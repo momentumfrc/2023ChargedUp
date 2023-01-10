@@ -4,16 +4,26 @@
 
 package frc.robot;
 
+import edu.wpi.first.cscore.VideoException;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.VisionSubsystem;
 
 public class RobotContainer {
 
-  private VisionSubsystem visionSubsystem = new VisionSubsystem();
+  private VisionSubsystem visionSubsystem;
 
   public RobotContainer() {
     configureBindings();
+
+    try {
+      visionSubsystem = new VisionSubsystem();
+    } catch(VideoException e) {
+      // If the visionSubsystem fails to initialize (for example, if the webcam is accidentally unplugged),
+      // we shouldn't crash the whole robot. We should still be able to at least drive.
+      System.out.println("Exception when initializing the VisionSubsystem:");
+      e.printStackTrace();
+    }
   }
 
   private void configureBindings() {}
