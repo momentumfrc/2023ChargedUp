@@ -4,14 +4,20 @@
 
 package frc.robot;
 
+import com.kauailabs.navx.frc.AHRS;
+
 import edu.wpi.first.cscore.VideoException;
+import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.*;
 
 public class RobotContainer {
 
+  private AHRS gyro = new AHRS(SerialPort.Port.kMXP);
+
   private VisionSubsystem visionSubsystem;
+  private DriveSubsystem drive = new DriveSubsystem(gyro);
 
   public RobotContainer() {
     configureBindings();
