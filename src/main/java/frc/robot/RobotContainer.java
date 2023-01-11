@@ -6,7 +6,7 @@ package frc.robot;
 
 import com.kauailabs.navx.frc.AHRS;
 
-import edu.wpi.first.cscore.VideoException;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -17,10 +17,10 @@ import frc.robot.subsystems.*;
 
 public class RobotContainer {
 
-  private AHRS gyro = new AHRS(SerialPort.Port.kMXP);
+  private AHRS gyro;
 
-  private VisionSubsystem visionSubsystem;
-  private DriveSubsystem drive = new DriveSubsystem(gyro);
+  private VisionSubsystem visionSubsystem = new VisionSubsystem();
+  private DriveSubsystem drive = new DriveSubsystem();
 
   private MoInput input = new SingleControllerInput(Constants.F310);
 
@@ -29,16 +29,17 @@ public class RobotContainer {
   public RobotContainer() {
     configureBindings();
 
-    drive.setDefaultCommand(driveCommand);
+    if(RobotBase.isReal()) {
+      // The navx and USBCamera classes don't play nice with the simulator,
+      // so we can only create instances if we're running on the real robot.
 
-    try {
-      visionSubsystem = new VisionSubsystem();
-    } catch(VideoException e) {
-      // If the visionSubsystem fails to initialize (for example, if the webcam is accidentally unplugged),
-      // we shouldn't crash the whole robot. We should still be able to at least drive.
-      System.out.println("Exception when initializing the VisionSubsystem:");
-      e.printStackTrace();
+      gyro = new AHRS(SerialPort.Port.kMXP);
+      drive.initOdometry(gyro);
+
+      visionSubsystem.init();
     }
+
+    drive.setDefaultCommand(driveCommand);
   }
 
   private void configureBindings() {}

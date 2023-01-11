@@ -15,16 +15,21 @@ public class DriveSubsystem extends SubsystemBase {
 
     private final MecanumDrive drive = new MecanumDrive(frontLeftMtr, rearLeftMtr, frontRightMtr, rearRightMtr);
 
-    private final AHRS gyro;
+    private AHRS gyro;
 
-    public DriveSubsystem(AHRS gyro) {
+    public void initOdometry(AHRS gyro) {
+        // TODO: setup odometry
         this.gyro = gyro;
     }
 
     public void driveCartesianFieldOriented(double fwdRequest, double leftRequest, double turnRequest) {
-        // TODO: get the Rotation2d from the odometry, not the gyro (so that it uses the AprilTags)
-        //       Example: this.odometry.getPoseMeters().getRotation();
-        drive.driveCartesian(fwdRequest, leftRequest, turnRequest, gyro.getRotation2d());
+        if(gyro != null) {
+            // TODO: get the Rotation2d from the odometry, not the gyro (so that it uses the AprilTags)
+            //       Example: this.odometry.getPoseMeters().getRotation();
+            drive.driveCartesian(fwdRequest, leftRequest, turnRequest, gyro.getRotation2d());
+        } else {
+            driveCartesianRobotOriented(fwdRequest, leftRequest, turnRequest);
+        }
     }
 
     public void driveCartesianRobotOriented(double fwdRequest, double leftRequest, double turnRequest) {

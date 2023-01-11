@@ -14,6 +14,7 @@ import edu.wpi.first.cscore.CvSink;
 import edu.wpi.first.cscore.CvSource;
 import edu.wpi.first.cscore.MjpegServer;
 import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.cscore.VideoException;
 import edu.wpi.first.cscore.VideoMode;
 import edu.wpi.first.cscore.VideoMode.PixelFormat;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -28,10 +29,10 @@ public class VisionSubsystem extends SubsystemBase {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
 
-    private final UsbCamera lifecam;
-    private final CvSink inputStream;
-    private final CvSource outputStream;
-    private final MjpegServer mjpegServer;
+    private UsbCamera lifecam;
+    private CvSink inputStream;
+    private CvSource outputStream;
+    private MjpegServer mjpegServer;
 
     private AprilTagDetector detector;
     private AprilTagPoseEstimator poseEstimator;
@@ -44,64 +45,74 @@ public class VisionSubsystem extends SubsystemBase {
     private Mat outFrame = new Mat();
     private Mat bwFrame = new Mat();
 
-    public VisionSubsystem() {
-        lifecam = new UsbCamera("Lifecam", 0);
+    private boolean initialized = false;
 
-        lifecam.setVideoMode(PixelFormat.kMJPEG, 640, 480, 30);
+    public boolean init() {
+        try {
+            lifecam = new UsbCamera("Lifecam", 0);
 
-        inputStream = new CvSink("opencv_Lifecam");
-        inputStream.setSource(lifecam);
+            lifecam.setVideoMode(PixelFormat.kMJPEG, 640, 480, 30);
 
-        outputStream = new CvSource("VisionSubsystem", PixelFormat.kMJPEG, 320, 240, 30);
-        mjpegServer = new MjpegServer("serve_VisionSubsystem", 1181);
-        mjpegServer.setSource(outputStream);
+            inputStream = new CvSink("opencv_Lifecam");
+            inputStream.setSource(lifecam);
 
-        shouldDetectAprilTags = MoShuffleboard.getInstance().detectAprilTagsSwitch.getEntry();
+            outputStream = new CvSource("VisionSubsystem", PixelFormat.kMJPEG, 320, 240, 30);
+            mjpegServer = new MjpegServer("serve_VisionSubsystem", 1181);
+            mjpegServer.setSource(outputStream);
 
-        AprilTagDetector.Config detectorConfig = new AprilTagDetector.Config();
-        detectorConfig.numThreads = 3;
-        detectorConfig.quadDecimate = 3;
-        detectorConfig.quadSigma = 0;
+            shouldDetectAprilTags = MoShuffleboard.getInstance().detectAprilTagsSwitch.getEntry();
 
-        detector = new AprilTagDetector();
-        detector.setConfig(detectorConfig);
+            AprilTagDetector.Config detectorConfig = new AprilTagDetector.Config();
+            detectorConfig.numThreads = 3;
+            detectorConfig.quadDecimate = 3;
+            detectorConfig.quadSigma = 0;
 
-        detector.addFamily("tag16h5", 0);
+            detector = new AprilTagDetector();
+            detector.setConfig(detectorConfig);
 
-        AprilTagPoseEstimator.Config poseEstimatorConfig = new AprilTagPoseEstimator.Config(
-            0.1524,
-            672.5873577443733,
-            673.3134462534064,
-            333.5730281629913,
-            226.2345964911072
-        );
-        poseEstimator = new AprilTagPoseEstimator(poseEstimatorConfig);
+            detector.addFamily("tag16h5", 0);
 
-        visionThread = new Thread(() -> {
-            while(!Thread.interrupted()) {
-                long frameTime = inputStream.grabFrame(currFrame);
-                if(frameTime > 0) {
-                    if(shouldDetectAprilTags.getBoolean(true)) {
-                        Imgproc.cvtColor(currFrame, bwFrame, Imgproc.COLOR_RGB2GRAY);
+            AprilTagPoseEstimator.Config poseEstimatorConfig = new AprilTagPoseEstimator.Config(
+                0.1524,
+                672.5873577443733,
+                673.3134462534064,
+                333.5730281629913,
+                226.2345964911072
+            );
+            poseEstimator = new AprilTagPoseEstimator(poseEstimatorConfig);
 
-                        AprilTagDetection[] detections = detector.detect(bwFrame);
-                        for(AprilTagDetection detection : detections) {
-                            Transform3d estimatedPose = poseEstimator.estimate(detection);
-                            drawDetection(detection, estimatedPose, currFrame);
+            visionThread = new Thread(() -> {
+                while(initialized && !Thread.interrupted() ) {
+                    long frameTime = inputStream.grabFrame(currFrame);
+                    if(frameTime > 0) {
+                        if(shouldDetectAprilTags.getBoolean(true)) {
+                            Imgproc.cvtColor(currFrame, bwFrame, Imgproc.COLOR_RGB2GRAY);
+
+                            AprilTagDetection[] detections = detector.detect(bwFrame);
+                            for(AprilTagDetection detection : detections) {
+                                Transform3d estimatedPose = poseEstimator.estimate(detection);
+                                drawDetection(detection, estimatedPose, currFrame);
+                            }
                         }
+                        Imgproc.resize(currFrame, outFrame, new Size(320, 240));
+                        outputStream.putFrame(outFrame);
                     }
-                    Imgproc.resize(currFrame, outFrame, new Size(320, 240));
-                    outputStream.putFrame(outFrame);
                 }
-            }
-        });
-        if(RobotBase.isReal()) {
-            // Something in the visionThread causes a segfault when running on Windows. I'm guessing there's something wrong
-            // with the windows builds of wpilib native libraries. The solution is to only run the vision code when running
-            // on the actual robot.
+            });
+
             visionThread.start();
+            initialized = true;
+        } catch(VideoException e) {
+            // If the visionSubsystem fails to initialize (for example, if the webcam is not plugged
+            // in), we shouldn't crash the whole robot. We should still be able to at least drive.
+            System.out.println("Exception when initializing the VisionSubsystem");
+            e.printStackTrace();
+            initialized = false;
         }
+        return initialized;
     }
+
+    public VisionSubsystem() {}
 
     private void drawDetection(AprilTagDetection detection, Transform3d estimatedTransform, Mat outMat) {
         final double fontSize = 1.1;

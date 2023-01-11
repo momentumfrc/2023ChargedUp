@@ -12,4 +12,10 @@ public class ExampleTest {
     void setup() {
         assert HAL.initialize(5000, 0);
     }
+
+    @Test
+    void testContainer() {
+        RobotContainer container = new RobotContainer();
+        Assertions.assertNotNull(container);
+    }
 }
