@@ -10,6 +10,9 @@ import edu.wpi.first.cscore.VideoException;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.commands.TeleopDriveCommand;
+import frc.robot.input.MoInput;
+import frc.robot.input.SingleControllerInput;
 import frc.robot.subsystems.*;
 
 public class RobotContainer {
@@ -19,8 +22,14 @@ public class RobotContainer {
   private VisionSubsystem visionSubsystem;
   private DriveSubsystem drive = new DriveSubsystem(gyro);
 
+  private MoInput input = new SingleControllerInput(Constants.F310);
+
+  private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, input);
+
   public RobotContainer() {
     configureBindings();
+
+    drive.setDefaultCommand(driveCommand);
 
     try {
       visionSubsystem = new VisionSubsystem();
