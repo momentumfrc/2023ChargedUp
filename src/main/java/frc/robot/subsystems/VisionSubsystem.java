@@ -57,8 +57,10 @@ public class VisionSubsystem extends SubsystemBase {
             inputStream.setSource(lifecam);
 
             outputStream = new CvSource("VisionSubsystem", PixelFormat.kMJPEG, 320, 240, 30);
-            mjpegServer = new MjpegServer("serve_VisionSubsystem", 1181);
-            mjpegServer.setSource(outputStream);
+            // mjpegServer = new MjpegServer("serve_VisionSubsystem", 1181);
+            // mjpegServer.setSource(outputStream);
+
+            MoShuffleboard.getInstance().matchTab.add(outputStream);
 
             shouldDetectAprilTags = MoShuffleboard.getInstance().detectAprilTagsSwitch.getEntry();
 
