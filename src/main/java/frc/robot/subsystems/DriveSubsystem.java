@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.kauailabs.navx.frc.AHRS;
 import com.playingwithfusion.CANVenom;
 
+import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -15,21 +16,12 @@ public class DriveSubsystem extends SubsystemBase {
 
     private final MecanumDrive drive = new MecanumDrive(frontLeftMtr, rearLeftMtr, frontRightMtr, rearRightMtr);
 
-    private AHRS gyro;
-
-    public void initOdometry(AHRS gyro) {
-        // TODO: setup odometry
-        this.gyro = gyro;
-    }
+    private AHRS gyro = new AHRS(SerialPort.Port.kMXP);
 
     public void driveCartesianFieldOriented(double fwdRequest, double leftRequest, double turnRequest) {
-        if(gyro != null) {
-            // TODO: get the Rotation2d from the odometry, not the gyro (so that it uses the AprilTags)
-            //       Example: this.odometry.getPoseMeters().getRotation();
-            drive.driveCartesian(fwdRequest, leftRequest, turnRequest, gyro.getRotation2d());
-        } else {
-            driveCartesianRobotOriented(fwdRequest, leftRequest, turnRequest);
-        }
+        // TODO: get the Rotation2d from the odometry, not the gyro (so that it uses the AprilTags)
+        //       Example: this.odometry.getPoseMeters().getRotation();
+        drive.driveCartesian(fwdRequest, leftRequest, turnRequest, gyro.getRotation2d());
     }
 
     public void driveCartesianRobotOriented(double fwdRequest, double leftRequest, double turnRequest) {

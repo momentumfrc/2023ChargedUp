@@ -17,8 +17,6 @@ import frc.robot.subsystems.*;
 
 public class RobotContainer {
 
-  private AHRS gyro;
-
   private VisionSubsystem visionSubsystem = new VisionSubsystem();
   private DriveSubsystem drive = new DriveSubsystem();
 
@@ -30,11 +28,8 @@ public class RobotContainer {
     configureBindings();
 
     if(RobotBase.isReal()) {
-      // The navx and USBCamera classes don't play nice with the simulator,
-      // so we can only create instances if we're running on the real robot.
-
-      gyro = new AHRS(SerialPort.Port.kMXP);
-      drive.initOdometry(gyro);
+      // The USBCamera classes doesn't play nice with the simulator,
+      // so we can only create an instance if we're running on the real robot.
 
       visionSubsystem.init();
     }
