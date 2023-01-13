@@ -3,14 +3,14 @@ package frc.robot.subsystems;
 import java.io.File;
 
 import com.kauailabs.navx.frc.AHRS;
-import com.playingwithfusion.CANVenom;
-import com.playingwithfusion.CANVenom.ControlMode;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.GenericSubscriber;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
+import edu.wpi.first.wpilibj.motorcontrol.Victor;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -19,15 +19,28 @@ import frc.robot.Constants;
 import frc.robot.utils.MoPIDF;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
-import frc.robot.utils.VenomTunerAdapter;
 
 import com.momentum4999.utils.PIDTuner;
 
 public class DriveSubsystem extends SubsystemBase {
-    private final CANVenom frontLeftMtr = new CANVenom(Constants.DRIVE_LEFT_FRONT.address);
-    private final CANVenom frontRightMtr = new CANVenom(Constants.DRIVE_RIGHT_FRONT.address);
-    private final CANVenom rearLeftMtr = new CANVenom(Constants.DRIVE_LEFT_REAR.address);
-    private final CANVenom rearRightMtr = new CANVenom(Constants.DRIVE_RIGHT_REAR.address);
+    // (6 inch diameter * (1 meters / 39.3701 inches) * PI)
+    private static final double METERS_PER_REV = 6 * (1 / 39.3701) * Math.PI;
+    // 1000 ticks per revolution
+    private static final double ENCODER_SCALE =  METERS_PER_REV / 1000;
+    private final Victor frontLeftMtr = new Victor(2);
+    private final Victor rearLeftMtr = new Victor(3);
+    private final Victor frontRightMtr = new Victor(0);
+    private final Victor rearRightMtr = new Victor(1);
+
+    private final Encoder frontLeftEncoder = new Encoder(0, 1);
+    private final Encoder frontRightEncoder = new Encoder(2, 3);
+    private final Encoder rearLeftEncoder = new Encoder(4, 5);
+    private final Encoder rearRightEncoder = new Encoder(6, 7);
+
+    private final MoPIDF frontLeftPID = new MoPIDF();
+    private final MoPIDF frontRightPID = new MoPIDF();
+    private final MoPIDF rearLeftPID = new MoPIDF();
+    private final MoPIDF rearRightPID = new MoPIDF();
 
     private final PIDTuner frontLeftTuner;
     private final PIDTuner frontRightTuner;
@@ -61,13 +74,23 @@ public class DriveSubsystem extends SubsystemBase {
         PIDTuner.PIDTunerSettings settings = new PIDTuner.PIDTunerSettings();
         if(RobotBase.isReal()) {
             settings.saveValuesLocation = new File("/home/lvuser/pid_constants.ini");
-        }
 
-        frontLeftTuner = new PIDTuner("Drive FL", new VenomTunerAdapter(frontLeftMtr), settings);
-        frontRightTuner = new PIDTuner("Drive FR", new VenomTunerAdapter(frontRightMtr), settings);
-        rearLeftTuner = new PIDTuner("Drive BL", new VenomTunerAdapter(rearLeftMtr), settings);
-        rearRightTuner = new PIDTuner("Drive BR", new VenomTunerAdapter(rearRightMtr), settings);
-        headingTuner = new PIDTuner("Drive Heading", headingController, settings);
+        frontLeftTuner = new PIDTuner("Drive FL", frontLeftPID, settings);
+        frontRightTuner = new PIDTuner("Drive FR", frontRightPID, settings);
+        rearLeftTuner = new PIDTuner("Drive BL", rearLeftPID, settings);
+        rearRightTuner = new PIDTuner("Drive BR", rearRightPID, settings);
+
+        frontLeftEncoder.setDistancePerPulse(ENCODER_SCALE);
+        frontRightEncoder.setDistancePerPulse(ENCODER_SCALE);
+        rearLeftEncoder.setDistancePerPulse(ENCODER_SCALE);
+        rearRightEncoder.setDistancePerPulse(ENCODER_SCALE);
+
+        frontLeftMtr.setInverted(true);
+        rearLeftMtr.setInverted(true);
+
+        frontRightEncoder.setReverseDirection(true);
+        frontLeftEncoder.setReverseDirection(true);
+        rearLeftEncoder.setReverseDirection(true);
     }
 
     public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest) {
@@ -91,15 +114,15 @@ public class DriveSubsystem extends SubsystemBase {
         double maxSpeedRpm = MoPrefs.maxDriveRpm.get();
 
         if(shouldDrivePID.getBoolean(true)) {
-            frontLeftMtr.setCommand(ControlMode.SpeedControl, wheelSpeeds.frontLeft * maxSpeedRpm);
-            frontRightMtr.setCommand(ControlMode.SpeedControl, wheelSpeeds.frontRight * maxSpeedRpm);
-            rearLeftMtr.setCommand(ControlMode.SpeedControl, wheelSpeeds.rearLeft * maxSpeedRpm);
-            rearRightMtr.setCommand(ControlMode.SpeedControl, wheelSpeeds.rearRight * maxSpeedRpm);
+            frontLeftMtr.set(frontLeftPID.calculate((frontLeftEncoder.getRate() / METERS_PER_REV) * 60, wheelSpeeds.frontLeft * maxSpeedRpm));
+            frontRightMtr.set(frontRightPID.calculate((frontLeftEncoder.getRate() / METERS_PER_REV) * 60, wheelSpeeds.frontRight * maxSpeedRpm));
+            rearLeftMtr.set(rearLeftPID.calculate((rearLeftEncoder.getRate() / METERS_PER_REV) * 60, wheelSpeeds.rearLeft * maxSpeedRpm));
+            rearRightMtr.set(rearRightPID.calculate((rearRightEncoder.getRate() / METERS_PER_REV) * 60, wheelSpeeds.rearRight * maxSpeedRpm));
         } else {
-            frontLeftMtr.setCommand(ControlMode.Proportional, wheelSpeeds.frontLeft);
-            frontRightMtr.setCommand(ControlMode.Proportional, wheelSpeeds.frontRight);
-            rearLeftMtr.setCommand(ControlMode.Proportional, wheelSpeeds.rearLeft);
-            rearRightMtr.setCommand(ControlMode.Proportional, wheelSpeeds.rearRight);
+            frontLeftMtr.set(wheelSpeeds.frontLeft);
+            frontRightMtr.set(wheelSpeeds.frontRight);
+            rearLeftMtr.set(wheelSpeeds.rearLeft);
+            rearRightMtr.set(wheelSpeeds.rearRight);
         }
     }
 }
