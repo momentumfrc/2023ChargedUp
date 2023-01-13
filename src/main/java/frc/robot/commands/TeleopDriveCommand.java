@@ -5,6 +5,8 @@ import frc.robot.input.MoInput;
 import frc.robot.subsystems.DriveSubsystem;
 
 public class TeleopDriveCommand extends CommandBase {
+    private double SLOW_SPEED = 0.5;
+
     private final DriveSubsystem drive;
     private final MoInput input;
 
@@ -21,6 +23,12 @@ public class TeleopDriveCommand extends CommandBase {
         double leftRequest = input.getLeftSpeedRequest();
         double turnRequest = input.getTurnRequest();
 
-        drive.driveCartesianFieldOriented(fwdRequest, leftRequest, turnRequest);
+        if(input.getShouldUseSlowSpeed()) {
+            fwdRequest *= SLOW_SPEED;
+            leftRequest *= SLOW_SPEED;
+            turnRequest *= SLOW_SPEED;
+        }
+
+        drive.driveCartesian(fwdRequest, leftRequest, turnRequest);
     }
 }

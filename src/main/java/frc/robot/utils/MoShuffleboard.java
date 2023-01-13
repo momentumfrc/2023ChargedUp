@@ -16,12 +16,14 @@ public class MoShuffleboard {
     }
 
     public final ShuffleboardTab matchTab;
+    public final ShuffleboardTab settingsTab;
 
     public final SimpleWidget detectAprilTagsSwitch;
 
 
     private MoShuffleboard() {
         matchTab = Shuffleboard.getTab("match");
+        settingsTab = Shuffleboard.getTab("Settings");
         detectAprilTagsSwitch = Shuffleboard.getTab("match").add("Detect AprilTags", true).withWidget(BuiltInWidgets.kToggleSwitch);
     }
 

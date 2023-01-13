@@ -30,4 +30,9 @@ public class SingleControllerInput implements MoInput {
         return curve(deadzone(controller.getRightX(), DEADZONE), CURVE);
     }
 
+    @Override
+    public boolean getShouldUseSlowSpeed() {
+        return controller.getLeftBumper();
+    }
+
 }
