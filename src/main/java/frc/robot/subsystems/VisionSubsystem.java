@@ -21,6 +21,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.GenericSubscriber;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.utils.MoShuffleboard;
 
@@ -56,13 +57,15 @@ public class VisionSubsystem extends SubsystemBase {
             inputStream = new CvSink("opencv_Lifecam");
             inputStream.setSource(lifecam);
 
-            outputStream = new CvSource("VisionSubsystem", PixelFormat.kMJPEG, 320, 240, 30);
+            outputStream = new CvSource("VisionSubsystem", PixelFormat.kMJPEG, 640, 480, 30);
             // mjpegServer = new MjpegServer("serve_VisionSubsystem", 1181);
             // mjpegServer.setSource(outputStream);
 
             MoShuffleboard.getInstance().matchTab.add(outputStream);
 
-            shouldDetectAprilTags = MoShuffleboard.getInstance().detectAprilTagsSwitch.getEntry();
+            shouldDetectAprilTags = MoShuffleboard.getInstance().settingsTab
+                .add("Detect AprilTags", true)
+                .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
             AprilTagDetector.Config detectorConfig = new AprilTagDetector.Config();
             detectorConfig.numThreads = 3;
