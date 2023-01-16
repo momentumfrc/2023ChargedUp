@@ -4,30 +4,36 @@ import static com.momentum4999.utils.Utils.*;
 
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants;
+import frc.robot.utils.MoPrefs;
+import frc.robot.utils.MoPrefs.Pref;
 
 public class SingleControllerInput implements MoInput {
-    private static final double DEADZONE = 0.1;
-    private static final double CURVE = 2.5;
-
     private final XboxController controller;
+
+    private Pref<Double> deadzone = MoPrefs.driveDeadzone;
+    private Pref<Double> curve = MoPrefs.driveCurve;
 
     public SingleControllerInput(Constants.HIDPort port) {
         this.controller = new XboxController(port.port);
     }
 
+    private double applyInputTransforms(double input) {
+        return curve(deadzone(input, deadzone.get()), curve.get());
+    }
+
     @Override
     public double getForwardSpeedRequest() {
-        return curve(deadzone(controller.getLeftY(), DEADZONE), CURVE);
+        return applyInputTransforms(controller.getLeftY());
     }
 
     @Override
     public double getLeftSpeedRequest() {
-        return curve(deadzone(controller.getLeftX(), DEADZONE), CURVE);
+        return applyInputTransforms(controller.getLeftX());
     }
 
     @Override
     public double getTurnRequest() {
-        return curve(deadzone(controller.getRightX(), DEADZONE), CURVE);
+        return applyInputTransforms(controller.getRightX());
     }
 
     @Override
