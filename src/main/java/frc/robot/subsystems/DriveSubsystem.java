@@ -13,12 +13,20 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.MoShuffleboard;
+import frc.robot.utils.VenomTunerAdapter;
+
+import com.momentum4999.utils.PIDTuner;
 
 public class DriveSubsystem extends SubsystemBase {
     private final CANVenom frontLeftMtr = new CANVenom(Constants.DRIVE_LEFT_FRONT.address);
     private final CANVenom frontRightMtr = new CANVenom(Constants.DRIVE_RIGHT_FRONT.address);
     private final CANVenom rearLeftMtr = new CANVenom(Constants.DRIVE_LEFT_REAR.address);
     private final CANVenom rearRightMtr = new CANVenom(Constants.DRIVE_RIGHT_REAR.address);
+
+    private final PIDTuner frontLeftTuner = new PIDTuner("Drive FL", new VenomTunerAdapter(frontLeftMtr));
+    private final PIDTuner frontRightTuner = new PIDTuner("Drive FR", new VenomTunerAdapter(frontRightMtr));
+    private final PIDTuner rearLeftTuner = new PIDTuner("Drive BL", new VenomTunerAdapter(rearLeftMtr));
+    private final PIDTuner rearRightTuner = new PIDTuner("Drive BR", new VenomTunerAdapter(rearRightMtr));
 
     private final MecanumDrive drive = new MecanumDrive(frontLeftMtr, rearLeftMtr, frontRightMtr, rearRightMtr);
 
