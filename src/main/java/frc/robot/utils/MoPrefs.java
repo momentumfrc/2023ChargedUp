@@ -16,6 +16,7 @@ public final class MoPrefs {
     public static Pref<Double> driveDeadzone = doublePref("Drive Deadzone", 0.05);
     public static Pref<Double> driveCurve = doublePref("Drive Curve", 1);
     public static Pref<Double> driveSlowSpeed = doublePref("Drive Slow Speed", 0.5);
+    public static Pref<Double> driveRampTime = doublePref("Drive Ramp Time", 0.25);
 
     public final class Pref<T> {
         public final String key;
@@ -39,16 +40,24 @@ public final class MoPrefs {
         }
 
         public void subscribe(Consumer<T> consumer) {
+            subscribe(consumer, false);
+        }
+
+        public void subscribe(Consumer<T> consumer, boolean notifyImmediately) {
             if(subscriber != null) {
                 subscriber = subscriber.andThen(consumer);
-                return;
+            } else {
+                subscriber = consumer;
+                entry.getInstance().addListener(
+                    entry,
+                    EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+                    (e) -> consumer.accept(getter.apply(e.valueData.value))
+                );
             }
-            subscriber = consumer;
-            entry.getInstance().addListener(
-                entry,
-                EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-                (e) -> consumer.accept(getter.apply(e.valueData.value))
-            );
+
+            if(notifyImmediately) {
+                consumer.accept(this.get());
+            }
         }
     }
 
