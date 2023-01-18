@@ -28,7 +28,7 @@ public class SingleControllerInput implements MoInput {
 
     @Override
     public double getLeftSpeedRequest() {
-        return applyInputTransforms(controller.getLeftX());
+        return -1 * applyInputTransforms(controller.getLeftX());
     }
 
     @Override
