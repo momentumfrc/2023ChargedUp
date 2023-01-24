@@ -33,7 +33,7 @@ public class SingleControllerInput implements MoInput {
 
     @Override
     public double getTurnRequest() {
-        return applyInputTransforms(controller.getRightX());
+        return -1 * applyInputTransforms(controller.getRightX());
     }
 
     @Override
