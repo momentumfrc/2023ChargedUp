@@ -4,9 +4,11 @@ import java.io.File;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.playingwithfusion.CANVenom;
+import com.playingwithfusion.CANVenom.BrakeCoastMode;
 import com.playingwithfusion.CANVenom.ControlMode;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.GenericPublisher;
 import edu.wpi.first.networktables.GenericSubscriber;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.SerialPort;
@@ -62,6 +64,21 @@ public class DriveSubsystem extends SubsystemBase {
         if(RobotBase.isReal()) {
             settings.saveValuesLocation = new File("/home/lvuser/pid_constants.ini");
         }
+
+        frontLeftMtr.setControlMode(ControlMode.SpeedControl);
+        frontRightMtr.setControlMode(ControlMode.SpeedControl);
+        rearLeftMtr.setControlMode(ControlMode.SpeedControl);
+        rearRightMtr.setControlMode(ControlMode.SpeedControl);
+
+        frontLeftMtr.setBrakeCoastMode(BrakeCoastMode.Brake);
+        frontRightMtr.setBrakeCoastMode(BrakeCoastMode.Brake);
+        rearLeftMtr.setBrakeCoastMode(BrakeCoastMode.Brake);
+        rearRightMtr.setBrakeCoastMode(BrakeCoastMode.Brake);
+
+        frontLeftMtr.setPID(0, 0, 0, 0, 0);
+        frontRightMtr.setPID(0, 0, 0, 0, 0);
+        rearLeftMtr.setPID(0, 0, 0, 0, 0);
+        rearRightMtr.setPID(0, 0, 0, 0, 0);
 
         frontLeftTuner = new PIDTuner("Drive FL", new VenomTunerAdapter(frontLeftMtr), settings);
         frontRightTuner = new PIDTuner("Drive FR", new VenomTunerAdapter(frontRightMtr), settings);

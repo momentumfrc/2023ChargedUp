@@ -42,25 +42,9 @@ public class VenomTunerAdapter implements PIDAdapter {
         return venom.getPIDTarget();
     }
 
-    private boolean didWarnInvalidMode = false;
-
     @Override
     public double getCurrentValue() {
-        var mode = venom.getControlMode();
-        switch(mode) {
-            case PositionControl:
-            return venom.getPosition();
-
-            case SpeedControl:
-            return venom.getSpeed();
-
-            default:
-            if(!didWarnInvalidMode) {
-                didWarnInvalidMode = true;
-                System.err.println("Warning: attempting to get value of CANVenom in unsupported mode " + mode.toString());
-            }
-            return 0;
-        }
+        return venom.getSpeed();
     }
 
 }
