@@ -68,6 +68,9 @@ public class DriveSubsystem extends SubsystemBase {
         rearLeftTuner = new PIDTuner("Drive BL", new VenomTunerAdapter(rearLeftMtr), settings);
         rearRightTuner = new PIDTuner("Drive BR", new VenomTunerAdapter(rearRightMtr), settings);
         headingTuner = new PIDTuner("Drive Heading", headingController, settings);
+
+        frontLeftMtr.setInverted(true);
+        rearLeftMtr.setInverted(true);
     }
 
     public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest) {
