@@ -10,6 +10,7 @@ import com.playingwithfusion.CANVenom.ControlMode;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.GenericPublisher;
 import edu.wpi.first.networktables.GenericSubscriber;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
@@ -80,6 +81,11 @@ public class DriveSubsystem extends SubsystemBase {
         rearLeftMtr.setPID(0, 0, 0, 0, 0);
         rearRightMtr.setPID(0, 0, 0, 0, 0);
 
+        frontLeftMtr.setMaxJerk(0);
+        frontRightMtr.setMaxJerk(0);
+        rearLeftMtr.setMaxJerk(0);
+        rearRightMtr.setMaxJerk(0);
+
         frontLeftTuner = new PIDTuner("Drive FL", new VenomTunerAdapter(frontLeftMtr), settings);
         frontRightTuner = new PIDTuner("Drive FR", new VenomTunerAdapter(frontRightMtr), settings);
         rearLeftTuner = new PIDTuner("Drive BL", new VenomTunerAdapter(rearLeftMtr), settings);
@@ -89,6 +95,8 @@ public class DriveSubsystem extends SubsystemBase {
         frontLeftMtr.setInverted(true);
         rearLeftMtr.setInverted(true);
     }
+
+    GenericPublisher pub = NetworkTableInstance.getDefault().getTopic("PID Setpoint").getGenericEntry();
 
     public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest) {
         // TODO: get the Rotation2d from the odometry, not the gyro (so that it uses the AprilTags)
@@ -109,6 +117,8 @@ public class DriveSubsystem extends SubsystemBase {
 
         var wheelSpeeds = MecanumDrive.driveCartesianIK(fwdRequest, leftRequest, turnRequest, fieldOrientedDriveAngle);
         double maxSpeedRpm = MoPrefs.maxDriveRpm.get();
+
+        pub.setDouble(wheelSpeeds.frontLeft * maxSpeedRpm);
 
         if(shouldDrivePID.getBoolean(true)) {
             frontLeftMtr.setCommand(ControlMode.SpeedControl, wheelSpeeds.frontLeft * maxSpeedRpm);
