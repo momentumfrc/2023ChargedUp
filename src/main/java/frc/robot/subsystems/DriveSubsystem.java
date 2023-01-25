@@ -35,15 +35,31 @@ public class DriveSubsystem extends SubsystemBase {
     };
     private TurnState turnState = TurnState.HOLD_HEADING;
 
-    private final CANVenom frontLeftMtr = new CANVenom(Constants.DRIVE_LEFT_FRONT.address);
-    private final CANVenom frontRightMtr = new CANVenom(Constants.DRIVE_RIGHT_FRONT.address);
-    private final CANVenom rearLeftMtr = new CANVenom(Constants.DRIVE_LEFT_REAR.address);
-    private final CANVenom rearRightMtr = new CANVenom(Constants.DRIVE_RIGHT_REAR.address);
+    private static class DriveMotor {
+        private final String mnemonic;
+        private final PIDTuner tuner;
+        public final CANVenom motor;
+        public DriveMotor(String mnemonic, Constants.CANAddress address) {
+            this.mnemonic = mnemonic;
+            motor = new CANVenom(address.address);
+            motor.setControlMode(ControlMode.SpeedControl);
+            motor.setBrakeCoastMode(BrakeCoastMode.Brake);
+            motor.setPID(0, 0, 0, 0, 0);
+            motor.setMaxJerk(0);
 
-    private final PIDTuner frontLeftTuner;
-    private final PIDTuner frontRightTuner;
-    private final PIDTuner rearLeftTuner;
-    private final PIDTuner rearRightTuner;
+            tuner = new PIDTuner("Drive " + mnemonic, new VenomTunerAdapter(motor), Constants.TUNER_SETTINGS);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("DriveMotor(\"%s\")", this.mnemonic);
+        }
+    }
+
+    private final DriveMotor frontLeftMtr = new DriveMotor("FL", Constants.DRIVE_LEFT_FRONT);
+    private final DriveMotor frontRightMtr = new DriveMotor("FR", Constants.DRIVE_RIGHT_FRONT);
+    private final DriveMotor rearLeftMtr = new DriveMotor("BL", Constants.DRIVE_LEFT_REAR);
+    private final DriveMotor rearRightMtr = new DriveMotor("BR", Constants.DRIVE_RIGHT_REAR);
 
     private final MoPIDF headingController = new MoPIDF();
     private final PIDTuner headingTuner;
@@ -69,39 +85,10 @@ public class DriveSubsystem extends SubsystemBase {
         .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
     public DriveSubsystem() {
-        PIDTuner.PIDTunerSettings settings = new PIDTuner.PIDTunerSettings();
-        if(RobotBase.isReal()) {
-            settings.saveValuesLocation = new File("/home/lvuser/pid_constants.ini");
-        }
+        headingTuner = new PIDTuner("Drive Heading", headingController, Constants.TUNER_SETTINGS);
 
-        frontLeftMtr.setControlMode(ControlMode.SpeedControl);
-        frontRightMtr.setControlMode(ControlMode.SpeedControl);
-        rearLeftMtr.setControlMode(ControlMode.SpeedControl);
-        rearRightMtr.setControlMode(ControlMode.SpeedControl);
-
-        frontLeftMtr.setBrakeCoastMode(BrakeCoastMode.Brake);
-        frontRightMtr.setBrakeCoastMode(BrakeCoastMode.Brake);
-        rearLeftMtr.setBrakeCoastMode(BrakeCoastMode.Brake);
-        rearRightMtr.setBrakeCoastMode(BrakeCoastMode.Brake);
-
-        frontLeftMtr.setPID(0, 0, 0, 0, 0);
-        frontRightMtr.setPID(0, 0, 0, 0, 0);
-        rearLeftMtr.setPID(0, 0, 0, 0, 0);
-        rearRightMtr.setPID(0, 0, 0, 0, 0);
-
-        frontLeftMtr.setMaxJerk(0);
-        frontRightMtr.setMaxJerk(0);
-        rearLeftMtr.setMaxJerk(0);
-        rearRightMtr.setMaxJerk(0);
-
-        frontLeftTuner = new PIDTuner("Drive FL", new VenomTunerAdapter(frontLeftMtr), settings);
-        frontRightTuner = new PIDTuner("Drive FR", new VenomTunerAdapter(frontRightMtr), settings);
-        rearLeftTuner = new PIDTuner("Drive BL", new VenomTunerAdapter(rearLeftMtr), settings);
-        rearRightTuner = new PIDTuner("Drive BR", new VenomTunerAdapter(rearRightMtr), settings);
-        headingTuner = new PIDTuner("Drive Heading", headingController, settings);
-
-        frontLeftMtr.setInverted(true);
-        rearLeftMtr.setInverted(true);
+        frontLeftMtr.motor.setInverted(true);
+        rearLeftMtr.motor.setInverted(true);
     }
 
     GenericPublisher pub = NetworkTableInstance.getDefault().getTopic("PID Setpoint").getGenericEntry();
@@ -156,15 +143,15 @@ public class DriveSubsystem extends SubsystemBase {
         pub.setDouble(wheelSpeeds.frontLeft * maxSpeedRpm);
 
         if(shouldDrivePID.getBoolean(true)) {
-            frontLeftMtr.setCommand(ControlMode.SpeedControl, wheelSpeeds.frontLeft * maxSpeedRpm);
-            frontRightMtr.setCommand(ControlMode.SpeedControl, wheelSpeeds.frontRight * maxSpeedRpm);
-            rearLeftMtr.setCommand(ControlMode.SpeedControl, wheelSpeeds.rearLeft * maxSpeedRpm);
-            rearRightMtr.setCommand(ControlMode.SpeedControl, wheelSpeeds.rearRight * maxSpeedRpm);
+            frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, wheelSpeeds.frontLeft * maxSpeedRpm);
+            frontRightMtr.motor.setCommand(ControlMode.SpeedControl, wheelSpeeds.frontRight * maxSpeedRpm);
+            rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, wheelSpeeds.rearLeft * maxSpeedRpm);
+            rearRightMtr.motor.setCommand(ControlMode.SpeedControl, wheelSpeeds.rearRight * maxSpeedRpm);
         } else {
-            frontLeftMtr.setCommand(ControlMode.Proportional, wheelSpeeds.frontLeft);
-            frontRightMtr.setCommand(ControlMode.Proportional, wheelSpeeds.frontRight);
-            rearLeftMtr.setCommand(ControlMode.Proportional, wheelSpeeds.rearLeft);
-            rearRightMtr.setCommand(ControlMode.Proportional, wheelSpeeds.rearRight);
+            frontLeftMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.frontLeft);
+            frontRightMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.frontRight);
+            rearLeftMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.rearLeft);
+            rearRightMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.rearRight);
         }
     }
 }

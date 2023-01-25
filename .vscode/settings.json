@@ -32,5 +32,7 @@
   "files.insertFinalNewline": true,
   "java.saveActions.organizeImports": true,
   "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable",
-  "editor.rulers": [100]
+  "editor.rulers": [100],
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000
 }

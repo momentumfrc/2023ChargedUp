@@ -1,5 +1,11 @@
 package frc.robot;
 
+import java.io.File;
+
+import com.momentum4999.utils.PIDTuner;
+
+import edu.wpi.first.wpilibj.RobotBase;
+
 public class Constants {
     /**
      * A wrapper class holding a single integer value representing a CAN Address. The point of this
@@ -31,6 +37,14 @@ public class Constants {
     public static final CANAddress DRIVE_RIGHT_REAR = new CANAddress(5);
 
     public static final HIDPort F310 = new HIDPort(0);
+
+    public static final PIDTuner.PIDTunerSettings TUNER_SETTINGS = new PIDTuner.PIDTunerSettings();
+
+    static {
+        if(RobotBase.isReal()) {
+            TUNER_SETTINGS.saveValuesLocation = new File("/home/lvuser/pid_constants.ini");
+        }
+    }
 
     private Constants() {
         throw new UnsupportedOperationException();
