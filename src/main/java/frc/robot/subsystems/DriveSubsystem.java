@@ -27,6 +27,14 @@ import frc.robot.utils.VenomTunerAdapter;
 import com.momentum4999.utils.PIDTuner;
 
 public class DriveSubsystem extends SubsystemBase {
+    private static final double TURN_RATE_CUTOFF = 0.001;
+
+    private static enum TurnState {
+        TURNING,
+        HOLD_HEADING
+    };
+    private TurnState turnState = TurnState.HOLD_HEADING;
+
     private final CANVenom frontLeftMtr = new CANVenom(Constants.DRIVE_LEFT_FRONT.address);
     private final CANVenom frontRightMtr = new CANVenom(Constants.DRIVE_RIGHT_FRONT.address);
     private final CANVenom rearLeftMtr = new CANVenom(Constants.DRIVE_LEFT_REAR.address);
@@ -98,6 +106,39 @@ public class DriveSubsystem extends SubsystemBase {
 
     GenericPublisher pub = NetworkTableInstance.getDefault().getTopic("PID Setpoint").getGenericEntry();
 
+    /**
+     * Calculate how much the robot should turn. We want to use PID to prevent any turning, except
+     * for these situations: (1) if the driver has requested a turn, or (2) if the robot is
+     * slowing down after a requested turn (to prevent an unexpected 'snap-back' behavior).
+     * @param turnRequest The turn requested by the driver
+     * @param currentHeading The robot's current heading, as reported by the gyro
+     * @return How much the robot should turn
+     */
+    private double calculateTurn(double turnRequest, Rotation2d currentHeading) {
+        switch(turnState) {
+            case HOLD_HEADING:
+                if(turnRequest != 0) {
+                    turnState = TurnState.TURNING;
+                }
+                break;
+            case TURNING:
+                if(turnRequest == 0 && Math.abs(gyro.getRate()) < TURN_RATE_CUTOFF) {
+                    maintainHeading = currentHeading;
+                    turnState = TurnState.HOLD_HEADING;
+                }
+                break;
+        }
+        switch(turnState) {
+            case HOLD_HEADING:
+                if(shouldHeadingPID.getBoolean(true)) {
+                    return headingController.calculate(currentHeading.getRadians(), maintainHeading.getRadians());
+                }
+            case TURNING:
+            default:
+                return turnRequest;
+        }
+    }
+
     public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest) {
         // TODO: get the Rotation2d from the odometry, not the gyro (so that it uses the AprilTags)
         //       Example: this.odometry.getPoseMeters().getRotation();
@@ -109,13 +150,7 @@ public class DriveSubsystem extends SubsystemBase {
             fieldOrientedDriveAngle = new Rotation2d();
         }
 
-        if(turnRequest != 0) {
-            maintainHeading = currentHeading;
-        } else if(shouldHeadingPID.getBoolean(true)) {
-            turnRequest = headingController.calculate(currentHeading.getRadians(), maintainHeading.getRadians());
-        }
-
-        var wheelSpeeds = MecanumDrive.driveCartesianIK(fwdRequest, leftRequest, turnRequest, fieldOrientedDriveAngle);
+        var wheelSpeeds = MecanumDrive.driveCartesianIK(fwdRequest, leftRequest, calculateTurn(turnRequest, currentHeading), fieldOrientedDriveAngle);
         double maxSpeedRpm = MoPrefs.maxDriveRpm.get();
 
         pub.setDouble(wheelSpeeds.frontLeft * maxSpeedRpm);
