@@ -137,7 +137,7 @@ public class DriveSubsystem extends SubsystemBase {
             fieldOrientedDriveAngle = new Rotation2d();
         }
 
-        var wheelSpeeds = MecanumDrive.driveCartesianIK(fwdRequest, leftRequest, calculateTurn(turnRequest, currentHeading), fieldOrientedDriveAngle);
+        var wheelSpeeds = MecanumDrive.driveCartesianIK(fwdRequest, leftRequest, calculateTurn(turnRequest, currentHeading), fieldOrientedDriveAngle.unaryMinus());
         double maxSpeedRpm = MoPrefs.maxDriveRpm.get();
 
         pub.setDouble(wheelSpeeds.frontLeft * maxSpeedRpm);
@@ -153,5 +153,9 @@ public class DriveSubsystem extends SubsystemBase {
             rearLeftMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.rearLeft);
             rearRightMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.rearRight);
         }
+    }
+
+    public void resetMaintainHeading() {
+        turnState = TurnState.TURNING;
     }
 }
