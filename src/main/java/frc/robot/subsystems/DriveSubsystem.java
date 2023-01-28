@@ -1,21 +1,23 @@
 package frc.robot.subsystems;
 
-import java.io.File;
-
 import com.kauailabs.navx.frc.AHRS;
 import com.playingwithfusion.CANVenom;
 import com.playingwithfusion.CANVenom.BrakeCoastMode;
 import com.playingwithfusion.CANVenom.ControlMode;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
+import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
+import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.networktables.GenericPublisher;
 import edu.wpi.first.networktables.GenericSubscriber;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -27,7 +29,28 @@ import frc.robot.utils.VenomTunerAdapter;
 import com.momentum4999.utils.PIDTuner;
 
 public class DriveSubsystem extends SubsystemBase {
+    /**
+     * The maximum rate of turn that the drive will consider as equivalent to zero. Used to
+     * determine when to re-enable heading pid after executing a driver-requested turn.
+     */
     private static final double TURN_RATE_CUTOFF = 0.001;
+
+    /**
+     * How many meters of forward travel correspond to 1 revolution of a wheel encoder.
+     */
+    private static final double METERS_PER_REVOLUTION = (6 * Math.PI) * (1.0 / 10.71);
+
+    /**
+     * The distance, in meters, of a wheel from the center of the robot towards the
+     * front of the robot.
+     */
+    private static final double WHEEL_FWD_POS = 0.2664394;
+
+    /**
+     * The distance, in meters, of a wheel from the center of the robot towards the
+     * left side of the robot.
+     */
+    private static final double WHEEL_LEFT_POS = 0.294386;
 
     private static enum TurnState {
         TURNING,
@@ -69,6 +92,19 @@ public class DriveSubsystem extends SubsystemBase {
     private Rotation2d initialHeading = gyro.getRotation2d();
     private Rotation2d maintainHeading = gyro.getRotation2d();
 
+    private MecanumDriveKinematics kinematics = new MecanumDriveKinematics(
+        new Translation2d(WHEEL_FWD_POS, WHEEL_LEFT_POS),
+        new Translation2d(WHEEL_FWD_POS, -WHEEL_LEFT_POS),
+        new Translation2d(-WHEEL_FWD_POS, WHEEL_LEFT_POS),
+        new Translation2d(-WHEEL_FWD_POS, -WHEEL_LEFT_POS)
+    );
+    private MecanumDriveOdometry odometry = new MecanumDriveOdometry(
+        kinematics,
+        gyro.getRotation2d(),
+        getWheelPositions()
+    );
+    private Pose2d currPose = odometry.getPoseMeters();
+
     private GenericSubscriber shouldDriveFieldOriented = MoShuffleboard.getInstance().settingsTab
         .add("Field-Oriented Drive", true)
         .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
@@ -84,6 +120,8 @@ public class DriveSubsystem extends SubsystemBase {
         .add("Keep Heading", true)
         .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
+    private Field2d field = MoShuffleboard.getInstance().field;
+
     public DriveSubsystem() {
         headingTuner = new PIDTuner("Drive Heading", headingController, Constants.TUNER_SETTINGS);
 
@@ -91,7 +129,14 @@ public class DriveSubsystem extends SubsystemBase {
         rearLeftMtr.motor.setInverted(true);
     }
 
-    GenericPublisher pub = NetworkTableInstance.getDefault().getTopic("PID Setpoint").getGenericEntry();
+    private MecanumDriveWheelPositions getWheelPositions() {
+        return new MecanumDriveWheelPositions(
+            frontLeftMtr.motor.getPosition() * METERS_PER_REVOLUTION,
+            frontRightMtr.motor.getPosition() * METERS_PER_REVOLUTION,
+            rearLeftMtr.motor.getPosition() * METERS_PER_REVOLUTION,
+            rearRightMtr.motor.getPosition() * METERS_PER_REVOLUTION
+        );
+    }
 
     /**
      * Calculate how much the robot should turn. We want to use PID to prevent any turning, except
@@ -127,9 +172,7 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest) {
-        // TODO: get the Rotation2d from the odometry, not the gyro (so that it uses the AprilTags)
-        //       Example: this.odometry.getPoseMeters().getRotation();
-        Rotation2d currentHeading = gyro.getRotation2d();
+        Rotation2d currentHeading = currPose.getRotation();
         Rotation2d fieldOrientedDriveAngle;
         if(shouldDriveFieldOriented.getBoolean(true)) {
             fieldOrientedDriveAngle = currentHeading.minus(initialHeading);
@@ -139,8 +182,6 @@ public class DriveSubsystem extends SubsystemBase {
 
         var wheelSpeeds = MecanumDrive.driveCartesianIK(fwdRequest, leftRequest, calculateTurn(turnRequest, currentHeading), fieldOrientedDriveAngle.unaryMinus());
         double maxSpeedRpm = MoPrefs.maxDriveRpm.get();
-
-        pub.setDouble(wheelSpeeds.frontLeft * maxSpeedRpm);
 
         if(shouldDrivePID.getBoolean(true)) {
             frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, wheelSpeeds.frontLeft * maxSpeedRpm);
@@ -157,5 +198,11 @@ public class DriveSubsystem extends SubsystemBase {
 
     public void resetMaintainHeading() {
         turnState = TurnState.TURNING;
+    }
+
+    @Override
+    public void periodic() {
+        currPose = odometry.update(gyro.getRotation2d(), getWheelPositions());
+        field.setRobotPose(currPose);
     }
 }
