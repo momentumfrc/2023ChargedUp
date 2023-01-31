@@ -1,11 +1,14 @@
 package frc.robot.subsystems;
 
+import java.util.function.Consumer;
+
 import com.kauailabs.navx.frc.AHRS;
 import com.playingwithfusion.CANVenom;
 import com.playingwithfusion.CANVenom.BrakeCoastMode;
 import com.playingwithfusion.CANVenom.ControlMode;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
@@ -28,7 +31,7 @@ import frc.robot.utils.VenomTunerAdapter;
 
 import com.momentum4999.utils.PIDTuner;
 
-public class DriveSubsystem extends SubsystemBase {
+public class DriveSubsystem extends SubsystemBase implements Consumer<Pose3d> {
     /**
      * The maximum rate of turn that the drive will consider as equivalent to zero. Used to
      * determine when to re-enable heading pid after executing a driver-requested turn.
@@ -204,5 +207,10 @@ public class DriveSubsystem extends SubsystemBase {
     public void periodic() {
         currPose = odometry.update(gyro.getRotation2d(), getWheelPositions());
         field.setRobotPose(currPose);
+    }
+
+    @Override
+    public void accept(Pose3d pose) {
+        odometry.resetPosition(gyro.getRotation2d(), getWheelPositions(), pose.toPose2d());
     }
 }

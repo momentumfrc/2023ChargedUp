@@ -22,7 +22,7 @@ public class RobotContainer {
   private DriveSubsystem drive = new DriveSubsystem();
 
   private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
-  private AprilTagsVisionCommand aprilTagsVisionCommand = new AprilTagsVisionCommand(visionSubsystem);
+  private AprilTagsVisionCommand aprilTagsVisionCommand = new AprilTagsVisionCommand(visionSubsystem, drive);
 
   private MoInput input = new SingleControllerInput(Constants.F310);
 
