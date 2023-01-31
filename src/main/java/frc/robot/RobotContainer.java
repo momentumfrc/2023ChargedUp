@@ -4,37 +4,43 @@
 
 package frc.robot;
 
-import com.kauailabs.navx.frc.AHRS;
-
-import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.AprilTagsVisionCommand;
+import frc.robot.commands.DefaultVisionCommand;
 import frc.robot.commands.TeleopDriveCommand;
 import frc.robot.input.MoInput;
 import frc.robot.input.SingleControllerInput;
 import frc.robot.subsystems.*;
+import frc.robot.utils.MoShuffleboard;
+import frc.robot.utils.ShuffleboardToggle;
 
 public class RobotContainer {
 
   private VisionSubsystem visionSubsystem = new VisionSubsystem();
   private DriveSubsystem drive = new DriveSubsystem();
 
+  private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
+  private AprilTagsVisionCommand aprilTagsVisionCommand = new AprilTagsVisionCommand(visionSubsystem);
+
   private MoInput input = new SingleControllerInput(Constants.F310);
 
   private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, input);
 
+  private Trigger aprilTagsVisionTrigger = new ShuffleboardToggle(
+    MoShuffleboard.getInstance().settingsTab,
+    "Detect AprilTags",
+    true
+  ).getTrigger();
+
   public RobotContainer() {
     configureBindings();
 
-    if(RobotBase.isReal()) {
-      // The USBCamera classes doesn't play nice with the simulator,
-      // so we can only create an instance if we're running on the real robot.
-
-      visionSubsystem.init();
-    }
-
     drive.setDefaultCommand(driveCommand);
+    visionSubsystem.setDefaultCommand(defaultVisionCommand);
+
+    aprilTagsVisionTrigger.whileTrue(aprilTagsVisionCommand);
   }
 
   private void configureBindings() {}
