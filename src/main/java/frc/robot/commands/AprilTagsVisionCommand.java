@@ -47,10 +47,10 @@ public class AprilTagsVisionCommand extends DefaultVisionCommand {
 
         AprilTagPoseEstimator.Config poseEstimatorConfig = new AprilTagPoseEstimator.Config(
             0.1524,
-            672.5873577443733,
-            673.3134462534064,
-            333.5730281629913,
-            226.2345964911072
+            728.9462029358942,
+            735.9300037816735,
+            304.3834365359453,
+            193.01309923904543
         );
         poseEstimator = new AprilTagPoseEstimator(poseEstimatorConfig);
 
@@ -94,7 +94,7 @@ public class AprilTagsVisionCommand extends DefaultVisionCommand {
      */
     private Optional<Pose3d> coalesceEstimatedPoses(ArrayList<Pose3d> poses) {
         if(poses.size() == 0) {
-            Optional.empty();
+            return Optional.empty();
         }
         if(poses.size() == 1) {
             return Optional.of(poses.get(0));
@@ -113,6 +113,30 @@ public class AprilTagsVisionCommand extends DefaultVisionCommand {
         return Optional.of(new Pose3d(translation, rotation));
     }
 
+    public Pose3d mapToFieldPos(Transform3d cameraCoordinates, Pose3d aprilTagPose) {
+        Translation3d cameraTranslation = cameraCoordinates.getTranslation();
+        Rotation3d cameraRotation = cameraCoordinates.getRotation();
+
+        Translation3d fieldTranslation = new Translation3d(
+            -cameraTranslation.getZ(),
+            cameraTranslation.getX(),
+            cameraTranslation.getY()
+        );
+
+        System.out.format("x:%.2f\ty:%.2f\tz:%.2f\n", cameraRotation.getX(), cameraRotation.getY(), cameraRotation.getZ());
+
+        Rotation3d fieldRotation = new Rotation3d(
+            0,
+            0,
+            0
+        );
+
+        return new Pose3d(
+            aprilTagPose.getTranslation().plus(fieldTranslation),
+            aprilTagPose.getRotation().plus(fieldRotation)
+        );
+    }
+
     @Override
     public void processFrame(Mat capturedFrame) {
         Imgproc.cvtColor(capturedFrame, bwFrame, Imgproc.COLOR_RGB2GRAY);
@@ -127,7 +151,7 @@ public class AprilTagsVisionCommand extends DefaultVisionCommand {
             if(fieldLayout != null) {
                 var maybeTagPose = fieldLayout.getTagPose(detection.getId());
                 if(maybeTagPose.isPresent()) {
-                    estimatedPoses.add(maybeTagPose.get().transformBy(estimatedTransform));
+                    estimatedPoses.add(mapToFieldPos(estimatedTransform, maybeTagPose.get()));
                 }
             }
         }

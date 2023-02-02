@@ -40,6 +40,7 @@ public class RobotContainer {
     drive.setDefaultCommand(driveCommand);
     visionSubsystem.setDefaultCommand(defaultVisionCommand);
 
+    aprilTagsVisionCommand.schedule();
     aprilTagsVisionTrigger.whileTrue(aprilTagsVisionCommand);
   }
 

@@ -2,12 +2,16 @@ package frc.robot.subsystems;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.CvSink;
 import edu.wpi.first.cscore.CvSource;
+import edu.wpi.first.cscore.MjpegServer;
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.cscore.VideoMode.PixelFormat;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.utils.MoShuffleboard;
 
 public class VisionSubsystem extends SubsystemBase {
     static {
@@ -27,14 +31,13 @@ public class VisionSubsystem extends SubsystemBase {
             return;
         }
 
-        lifecam = new UsbCamera("Lifecam", 0);
-
+        lifecam = CameraServer.startAutomaticCapture(0);
         lifecam.setVideoMode(PixelFormat.kMJPEG, 640, 480, 30);
 
-        inputStream = new CvSink("opencv_Lifecam");
-        inputStream.setSource(lifecam);
+        inputStream = CameraServer.getVideo();
+        outputStream = CameraServer.putVideo("VisionSubsystem", 320, 240);
 
-        outputStream = new CvSource("VisionSubsystem", PixelFormat.kMJPEG, 640, 480, 30);
+        MoShuffleboard.getInstance().matchTab.add(outputStream);
 
         initialized = true;
     }
