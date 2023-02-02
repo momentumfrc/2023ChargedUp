@@ -175,7 +175,7 @@ public class DriveSubsystem extends SubsystemBase implements Consumer<Pose3d> {
     }
 
     public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest) {
-        Rotation2d currentHeading = currPose.getRotation();
+        Rotation2d currentHeading = gyro.getRotation2d();
         Rotation2d fieldOrientedDriveAngle;
         if(shouldDriveFieldOriented.getBoolean(true)) {
             fieldOrientedDriveAngle = currentHeading.minus(initialHeading);
