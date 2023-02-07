@@ -2,12 +2,15 @@ package frc.robot.subsystems;
 
 import java.util.function.Consumer;
 
+import com.kauailabs.navx.frc.AHRS;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -16,8 +19,20 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.utils.MoShuffleboard;
 
 public class PositioningSubsystem extends SubsystemBase {
+    /**
+     * The distance, in meters, of a wheel from the center of the robot towards the
+     * front of the robot.
+     */
+    private static final double WHEEL_FWD_POS = 0.2664394;
+
+    /**
+     * The distance, in meters, of a wheel from the center of the robot towards the
+     * left side of the robot.
+     */
+    private static final double WHEEL_LEFT_POS = 0.294386;
+
 	private final LimelightTableAdapter limelight = new LimelightTableAdapter();
-	private Pose3d robotPose = new Pose3d();
+	private Pose2d robotPose = new Pose2d();
 	private double poseUncertainty = 0;
 
 	private long lastTagCycleTimestamp = System.currentTimeMillis();
@@ -25,7 +40,30 @@ public class PositioningSubsystem extends SubsystemBase {
 
 	private Field2d field = MoShuffleboard.getInstance().field;
 
-	boolean shouldLights = false;
+	private boolean shouldLights = false;
+
+	private final AHRS gyro;
+	private final DriveSubsystem drive;
+
+	public final MecanumDriveKinematics kinematics = new MecanumDriveKinematics(
+        new Translation2d(WHEEL_FWD_POS, WHEEL_LEFT_POS),
+        new Translation2d(WHEEL_FWD_POS, -WHEEL_LEFT_POS),
+        new Translation2d(-WHEEL_FWD_POS, WHEEL_LEFT_POS),
+        new Translation2d(-WHEEL_FWD_POS, -WHEEL_LEFT_POS)
+    );
+    private MecanumDriveOdometry odometry;
+
+	public PositioningSubsystem(AHRS ahrs, DriveSubsystem drive) {
+		this.gyro = ahrs;
+		this.drive = drive;
+
+		odometry = new MecanumDriveOdometry(
+			kinematics,
+			gyro.getRotation2d(),
+			drive.getWheelPositions()
+		);
+	}
+
 
     @Override
     public void periodic() {
@@ -38,16 +76,17 @@ public class PositioningSubsystem extends SubsystemBase {
 			this.setRobotPose((int)(time - this.lastTagCycleTimestamp), -1, pose);
 		});
 
-		field.setRobotPose(robotPose.toPose2d());
+        robotPose = odometry.update(gyro.getRotation2d(), drive.getWheelPositions());
+		field.setRobotPose(robotPose);
     }
 
-	public Pose3d getRobotPose() {
+	public Pose2d getRobotPose() {
 		return robotPose;
 	}
 
 	public void setRobotPose(int deltaMs, double certainty, Pose3d pose) {
 		this.poseUncertainty += (certainty / deltaMs);
-		this.robotPose = pose;
+		this.odometry.resetPosition(gyro.getRotation2d(), drive.getWheelPositions(), pose.toPose2d());
 	}
 
 	public enum LimelightPipeline {

@@ -30,29 +30,17 @@ import frc.robot.utils.VenomTunerAdapter;
 
 import com.momentum4999.utils.PIDTuner;
 
-public class DriveSubsystem extends SubsystemBase implements Consumer<Pose3d> {
-    /**
-     * The maximum rate of turn that the drive will consider as equivalent to zero. Used to
-     * determine when to re-enable heading pid after executing a driver-requested turn.
-     */
-    private static final double TURN_RATE_CUTOFF = 0.001;
-
+public class DriveSubsystem extends SubsystemBase {
     /**
      * How many meters of forward travel correspond to 1 revolution of a wheel encoder.
      */
     private static final double METERS_PER_REVOLUTION = (6 * Math.PI) * (1.0 / 10.71);
 
     /**
-     * The distance, in meters, of a wheel from the center of the robot towards the
-     * front of the robot.
+     * The maximum rate of turn that the drive will consider as equivalent to zero. Used to
+     * determine when to re-enable heading pid after executing a driver-requested turn.
      */
-    private static final double WHEEL_FWD_POS = 0.2664394;
-
-    /**
-     * The distance, in meters, of a wheel from the center of the robot towards the
-     * left side of the robot.
-     */
-    private static final double WHEEL_LEFT_POS = 0.294386;
+    private static final double TURN_RATE_CUTOFF = 0.001;
 
     private static enum TurnState {
         TURNING,
@@ -89,30 +77,16 @@ public class DriveSubsystem extends SubsystemBase implements Consumer<Pose3d> {
     private final MoPIDF headingController = new MoPIDF();
     private final PIDTuner headingTuner;
 
-    private AHRS gyro = new AHRS(SerialPort.Port.kMXP);
+    private final AHRS gyro;
 
-    private Rotation2d initialHeading = gyro.getRotation2d();
-    private Rotation2d maintainHeading = gyro.getRotation2d();
-
-    private MecanumDriveKinematics kinematics = new MecanumDriveKinematics(
-        new Translation2d(WHEEL_FWD_POS, WHEEL_LEFT_POS),
-        new Translation2d(WHEEL_FWD_POS, -WHEEL_LEFT_POS),
-        new Translation2d(-WHEEL_FWD_POS, WHEEL_LEFT_POS),
-        new Translation2d(-WHEEL_FWD_POS, -WHEEL_LEFT_POS)
-    );
-    private MecanumDriveOdometry odometry = new MecanumDriveOdometry(
-        kinematics,
-        gyro.getRotation2d(),
-        getWheelPositions()
-    );
-    private Pose2d currPose = odometry.getPoseMeters();
+    private Rotation2d initialHeading;
+    private Rotation2d maintainHeading;
 
     private GenericSubscriber shouldDriveFieldOriented = MoShuffleboard.getInstance().settingsTab
         .add("Field-Oriented Drive", true)
         .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
-    private ComplexWidget doResetOrientation = MoShuffleboard.getInstance().settingsTab
-        .add("Reset Drive Orientation", new InstantCommand(() -> { initialHeading = gyro.getRotation2d(); }));
+    private ComplexWidget doResetOrientation;
 
     private GenericSubscriber shouldDrivePID = MoShuffleboard.getInstance().settingsTab
         .add("PID Drive", true)
@@ -122,14 +96,21 @@ public class DriveSubsystem extends SubsystemBase implements Consumer<Pose3d> {
         .add("Keep Heading", true)
         .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
-    public DriveSubsystem() {
+    public DriveSubsystem(AHRS gyro) {
         headingTuner = new PIDTuner("Drive Heading", headingController, Constants.TUNER_SETTINGS);
+
+        this.gyro = gyro;
+        initialHeading = gyro.getRotation2d();
+        maintainHeading = gyro.getRotation2d();
 
         frontLeftMtr.motor.setInverted(true);
         rearLeftMtr.motor.setInverted(true);
+
+        doResetOrientation = MoShuffleboard.getInstance().settingsTab
+        .add("Reset Drive Orientation", new InstantCommand(() -> { initialHeading = gyro.getRotation2d(); }));
     }
 
-    private MecanumDriveWheelPositions getWheelPositions() {
+    public MecanumDriveWheelPositions getWheelPositions() {
         return new MecanumDriveWheelPositions(
             frontLeftMtr.motor.getPosition() * METERS_PER_REVOLUTION,
             frontRightMtr.motor.getPosition() * METERS_PER_REVOLUTION,
@@ -198,15 +179,5 @@ public class DriveSubsystem extends SubsystemBase implements Consumer<Pose3d> {
 
     public void resetMaintainHeading() {
         turnState = TurnState.TURNING;
-    }
-
-    @Override
-    public void periodic() {
-        currPose = odometry.update(gyro.getRotation2d(), getWheelPositions());
-    }
-
-    @Override
-    public void accept(Pose3d pose) {
-        odometry.resetPosition(gyro.getRotation2d(), getWheelPositions(), pose.toPose2d());
     }
 }

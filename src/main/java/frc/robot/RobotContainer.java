@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import com.kauailabs.navx.frc.AHRS;
+
+import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -17,14 +20,15 @@ import frc.robot.utils.MoShuffleboard;
 import frc.robot.utils.ShuffleboardToggle;
 
 public class RobotContainer {
+  private AHRS gyro = new AHRS(SerialPort.Port.kMXP);
 
   private VisionSubsystem visionSubsystem = new VisionSubsystem();
-  private DriveSubsystem drive = new DriveSubsystem();
+  private DriveSubsystem drive = new DriveSubsystem(gyro);
 
-  private PositioningSubsystem positioning = new PositioningSubsystem();
+  private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
 
   private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
-  private AprilTagsVisionCommand aprilTagsVisionCommand = new AprilTagsVisionCommand(visionSubsystem, drive);
+  private AprilTagsVisionCommand aprilTagsVisionCommand = new AprilTagsVisionCommand(visionSubsystem, (tmp) -> {});
 
   private MoInput input = new SingleControllerInput(Constants.F310);
 
