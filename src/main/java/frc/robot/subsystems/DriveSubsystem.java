@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -123,8 +122,6 @@ public class DriveSubsystem extends SubsystemBase implements Consumer<Pose3d> {
         .add("Keep Heading", true)
         .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
-    private Field2d field = MoShuffleboard.getInstance().field;
-
     public DriveSubsystem() {
         headingTuner = new PIDTuner("Drive Heading", headingController, Constants.TUNER_SETTINGS);
 
@@ -206,7 +203,6 @@ public class DriveSubsystem extends SubsystemBase implements Consumer<Pose3d> {
     @Override
     public void periodic() {
         currPose = odometry.update(gyro.getRotation2d(), getWheelPositions());
-        field.setRobotPose(currPose);
     }
 
     @Override

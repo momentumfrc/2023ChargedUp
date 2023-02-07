@@ -21,6 +21,8 @@ public class RobotContainer {
   private VisionSubsystem visionSubsystem = new VisionSubsystem();
   private DriveSubsystem drive = new DriveSubsystem();
 
+  private PositioningSubsystem positioning = new PositioningSubsystem();
+
   private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
   private AprilTagsVisionCommand aprilTagsVisionCommand = new AprilTagsVisionCommand(visionSubsystem, drive);
 
@@ -31,7 +33,7 @@ public class RobotContainer {
   private Trigger aprilTagsVisionTrigger = new ShuffleboardToggle(
     MoShuffleboard.getInstance().settingsTab,
     "Detect AprilTags",
-    true
+    false
   ).getTrigger();
 
   public RobotContainer() {
@@ -40,7 +42,6 @@ public class RobotContainer {
     drive.setDefaultCommand(driveCommand);
     visionSubsystem.setDefaultCommand(defaultVisionCommand);
 
-    aprilTagsVisionCommand.schedule();
     aprilTagsVisionTrigger.whileTrue(aprilTagsVisionCommand);
   }
 
