@@ -28,25 +28,16 @@ public class RobotContainer {
   private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
 
   private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
-  private AprilTagsVisionCommand aprilTagsVisionCommand = new AprilTagsVisionCommand(visionSubsystem, (tmp) -> {});
 
   private MoInput input = new SingleControllerInput(Constants.F310);
 
   private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, input);
-
-  private Trigger aprilTagsVisionTrigger = new ShuffleboardToggle(
-    MoShuffleboard.getInstance().settingsTab,
-    "Detect AprilTags",
-    false
-  ).getTrigger();
 
   public RobotContainer() {
     configureBindings();
 
     drive.setDefaultCommand(driveCommand);
     visionSubsystem.setDefaultCommand(defaultVisionCommand);
-
-    aprilTagsVisionTrigger.whileTrue(aprilTagsVisionCommand);
   }
 
   private void configureBindings() {}
