@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -31,6 +32,12 @@ public class PositioningSubsystem extends SubsystemBase {
      */
     private static final double WHEEL_LEFT_POS = 0.294386;
 
+	/**
+	 * The maximum acceptable distance, in meters, between a limelight position update and the
+	 * robot's current odometry.
+	 */
+	private static final double POSITION_MAX_ACCEPTABLE_UPDATE_DELTA = 5;
+
 	private final LimelightTableAdapter limelight = new LimelightTableAdapter();
 	private Pose2d robotPose = new Pose2d();
 	private double poseUncertainty = 0;
@@ -41,6 +48,10 @@ public class PositioningSubsystem extends SubsystemBase {
 	private Field2d field = MoShuffleboard.getInstance().field;
 
 	private boolean shouldLights = false;
+
+	private GenericEntry didEstablishInitialPosition = MoShuffleboard.getInstance().matchTab.add("Initial Position", false).getEntry();
+
+	private GenericEntry shouldUseAprilTags = MoShuffleboard.getInstance().settingsTab.add("Detect AprilTags", true).getEntry();
 
 	private final AHRS gyro;
 	private final DriveSubsystem drive;
@@ -72,6 +83,12 @@ public class PositioningSubsystem extends SubsystemBase {
 		limelight.setLight(shouldLights);
 
 		limelight.ifPose(pose -> {
+			if(!shouldUseAprilTags.getBoolean(true)) {
+				return;
+			}
+			if(drive.isMoving()) {
+				return;
+			}
 			long time = System.currentTimeMillis();
 			this.setRobotPose((int)(time - this.lastTagCycleTimestamp), -1, pose);
 		});
@@ -86,7 +103,16 @@ public class PositioningSubsystem extends SubsystemBase {
 
 	public void setRobotPose(int deltaMs, double certainty, Pose3d pose) {
 		this.poseUncertainty += (certainty / deltaMs);
-		this.odometry.resetPosition(gyro.getRotation2d(), drive.getWheelPositions(), pose.toPose2d());
+
+		Pose2d pose2d = pose.toPose2d();
+
+		if(this.didEstablishInitialPosition.getBoolean(false)
+			&& this.odometry.getPoseMeters().getTranslation().getDistance(pose2d.getTranslation()) > POSITION_MAX_ACCEPTABLE_UPDATE_DELTA)
+		{
+			return;
+		}
+		this.didEstablishInitialPosition.setBoolean(true);
+		this.odometry.resetPosition(gyro.getRotation2d(), drive.getWheelPositions(), pose2d);
 	}
 
 	public enum LimelightPipeline {
@@ -106,12 +132,16 @@ public class PositioningSubsystem extends SubsystemBase {
 			return NetworkTableInstance.getDefault().getTable("limelight");
 		}
 
+		private boolean isPoseValid(double[] pose) {
+			return pose.length >= 6 && (pose[0] != 0 || pose[1] != 0 || pose[2] != 0 || pose[3] != 0 || pose[4] != 0 || pose[5] != 0);
+		}
+
 		public void periodic() {
 			NetworkTable table = this.getTable();
 
 			this.hasDetection = table.getEntry("tv").getNumber(0).doubleValue() > 0;
 			double[] pose = table.getEntry("botpose_wpiblue").getDoubleArray(emptyPose);
-			if (pose.length >= 6) {
+			if (isPoseValid(pose)) {
 				double rad = Math.PI / 180;
 				this.fieldPose = new Pose3d(
 					new Translation3d(pose[0], pose[1], pose[2]),

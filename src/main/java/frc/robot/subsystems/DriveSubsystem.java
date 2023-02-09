@@ -14,12 +14,16 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.GenericPublisher;
 import edu.wpi.first.networktables.GenericSubscriber;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.SuppliedValueWidget;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -32,15 +36,20 @@ import com.momentum4999.utils.PIDTuner;
 
 public class DriveSubsystem extends SubsystemBase {
     /**
-     * How many meters of forward travel correspond to 1 revolution of a wheel encoder.
+     * How many revolutions of a wheel encoder correspond to one meter of forward travel.
      */
-    private static final double METERS_PER_REVOLUTION = (6 * Math.PI) * (1.0 / 10.71);
+    private static final double REVOLUTIONS_PER_METER = 22.2; // (0.152 * Math.PI) * (1.0 / 10.71);
 
     /**
      * The maximum rate of turn that the drive will consider as equivalent to zero. Used to
      * determine when to re-enable heading pid after executing a driver-requested turn.
      */
     private static final double TURN_RATE_CUTOFF = 0.001;
+
+    /**
+     * The maximum rate of movement that the drive will consider as equivalent to zero.
+     */
+    private static final double MOVE_RATE_CUTOFF = 0.05;
 
     private static enum TurnState {
         TURNING,
@@ -73,6 +82,11 @@ public class DriveSubsystem extends SubsystemBase {
     private final DriveMotor frontRightMtr = new DriveMotor("FR", Constants.DRIVE_RIGHT_FRONT);
     private final DriveMotor rearLeftMtr = new DriveMotor("BL", Constants.DRIVE_LEFT_REAR);
     private final DriveMotor rearRightMtr = new DriveMotor("BR", Constants.DRIVE_RIGHT_REAR);
+
+    // private SuppliedValueWidget<Double> frontLeft = MoShuffleboard.getInstance().matchTab.addDouble("FL_Enc", this.frontLeftMtr.motor::getPosition);
+    // private SuppliedValueWidget<Double> frontRight = MoShuffleboard.getInstance().matchTab.addDouble("FR_Enc", this.frontRightMtr.motor::getPosition);
+    // private SuppliedValueWidget<Double> rearLeft = MoShuffleboard.getInstance().matchTab.addDouble("BL_Enc", this.rearLeftMtr.motor::getPosition);
+    // private SuppliedValueWidget<Double> rearRight = MoShuffleboard.getInstance().matchTab.addDouble("tBR_Enc", this.rearRightMtr.motor::getPosition);
 
     private final MoPIDF headingController = new MoPIDF();
     private final PIDTuner headingTuner;
@@ -112,10 +126,10 @@ public class DriveSubsystem extends SubsystemBase {
 
     public MecanumDriveWheelPositions getWheelPositions() {
         return new MecanumDriveWheelPositions(
-            frontLeftMtr.motor.getPosition() * METERS_PER_REVOLUTION,
-            frontRightMtr.motor.getPosition() * METERS_PER_REVOLUTION,
-            rearLeftMtr.motor.getPosition() * METERS_PER_REVOLUTION,
-            rearRightMtr.motor.getPosition() * METERS_PER_REVOLUTION
+            -1 * frontLeftMtr.motor.getPosition() / REVOLUTIONS_PER_METER,
+            -1 * frontRightMtr.motor.getPosition() / REVOLUTIONS_PER_METER,
+            -1 * rearLeftMtr.motor.getPosition() / REVOLUTIONS_PER_METER,
+            -1 * rearRightMtr.motor.getPosition() / REVOLUTIONS_PER_METER
         );
     }
 
@@ -175,6 +189,14 @@ public class DriveSubsystem extends SubsystemBase {
             rearLeftMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.rearLeft);
             rearRightMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.rearRight);
         }
+    }
+
+    public boolean isMoving() {
+        return Math.abs(gyro.getRate()) > TURN_RATE_CUTOFF
+            || Math.abs(frontLeftMtr.motor.getSpeed()) > MOVE_RATE_CUTOFF
+            || Math.abs(frontRightMtr.motor.getSpeed()) > MOVE_RATE_CUTOFF
+            || Math.abs(rearLeftMtr.motor.getSpeed()) > MOVE_RATE_CUTOFF
+            || Math.abs(rearRightMtr.motor.getSpeed()) > MOVE_RATE_CUTOFF;
     }
 
     public void resetMaintainHeading() {
