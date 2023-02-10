@@ -3,17 +3,34 @@ package frc.robot.subsystems;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
 import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.sensors.Limelight;
 import frc.robot.utils.MoShuffleboard;
 
+/**
+ * Subsystem that determines the robot's position on the field.
+ * <p>
+ * Note: the robot's pose is defined in alliance-relative coordinates.
+ * This means that the right-hand side of the alliance wall is considered the origin. This
+ * simplifies autonomous by allowing the same coordinates to be used no matter the alliance in
+ * which the team is currently participating. (Well, since the field is mirrored this year,
+ * this logic doesn't quite work. But the pathing library already takes care of the mirroring
+ * for us, so as long as our poses are alliance-relative, it all works out.)
+ * <p>
+ * If you absolutely must have the absolute position of the robot in field coordinates
+ * (instead of alliance coordinates), use the {@link #getAbsoluteRobotPose} method. But this
+ * should really only be needed for displaying the robot's position on the shuffleboard, and not for
+ * any autonomous logic.
+ */
 public class PositioningSubsystem extends SubsystemBase {
     /**
      * The distance, in meters, of a wheel from the center of the robot towards the
@@ -33,6 +50,11 @@ public class PositioningSubsystem extends SubsystemBase {
      */
     private static final double POSITION_MAX_ACCEPTABLE_UPDATE_DELTA = 5;
 
+    /**
+     * The size of the field, in meters. Used to transform alliance-relative coordinates
+     * into field-relative coordinates.
+     */
+    private static final Translation2d fieldSize = new Translation2d(16.54175, 8.0137);
     /**
      * The limelight. Should be used by auto scoring commands for fine targeting.
      */
@@ -68,8 +90,26 @@ public class PositioningSubsystem extends SubsystemBase {
         );
     }
 
+    /**
+     * Get robot pose in alliance coordinates.
+     * <p>
+     * Note that the robot always assumes its origin is in the right corner of its alliance.
+     */
     public Pose2d getRobotPose() {
         return robotPose;
+    }
+
+    /**
+     * Get the robot pose in field coordinates.
+     */
+    public Pose2d getAbsoluteRobotPose() {
+        if(DriverStation.getAlliance() == Alliance.Blue) {
+            return robotPose;
+        }
+        Pose2d alliancePose = robotPose;
+        Translation2d translation = fieldSize.minus(alliancePose.getTranslation());
+        Rotation2d rotation = robotPose.getRotation().rotateBy(Rotation2d.fromRotations(0.5));
+        return new Pose2d(translation, rotation);
     }
 
     public void setRobotPose(Pose2d pose) {
@@ -98,6 +138,6 @@ public class PositioningSubsystem extends SubsystemBase {
         });
 
         robotPose = odometry.update(gyro.getRotation2d(), drive.getWheelPositions());
-        field.setRobotPose(robotPose);
+        field.setRobotPose(getAbsoluteRobotPose());
     }
 }

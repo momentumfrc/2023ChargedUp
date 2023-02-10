@@ -11,6 +11,8 @@ import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.utils.PoseFilter;
 
@@ -60,8 +62,8 @@ public class Limelight {
     private final IntegerSubscriber txSubscriber = limelightTable.getIntegerTopic("tx").subscribe(0);
     private final IntegerSubscriber tySubscriber = limelightTable.getIntegerTopic("ty").subscribe(0);
 
-    // TODO: We might want to dynamically switch between wpiblue and wpired
-    private final DoubleArraySubscriber botposeSubscriber = limelightTable.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[6]);
+    private final DoubleArraySubscriber botposeBlueSubscriber = limelightTable.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[6]);
+    private final DoubleArraySubscriber botposeRedSubscriber = limelightTable.getDoubleArrayTopic("botpose_wpired").subscribe(new double[6]);
 
     public void setPipeline(LimelightPipeline pipeline) {
         this.currentPipeline = pipeline;
@@ -104,7 +106,12 @@ public class Limelight {
         // Receive data from Limelight
         boolean hasDetection = tvSubscriber.get() > 0;
         Translation2d crosshairs = new Translation2d(txSubscriber.get(), tySubscriber.get());
-        double[] rawPoseData = botposeSubscriber.get();
+        double[] rawPoseData;
+        if(DriverStation.getAlliance() == Alliance.Red) {
+            rawPoseData = botposeRedSubscriber.get();
+        } else {
+            rawPoseData = botposeBlueSubscriber.get();
+        }
 
         // Process received data
         if(!hasDetection) {
