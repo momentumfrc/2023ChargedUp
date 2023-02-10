@@ -7,39 +7,50 @@ package frc.robot;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.SerialPort;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.DefaultVisionCommand;
 import frc.robot.commands.TeleopDriveCommand;
+import frc.robot.commands.auto.BalanceScaleCommand;
 import frc.robot.input.MoInput;
 import frc.robot.input.SingleControllerInput;
 import frc.robot.subsystems.*;
+import frc.robot.utils.MoShuffleboard;
 
 public class RobotContainer {
+    // Sensors
     private AHRS gyro = new AHRS(SerialPort.Port.kMXP);
-
-    private VisionSubsystem visionSubsystem = new VisionSubsystem();
-    private DriveSubsystem drive = new DriveSubsystem(gyro);
-
-    private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
-
-    private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
-
     private MoInput input = new SingleControllerInput(Constants.F310);
 
+    // Subsystems
+    private VisionSubsystem visionSubsystem = new VisionSubsystem();
+    private DriveSubsystem drive = new DriveSubsystem(gyro);
+    private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
+
+    // Commands
+    private BalanceScaleCommand balanceScaleCommand = new BalanceScaleCommand(drive, gyro);
+
+    private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
     private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, input);
+
+    private SendableChooser<Command> autoChooser = new SendableChooser<>();
 
     public RobotContainer() {
         configureBindings();
 
         drive.setDefaultCommand(driveCommand);
         visionSubsystem.setDefaultCommand(defaultVisionCommand);
+
+        autoChooser.setDefaultOption("Balance Scale", balanceScaleCommand);
+        MoShuffleboard.getInstance().matchTab.add("Auto Chooser", autoChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
     }
 
     private void configureBindings() {}
 
     public Command getAutonomousCommand() {
-        return Commands.print("No autonomous command configured");
+        return autoChooser.getSelected();
     }
 
 }
