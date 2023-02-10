@@ -31,7 +31,7 @@ public class RobotContainer {
 
   private MoInput input = new SingleControllerInput(Constants.F310);
 
-  private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, input);
+  private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, input);
 
   public RobotContainer() {
     configureBindings();

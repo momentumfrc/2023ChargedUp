@@ -1,29 +1,16 @@
 package frc.robot.subsystems;
 
-import java.util.function.Consumer;
-
 import com.kauailabs.navx.frc.AHRS;
 import com.playingwithfusion.CANVenom;
 import com.playingwithfusion.CANVenom.BrakeCoastMode;
 import com.playingwithfusion.CANVenom.ControlMode;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
-import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.GenericPublisher;
 import edu.wpi.first.networktables.GenericSubscriber;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.SuppliedValueWidget;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -96,7 +83,7 @@ public class DriveSubsystem extends SubsystemBase {
     private Rotation2d initialHeading;
     private Rotation2d maintainHeading;
 
-    private GenericSubscriber shouldDriveFieldOriented = MoShuffleboard.getInstance().settingsTab
+    public GenericSubscriber shouldDriveFieldOriented = MoShuffleboard.getInstance().settingsTab
         .add("Field-Oriented Drive", true)
         .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
@@ -167,15 +154,11 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest) {
-        Rotation2d currentHeading = gyro.getRotation2d();
-        Rotation2d fieldOrientedDriveAngle;
-        if(shouldDriveFieldOriented.getBoolean(true)) {
-            fieldOrientedDriveAngle = currentHeading.minus(initialHeading);
-        } else {
-            fieldOrientedDriveAngle = new Rotation2d();
-        }
+        this.driveCartesian(fwdRequest, leftRequest, turnRequest, new Rotation2d());
+    }
 
-        var wheelSpeeds = MecanumDrive.driveCartesianIK(fwdRequest, leftRequest, calculateTurn(turnRequest, currentHeading), fieldOrientedDriveAngle.unaryMinus());
+    public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest, Rotation2d fieldOrientedDriveAngle) {
+        var wheelSpeeds = MecanumDrive.driveCartesianIK(fwdRequest, leftRequest, calculateTurn(turnRequest, gyro.getRotation2d()), fieldOrientedDriveAngle.unaryMinus());
         double maxSpeedRpm = MoPrefs.maxDriveRpm.get();
 
         if(shouldDrivePID.getBoolean(true)) {
