@@ -9,15 +9,11 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.AprilTagsVisionCommand;
 import frc.robot.commands.DefaultVisionCommand;
 import frc.robot.commands.TeleopDriveCommand;
 import frc.robot.input.MoInput;
 import frc.robot.input.SingleControllerInput;
 import frc.robot.subsystems.*;
-import frc.robot.utils.MoShuffleboard;
-import frc.robot.utils.ShuffleboardToggle;
 
 public class RobotContainer {
   private AHRS gyro = new AHRS(SerialPort.Port.kMXP);
@@ -46,7 +42,4 @@ public class RobotContainer {
     return Commands.print("No autonomous command configured");
   }
 
-  public void teleopInit() {
-    drive.resetMaintainHeading();
-  }
 }

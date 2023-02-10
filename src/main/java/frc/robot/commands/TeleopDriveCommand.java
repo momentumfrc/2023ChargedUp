@@ -37,6 +37,19 @@ public class TeleopDriveCommand extends CommandBase {
     }
 
     @Override
+    public void initialize() {
+        // We need to make sure the robot doesn't try to snap back to zero if it was pushed
+        // around while it was disabled.
+        // Since runsWhenDisabled() returns false, this command will be canceled
+        // whenever the robot is disabled. Then, when the robot is re-enabled, it will be
+        // rescheduled (since it is the default command of DriveSubsystem) and init will
+        // be called again.
+        // Thus, every time teleop is started, this method will be called and the drive
+        // will reset its heading to the current value.
+        drive.resetMaintainHeading();
+    }
+
+    @Override
     public void execute() {
         double fwdRequest = input.getForwardSpeedRequest();
         double leftRequest = input.getLeftSpeedRequest();
@@ -62,5 +75,10 @@ public class TeleopDriveCommand extends CommandBase {
         }
         drive.driveCartesian(fwdRequest, leftRequest, turnRequest, fieldOrientedDriveAngle);
 
+    }
+
+    @Override
+    public boolean runsWhenDisabled() {
+        return false;
     }
 }
