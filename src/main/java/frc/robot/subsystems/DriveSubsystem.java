@@ -5,8 +5,10 @@ import com.playingwithfusion.CANVenom;
 import com.playingwithfusion.CANVenom.BrakeCoastMode;
 import com.playingwithfusion.CANVenom.ControlMode;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
+import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
 import edu.wpi.first.networktables.GenericSubscriber;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
@@ -14,6 +16,7 @@ import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.utils.MoPID;
 import frc.robot.utils.MoPIDF;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
@@ -70,10 +73,9 @@ public class DriveSubsystem extends SubsystemBase {
     private final DriveMotor rearLeftMtr = new DriveMotor("BL", Constants.DRIVE_LEFT_REAR);
     private final DriveMotor rearRightMtr = new DriveMotor("BR", Constants.DRIVE_RIGHT_REAR);
 
-    // private SuppliedValueWidget<Double> frontLeft = MoShuffleboard.getInstance().matchTab.addDouble("FL_Enc", this.frontLeftMtr.motor::getPosition);
-    // private SuppliedValueWidget<Double> frontRight = MoShuffleboard.getInstance().matchTab.addDouble("FR_Enc", this.frontRightMtr.motor::getPosition);
-    // private SuppliedValueWidget<Double> rearLeft = MoShuffleboard.getInstance().matchTab.addDouble("BL_Enc", this.rearLeftMtr.motor::getPosition);
-    // private SuppliedValueWidget<Double> rearRight = MoShuffleboard.getInstance().matchTab.addDouble("tBR_Enc", this.rearRightMtr.motor::getPosition);
+    public final PIDController xPathController = new MoPID("X Path");
+    public final PIDController yPathController = new MoPID("Y Path");
+    public final PIDController rotPathController = new MoPID("Rot Path");
 
     private final MoPIDF headingController = new MoPIDF();
     private final PIDTuner headingTuner;
@@ -172,6 +174,26 @@ public class DriveSubsystem extends SubsystemBase {
             rearLeftMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.rearLeft);
             rearRightMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.rearRight);
         }
+    }
+
+    public void stop() {
+        frontLeftMtr.motor.setCommand(ControlMode.Proportional, 0);
+        frontRightMtr.motor.setCommand(ControlMode.Proportional, 0);
+        rearLeftMtr.motor.setCommand(ControlMode.Proportional, 0);
+        rearRightMtr.motor.setCommand(ControlMode.Proportional, 0);
+    }
+
+    public void driveWheelSpeeds(MecanumDriveWheelSpeeds speeds) {
+        if(!shouldDrivePID.getBoolean(true)) {
+            System.out.println("Warning: cannot driveWheelSpeeds with PID disabled!");
+            stop();
+            return;
+        }
+
+        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, speeds.frontLeftMetersPerSecond);
+        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, speeds.frontRightMetersPerSecond);
+        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, speeds.rearLeftMetersPerSecond);
+        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, speeds.rearRightMetersPerSecond);
     }
 
     public boolean isMoving() {

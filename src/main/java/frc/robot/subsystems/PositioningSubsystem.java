@@ -72,16 +72,14 @@ public class PositioningSubsystem extends SubsystemBase {
         return robotPose;
     }
 
-    public void setRobotPose(Pose3d pose) {
-        Pose2d pose2d = pose.toPose2d();
-
+    public void setRobotPose(Pose2d pose) {
         if(this.didEstablishInitialPosition.getBoolean(false)
-            && this.odometry.getPoseMeters().getTranslation().getDistance(pose2d.getTranslation()) > POSITION_MAX_ACCEPTABLE_UPDATE_DELTA)
+            && this.odometry.getPoseMeters().getTranslation().getDistance(pose.getTranslation()) > POSITION_MAX_ACCEPTABLE_UPDATE_DELTA)
         {
             return;
         }
         this.didEstablishInitialPosition.setBoolean(true);
-        this.odometry.resetPosition(gyro.getRotation2d(), drive.getWheelPositions(), pose2d);
+        this.odometry.resetPosition(gyro.getRotation2d(), drive.getWheelPositions(), pose);
     }
 
 
@@ -96,7 +94,7 @@ public class PositioningSubsystem extends SubsystemBase {
             if(drive.isMoving()) {
                 return;
             }
-            this.setRobotPose(pose);
+            this.setRobotPose(pose.toPose2d());
         });
 
         robotPose = odometry.update(gyro.getRotation2d(), drive.getWheelPositions());

@@ -18,6 +18,7 @@ import frc.robot.input.MoInput;
 import frc.robot.input.SingleControllerInput;
 import frc.robot.subsystems.*;
 import frc.robot.utils.MoShuffleboard;
+import frc.robot.utils.PathFollowingUtils;
 
 public class RobotContainer {
     // Sensors
@@ -32,6 +33,10 @@ public class RobotContainer {
     // Commands
     private BalanceScaleCommand balanceScaleCommand = new BalanceScaleCommand(drive, gyro);
 
+    private Command pathFollowLinearX = PathFollowingUtils.getFollowTrajectoryCommand(drive, positioning, "Linear X", true);
+    private Command pathFollowLinearY = PathFollowingUtils.getFollowTrajectoryCommand(drive, positioning, "Linear Y", true);
+    private Command pathFollowCurved = PathFollowingUtils.getFollowTrajectoryCommand(drive, positioning, "Curve", false);
+
     private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
     private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, input);
 
@@ -44,6 +49,10 @@ public class RobotContainer {
         visionSubsystem.setDefaultCommand(defaultVisionCommand);
 
         autoChooser.setDefaultOption("Balance Scale", balanceScaleCommand);
+        autoChooser.addOption("Path: Linear X", pathFollowLinearX);
+        autoChooser.addOption("Path: Linear Y", pathFollowLinearY);
+        autoChooser.addOption("Path: Curve", pathFollowCurved);
+
         MoShuffleboard.getInstance().matchTab.add("Auto Chooser", autoChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
     }
 
