@@ -2,7 +2,7 @@ package frc.robot;
 
 import java.io.File;
 
-import com.momentum4999.utils.PIDTuner;
+import com.momentum4999.utils.PIDTuner.PIDTunerSettings;
 
 import edu.wpi.first.wpilibj.RobotBase;
 
@@ -38,7 +38,7 @@ public class Constants {
 
     public static final HIDPort F310 = new HIDPort(0);
 
-    public static final PIDTuner.PIDTunerSettings TUNER_SETTINGS = new PIDTuner.PIDTunerSettings();
+    public static final PIDTunerSettings TUNER_SETTINGS = new PIDTunerSettings();
 
     static {
         if(RobotBase.isReal()) {

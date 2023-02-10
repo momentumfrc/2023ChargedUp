@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
+import com.momentum4999.utils.PIDTuner;
 import com.playingwithfusion.CANVenom;
 import com.playingwithfusion.CANVenom.BrakeCoastMode;
 import com.playingwithfusion.CANVenom.ControlMode;
@@ -17,13 +18,10 @@ import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.utils.MoPID;
 import frc.robot.utils.MoPIDF;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
-import frc.robot.utils.VenomTunerAdapter;
-
-import com.momentum4999.utils.PIDTuner;
+import frc.robot.utils.TunerUtils;
 
 public class DriveSubsystem extends SubsystemBase {
     /**
@@ -60,7 +58,7 @@ public class DriveSubsystem extends SubsystemBase {
             motor.setPID(0, 0, 0, 0, 0);
             motor.setMaxJerk(0);
 
-            tuner = new PIDTuner("Drive " + mnemonic, new VenomTunerAdapter(motor), Constants.TUNER_SETTINGS);
+            tuner = TunerUtils.forVenom(motor, "Drive " + mnemonic, true);
         }
 
         @Override
@@ -74,12 +72,16 @@ public class DriveSubsystem extends SubsystemBase {
     private final DriveMotor rearLeftMtr = new DriveMotor("BL", Constants.DRIVE_LEFT_REAR);
     private final DriveMotor rearRightMtr = new DriveMotor("BR", Constants.DRIVE_RIGHT_REAR);
 
-    public final PIDController xPathController = new MoPID("X Path");
-    public final PIDController yPathController = new MoPID("Y Path");
-    public final PIDController rotPathController = new MoPID("Rot Path");
+    public final MoPIDF xPathController = new MoPIDF();
+    public final MoPIDF yPathController = new MoPIDF();
+    public final MoPIDF rotPathController = new MoPIDF();
+
+    private final PIDTuner xPathTuner = TunerUtils.forMoPID(xPathController, "X Path");
+    private final PIDTuner yPathTuner = TunerUtils.forMoPID(yPathController, "Y Path");
+    private final PIDTuner rotPathTuner = TunerUtils.forMoPID(rotPathController, "Rot Path");
 
     private final MoPIDF headingController = new MoPIDF();
-    private final PIDTuner headingTuner;
+    private final PIDTuner headingTuner = TunerUtils.forMoPIDF(headingController, "Drive Heading", true);
 
     private final AHRS gyro;
 
@@ -101,8 +103,6 @@ public class DriveSubsystem extends SubsystemBase {
         .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
     public DriveSubsystem(AHRS gyro) {
-        headingTuner = new PIDTuner("Drive Heading", headingController, Constants.TUNER_SETTINGS);
-
         this.gyro = gyro;
         initialHeading = gyro.getRotation2d();
         maintainHeading = gyro.getRotation2d();
