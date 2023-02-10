@@ -16,30 +16,30 @@ import frc.robot.input.SingleControllerInput;
 import frc.robot.subsystems.*;
 
 public class RobotContainer {
-  private AHRS gyro = new AHRS(SerialPort.Port.kMXP);
+    private AHRS gyro = new AHRS(SerialPort.Port.kMXP);
 
-  private VisionSubsystem visionSubsystem = new VisionSubsystem();
-  private DriveSubsystem drive = new DriveSubsystem(gyro);
+    private VisionSubsystem visionSubsystem = new VisionSubsystem();
+    private DriveSubsystem drive = new DriveSubsystem(gyro);
 
-  private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
+    private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
 
-  private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
+    private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
 
-  private MoInput input = new SingleControllerInput(Constants.F310);
+    private MoInput input = new SingleControllerInput(Constants.F310);
 
-  private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, input);
+    private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, input);
 
-  public RobotContainer() {
-    configureBindings();
+    public RobotContainer() {
+        configureBindings();
 
-    drive.setDefaultCommand(driveCommand);
-    visionSubsystem.setDefaultCommand(defaultVisionCommand);
-  }
+        drive.setDefaultCommand(driveCommand);
+        visionSubsystem.setDefaultCommand(defaultVisionCommand);
+    }
 
-  private void configureBindings() {}
+    private void configureBindings() {}
 
-  public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
-  }
+    public Command getAutonomousCommand() {
+        return Commands.print("No autonomous command configured");
+    }
 
 }
