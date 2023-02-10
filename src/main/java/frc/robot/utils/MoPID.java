@@ -4,6 +4,7 @@ import com.momentum4999.utils.PIDTuner;
 import com.momentum4999.utils.PIDTuner.PIDAdapter;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 
 public class MoPID extends PIDController implements PIDAdapter {
@@ -19,7 +20,7 @@ public class MoPID extends PIDController implements PIDAdapter {
     public void setFF(double kFF) {
         // not supported on wpilib PIDControllers
         if(kFF != 0)
-            System.out.println("Attempt to set unsupported value kFF on wpilib PIDController");
+            DriverStation.reportWarning("Cannot set kFF on a wpilib PIDController", false);
     }
 
     @Override

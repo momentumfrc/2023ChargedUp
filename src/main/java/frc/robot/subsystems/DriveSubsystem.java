@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
 import edu.wpi.first.networktables.GenericSubscriber;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
@@ -185,7 +186,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     public void driveWheelSpeeds(MecanumDriveWheelSpeeds speeds) {
         if(!shouldDrivePID.getBoolean(true)) {
-            System.out.println("Warning: cannot driveWheelSpeeds with PID disabled!");
+            DriverStation.reportWarning("Cannot driveWheelSpeeds() with PID disabled", false);
             stop();
             return;
         }

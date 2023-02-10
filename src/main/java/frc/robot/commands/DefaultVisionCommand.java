@@ -5,6 +5,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import edu.wpi.first.cscore.VideoException;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.VisionSubsystem;
 
@@ -50,8 +51,7 @@ public class DefaultVisionCommand extends CommandBase {
             visionSubsystem.setUpIO();
             visionThread.start();
         } catch(VideoException e) {
-            System.out.println("Exception when initializing the DetectAprilTagsCommand");
-            e.printStackTrace();
+            DriverStation.reportError("Exception when initializing the DetectAprilTagsCommand", e.getStackTrace());
         }
     }
 
