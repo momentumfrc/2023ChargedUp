@@ -27,29 +27,29 @@ public class PositioningSubsystem extends SubsystemBase {
      */
     private static final double WHEEL_LEFT_POS = 0.288131; // 0.294386;
 
-	/**
-	 * The maximum acceptable distance, in meters, between a limelight position update and the
-	 * robot's current odometry.
-	 */
-	private static final double POSITION_MAX_ACCEPTABLE_UPDATE_DELTA = 5;
+    /**
+     * The maximum acceptable distance, in meters, between a limelight position update and the
+     * robot's current odometry.
+     */
+    private static final double POSITION_MAX_ACCEPTABLE_UPDATE_DELTA = 5;
 
     /**
      * The limelight. Should be used by auto scoring commands for fine targeting.
      */
-	public final Limelight limelight = new Limelight();
+    public final Limelight limelight = new Limelight();
 
-	private Pose2d robotPose = new Pose2d();
+    private Pose2d robotPose = new Pose2d();
 
-	private Field2d field = MoShuffleboard.getInstance().field;
+    private Field2d field = MoShuffleboard.getInstance().field;
 
-	private GenericEntry didEstablishInitialPosition = MoShuffleboard.getInstance().matchTab.add("Initial Position", false).withWidget(BuiltInWidgets.kBooleanBox).getEntry();
+    private GenericEntry didEstablishInitialPosition = MoShuffleboard.getInstance().matchTab.add("Initial Position", false).withWidget(BuiltInWidgets.kBooleanBox).getEntry();
 
-	private GenericEntry shouldUseAprilTags = MoShuffleboard.getInstance().settingsTab.add("Detect AprilTags", true).withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
+    private GenericEntry shouldUseAprilTags = MoShuffleboard.getInstance().settingsTab.add("Detect AprilTags", true).withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
-	private final AHRS gyro;
-	private final DriveSubsystem drive;
+    private final AHRS gyro;
+    private final DriveSubsystem drive;
 
-	public final MecanumDriveKinematics kinematics = new MecanumDriveKinematics(
+    public final MecanumDriveKinematics kinematics = new MecanumDriveKinematics(
         new Translation2d(WHEEL_FWD_POS, WHEEL_LEFT_POS),
         new Translation2d(WHEEL_FWD_POS, -WHEEL_LEFT_POS),
         new Translation2d(-WHEEL_FWD_POS, WHEEL_LEFT_POS),
@@ -57,49 +57,49 @@ public class PositioningSubsystem extends SubsystemBase {
     );
     private MecanumDriveOdometry odometry;
 
-	public PositioningSubsystem(AHRS ahrs, DriveSubsystem drive) {
-		this.gyro = ahrs;
-		this.drive = drive;
+    public PositioningSubsystem(AHRS ahrs, DriveSubsystem drive) {
+        this.gyro = ahrs;
+        this.drive = drive;
 
-		odometry = new MecanumDriveOdometry(
-			kinematics,
-			gyro.getRotation2d(),
-			drive.getWheelPositions()
-		);
-	}
+        odometry = new MecanumDriveOdometry(
+            kinematics,
+            gyro.getRotation2d(),
+            drive.getWheelPositions()
+        );
+    }
 
     public Pose2d getRobotPose() {
-		return robotPose;
-	}
+        return robotPose;
+    }
 
-	public void setRobotPose(Pose3d pose) {
-		Pose2d pose2d = pose.toPose2d();
+    public void setRobotPose(Pose3d pose) {
+        Pose2d pose2d = pose.toPose2d();
 
-		if(this.didEstablishInitialPosition.getBoolean(false)
-			&& this.odometry.getPoseMeters().getTranslation().getDistance(pose2d.getTranslation()) > POSITION_MAX_ACCEPTABLE_UPDATE_DELTA)
-		{
-			return;
-		}
-		this.didEstablishInitialPosition.setBoolean(true);
-		this.odometry.resetPosition(gyro.getRotation2d(), drive.getWheelPositions(), pose2d);
-	}
+        if(this.didEstablishInitialPosition.getBoolean(false)
+            && this.odometry.getPoseMeters().getTranslation().getDistance(pose2d.getTranslation()) > POSITION_MAX_ACCEPTABLE_UPDATE_DELTA)
+        {
+            return;
+        }
+        this.didEstablishInitialPosition.setBoolean(true);
+        this.odometry.resetPosition(gyro.getRotation2d(), drive.getWheelPositions(), pose2d);
+    }
 
 
     @Override
     public void periodic() {
-		limelight.periodic();
+        limelight.periodic();
 
-		limelight.getRobotPose().ifPresent(pose -> {
-			if(!shouldUseAprilTags.getBoolean(true)) {
-				return;
-			}
-			if(drive.isMoving()) {
-				return;
-			}
-			this.setRobotPose(pose);
-		});
+        limelight.getRobotPose().ifPresent(pose -> {
+            if(!shouldUseAprilTags.getBoolean(true)) {
+                return;
+            }
+            if(drive.isMoving()) {
+                return;
+            }
+            this.setRobotPose(pose);
+        });
 
         robotPose = odometry.update(gyro.getRotation2d(), drive.getWheelPositions());
-		field.setRobotPose(robotPose);
+        field.setRobotPose(robotPose);
     }
 }
