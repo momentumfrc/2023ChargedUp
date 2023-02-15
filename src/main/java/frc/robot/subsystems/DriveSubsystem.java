@@ -178,6 +178,11 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public void stop() {
+        frontLeftMtr.motor.setBrakeCoastMode(BrakeCoastMode.Brake);
+        frontRightMtr.motor.setBrakeCoastMode(BrakeCoastMode.Brake);
+        rearLeftMtr.motor.setBrakeCoastMode(BrakeCoastMode.Brake);
+        rearRightMtr.motor.setBrakeCoastMode(BrakeCoastMode.Brake);
+
         frontLeftMtr.motor.setCommand(ControlMode.Proportional, 0);
         frontRightMtr.motor.setCommand(ControlMode.Proportional, 0);
         rearLeftMtr.motor.setCommand(ControlMode.Proportional, 0);
@@ -191,10 +196,10 @@ public class DriveSubsystem extends SubsystemBase {
             return;
         }
 
-        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, speeds.frontLeftMetersPerSecond);
-        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, speeds.frontRightMetersPerSecond);
-        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, speeds.rearLeftMetersPerSecond);
-        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, speeds.rearRightMetersPerSecond);
+        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.frontLeftMetersPerSecond * REVOLUTIONS_PER_METER);
+        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.frontRightMetersPerSecond * REVOLUTIONS_PER_METER);
+        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.rearLeftMetersPerSecond * REVOLUTIONS_PER_METER);
+        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.rearRightMetersPerSecond * REVOLUTIONS_PER_METER);
     }
 
     public boolean isMoving() {
