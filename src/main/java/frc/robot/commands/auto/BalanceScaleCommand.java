@@ -23,6 +23,11 @@ public class BalanceScaleCommand extends CommandBase {
     }
 
     @Override
+    public void initialize() {
+        drive.resetMaintainHeading();
+    }
+
+    @Override
     public void execute() {
         // TODO: Verify if we need pitch or roll here
         double pitch = navx.getPitch();
