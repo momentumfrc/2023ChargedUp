@@ -19,7 +19,7 @@ public class PoseFilter {
     private double zscoreCutoff;
 
     private final Deque<Pose3d> poseData;
-    private Translation3d centroid;
+    private Translation3d centroid = new Translation3d();
     private double[] centroidDistances;
     private List<Pose3d> goodData;
 
@@ -98,13 +98,17 @@ public class PoseFilter {
         }
 
         Translation3d averageTranslation = new Translation3d();
-        Rotation3d averageRotation = new Rotation3d();
+        double x = 0;
+        double y = 0;
+        double z = 0;
         for(Pose3d pose : goodData) {
             averageTranslation = averageTranslation.plus(pose.getTranslation());
-            averageRotation = averageRotation.plus(pose.getRotation());
+            x += pose.getRotation().getX();
+            y += pose.getRotation().getY();
+            z += pose.getRotation().getZ();
         }
         averageTranslation = averageTranslation.div(goodData.size());
-        averageRotation = averageRotation.div(goodData.size());
+        Rotation3d averageRotation = new Rotation3d(x / goodData.size(), y / goodData.size(), z / goodData.size());
 
         return Optional.of(new Pose3d(averageTranslation, averageRotation));
     }
