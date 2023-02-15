@@ -21,13 +21,14 @@ import frc.robot.Constants;
 import frc.robot.utils.MoPIDF;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
+import frc.robot.utils.PathFollowingUtils;
 import frc.robot.utils.TunerUtils;
 
 public class DriveSubsystem extends SubsystemBase {
     /**
      * How many revolutions of a wheel encoder correspond to one meter of forward travel.
      */
-    private static final double REVOLUTIONS_PER_METER = 22.2; // (0.152 * Math.PI) * (1.0 / 10.71);
+    public static final double REVOLUTIONS_PER_METER = 22.2; // (0.152 * Math.PI) * (1.0 / 10.71);
 
     /**
      * The maximum rate of turn that the drive will consider as equivalent to zero. Used to
@@ -76,9 +77,9 @@ public class DriveSubsystem extends SubsystemBase {
     public final MoPIDF yPathController = new MoPIDF();
     public final MoPIDF rotPathController = new MoPIDF();
 
-    private final PIDTuner xPathTuner = TunerUtils.forMoPID(xPathController, "X Path");
-    private final PIDTuner yPathTuner = TunerUtils.forMoPID(yPathController, "Y Path");
-    private final PIDTuner rotPathTuner = TunerUtils.forMoPID(rotPathController, "Rot Path");
+    private final PIDTuner xPathTuner = TunerUtils.forMoPID(xPathController, "X Path", !PathFollowingUtils.USE_HOLONOMIC_DRIVE);
+    private final PIDTuner yPathTuner = TunerUtils.forMoPID(yPathController, "Y Path", !PathFollowingUtils.USE_HOLONOMIC_DRIVE);
+    private final PIDTuner rotPathTuner = TunerUtils.forMoPID(rotPathController, "Rot Path", !PathFollowingUtils.USE_HOLONOMIC_DRIVE);
 
     private final MoPIDF headingController = new MoPIDF();
     private final PIDTuner headingTuner = TunerUtils.forMoPIDF(headingController, "Drive Heading", true);
@@ -200,6 +201,20 @@ public class DriveSubsystem extends SubsystemBase {
         frontRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.frontRightMetersPerSecond * REVOLUTIONS_PER_METER);
         rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.rearLeftMetersPerSecond * REVOLUTIONS_PER_METER);
         rearRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.rearRightMetersPerSecond * REVOLUTIONS_PER_METER);
+    }
+
+    public void driveDifferentialWheelSpeeds(double leftMps, double rightMps) {
+        if(!shouldDrivePID.getBoolean(true)) {
+            DriverStation.reportWarning("Cannot driveWheelSpeeds() with PID disabled", false);
+            stop();
+            return;
+        }
+
+        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, leftMps * REVOLUTIONS_PER_METER);
+        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, rightMps * REVOLUTIONS_PER_METER);
+        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, leftMps * REVOLUTIONS_PER_METER);
+        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, rightMps * REVOLUTIONS_PER_METER);
+
     }
 
     public boolean isMoving() {

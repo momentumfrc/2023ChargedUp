@@ -5,6 +5,7 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
 import edu.wpi.first.networktables.GenericEntry;
@@ -88,6 +89,10 @@ public class PositioningSubsystem extends SubsystemBase {
             gyro.getRotation2d(),
             drive.getWheelPositions()
         );
+    }
+
+    public DifferentialDriveKinematics getDifferentialKinematics() {
+        return new DifferentialDriveKinematics(WHEEL_LEFT_POS * 2);
     }
 
     /**
