@@ -36,6 +36,7 @@ public class RobotContainer {
     private Command pathFollowLinearX = PathFollowingUtils.getFollowTrajectoryCommand(drive, positioning, "Linear X", true);
     private Command pathFollowLinearY = PathFollowingUtils.getFollowTrajectoryCommand(drive, positioning, "Linear Y", true);
     private Command pathFollowCurved = PathFollowingUtils.getFollowTrajectoryCommand(drive, positioning, "Curve", false);
+    private Command pathRotate = PathFollowingUtils.getFollowTrajectoryCommand(drive, positioning, "Rotation", true);
 
     private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
     private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, input);
@@ -52,6 +53,7 @@ public class RobotContainer {
         autoChooser.addOption("Path: Linear X", pathFollowLinearX);
         autoChooser.addOption("Path: Linear Y", pathFollowLinearY);
         autoChooser.addOption("Path: Curve", pathFollowCurved);
+        autoChooser.addOption("Path: Rotation", pathRotate);
 
         MoShuffleboard.getInstance().matchTab.add("Auto Chooser", autoChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
     }
