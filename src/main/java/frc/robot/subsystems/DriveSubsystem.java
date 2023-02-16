@@ -210,10 +210,10 @@ public class DriveSubsystem extends SubsystemBase {
             return;
         }
 
-        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, leftMps * REVOLUTIONS_PER_METER);
-        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, rightMps * REVOLUTIONS_PER_METER);
-        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, leftMps * REVOLUTIONS_PER_METER);
-        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, rightMps * REVOLUTIONS_PER_METER);
+        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * leftMps * 60 * REVOLUTIONS_PER_METER);
+        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * rightMps * 60 * REVOLUTIONS_PER_METER);
+        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * leftMps * 60 * REVOLUTIONS_PER_METER);
+        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * rightMps * 60 * REVOLUTIONS_PER_METER);
 
     }
 
