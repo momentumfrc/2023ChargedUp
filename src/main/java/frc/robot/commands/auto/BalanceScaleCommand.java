@@ -14,7 +14,7 @@ import frc.robot.utils.TunerUtils;
  */
 public class BalanceScaleCommand extends CommandBase {
     private static final double MAX_MOVE_SPEED = 0.1;
-    private static final double LEVEL_DEFINITION = 1; // degrees
+    private static final double LEVEL_DEFINITION = 1.5; // degrees
 
     private final MoPIDF balanceScalePid = new MoPIDF();
     private final PIDTuner balanceScaleTuner = TunerUtils.forMoPID(balanceScalePid, "Balance Scale");
