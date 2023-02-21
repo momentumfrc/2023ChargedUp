@@ -10,8 +10,9 @@ import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.DefaultVisionCommand;
+import frc.robot.commands.RaiseArmCommand;
+import frc.robot.commands.RotateWristCommand;
 import frc.robot.commands.TeleopDriveCommand;
 import frc.robot.commands.auto.BalanceScaleCommand;
 import frc.robot.input.MoInput;
@@ -29,6 +30,7 @@ public class RobotContainer {
     private VisionSubsystem visionSubsystem = new VisionSubsystem();
     private DriveSubsystem drive = new DriveSubsystem(gyro);
     private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
+    private ArmSubsystem arms = new ArmSubsystem();
 
     // Commands
     private BalanceScaleCommand balanceScaleCommand = new BalanceScaleCommand(drive, gyro);
@@ -56,7 +58,14 @@ public class RobotContainer {
         MoShuffleboard.getInstance().matchTab.add("Auto Chooser", autoChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
     }
 
-    private void configureBindings() {}
+    private void configureBindings() {
+        this.input.getRaiseArmButton()
+            .whileTrue(new RaiseArmCommand(arms, 1, this.input::getShouldMaintainWristParallel));
+        this.input.getLowerArmButton()
+            .whileTrue(new RaiseArmCommand(arms, -1, this.input::getShouldMaintainWristParallel));
+        this.input.getRetractWristButton().whileTrue(new RotateWristCommand(arms, -1));
+        this.input.getExtendWristButton().whileTrue(new RotateWristCommand(arms, 1));
+    }
 
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
