@@ -3,7 +3,6 @@ package frc.robot.input;
 import static com.momentum4999.utils.Utils.*;
 
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.Constants;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoPrefs.Pref;
@@ -14,17 +13,8 @@ public class SingleControllerInput implements MoInput {
     private Pref<Double> deadzone = MoPrefs.driveDeadzone;
     private Pref<Double> curve = MoPrefs.driveCurve;
 
-    private JoystickButton raiseArm;
-    private JoystickButton lowerArm;
-    private JoystickButton retractWrist;
-    private JoystickButton extendWrist;
-
     public SingleControllerInput(Constants.HIDPort port) {
         this.controller = new XboxController(port.port);
-        this.raiseArm = new JoystickButton(controller, XboxController.Button.kLeftBumper.value);
-        this.lowerArm = new JoystickButton(controller, XboxController.Button.kRightBumper.value);
-        this.retractWrist = new JoystickButton(controller, XboxController.Button.kX.value);
-        this.extendWrist = new JoystickButton(controller, XboxController.Button.kY.value);
     }
 
     private double applyInputTransforms(double input) {
@@ -52,27 +42,12 @@ public class SingleControllerInput implements MoInput {
     }
 
     @Override
-    public boolean getShouldMaintainWristParallel() {
-        return controller.getAButton();
+    public double getDirectShoulderRequest() {
+        return this.controller.getRightTriggerAxis() - this.controller.getLeftTriggerAxis();
     }
 
     @Override
-    public JoystickButton getRaiseArmButton() {
-        return this.raiseArm;
-    }
-
-    @Override
-    public JoystickButton getLowerArmButton() {
-        return this.lowerArm;
-    }
-
-    @Override
-    public JoystickButton getRetractWristButton() {
-        return this.retractWrist;
-    }
-
-    @Override
-    public JoystickButton getExtendWristButton() {
-        return this.extendWrist;
+    public double getDirectWristRequest() {
+        return this.controller.getRightY();
     }
 }

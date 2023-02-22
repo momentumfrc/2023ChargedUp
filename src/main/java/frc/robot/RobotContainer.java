@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.Optional;
+
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.SerialPort;
@@ -11,8 +13,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.DefaultVisionCommand;
-import frc.robot.commands.RaiseArmCommand;
-import frc.robot.commands.RotateWristCommand;
+import frc.robot.commands.TeleopArmCommand;
 import frc.robot.commands.TeleopDriveCommand;
 import frc.robot.commands.auto.BalanceScaleCommand;
 import frc.robot.input.MoInput;
@@ -41,34 +42,33 @@ public class RobotContainer {
 
     private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
     private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, input);
+    private TeleopArmCommand directArmControlCommand = new TeleopArmCommand.Direct(arms, input);
 
     private SendableChooser<Command> autoChooser = new SendableChooser<>();
+    private SendableChooser<Command> armChooser = new SendableChooser<>();
 
     public RobotContainer() {
         configureBindings();
 
         drive.setDefaultCommand(driveCommand);
         visionSubsystem.setDefaultCommand(defaultVisionCommand);
+        arms.setDefaultCommand(Optional.ofNullable(armChooser.getSelected()).orElse(directArmControlCommand));
 
         autoChooser.setDefaultOption("Balance Scale", balanceScaleCommand);
         autoChooser.addOption("Path: Linear X", pathFollowLinearX);
         autoChooser.addOption("Path: Curve", pathFollowCurved);
         autoChooser.addOption("Path: Figure 8", pathFollowFigEight);
 
+        armChooser.setDefaultOption("Direct", directArmControlCommand);
+
         MoShuffleboard.getInstance().matchTab.add("Auto Chooser", autoChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
+        MoShuffleboard.getInstance().matchTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
     }
 
     private void configureBindings() {
-        this.input.getRaiseArmButton()
-            .whileTrue(new RaiseArmCommand(arms, 1, this.input::getShouldMaintainWristParallel));
-        this.input.getLowerArmButton()
-            .whileTrue(new RaiseArmCommand(arms, -1, this.input::getShouldMaintainWristParallel));
-        this.input.getRetractWristButton().whileTrue(new RotateWristCommand(arms, -1));
-        this.input.getExtendWristButton().whileTrue(new RotateWristCommand(arms, 1));
     }
 
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
     }
-
 }

@@ -26,7 +26,7 @@ public class PathFollowingUtils {
         PathPlannerTrajectory trajectory, boolean shouldAssumeRobotIsAtStart
     ) {
         Command driveControllerCommand;
-        if(USE_HOLONOMIC_DRIVE) {
+        if (USE_HOLONOMIC_DRIVE) {
             driveControllerCommand = new PPMecanumControllerCommand(
                 trajectory,
                 positioning::getRobotPose,

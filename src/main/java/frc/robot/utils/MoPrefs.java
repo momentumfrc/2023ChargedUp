@@ -19,7 +19,6 @@ public final class MoPrefs {
     public static Pref<Double> driveRampTime = doublePref("Drive Ramp Time", 0.25);
     public static Pref<Double> shoulderSetpointRpm = doublePref("Shoulder Speed RPM", 200.0); // TODO: Find actual value
     public static Pref<Double> wristSetpointRpm = doublePref("Wrist Speed RPM", 200.0); // TODO: Find actual value
-    public static Pref<Double> armJointSetpointRatio = doublePref("Wrist/Shoulder Speed Ratio", 1); // TODO: Find actual value
 
     public final class Pref<T> {
         public final String key;

@@ -1,9 +1,12 @@
 package frc.robot.utils;
 
+import java.util.function.DoubleSupplier;
+
 import com.momentum4999.utils.PIDTuner;
 import com.momentum4999.utils.PIDTunerBuilder;
 import com.momentum4999.utils.PIDTuner.PIDGraphValues;
 import com.playingwithfusion.CANVenom;
+import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkMaxPIDController;
 
 import frc.robot.Constants;

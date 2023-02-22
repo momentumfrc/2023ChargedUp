@@ -2,17 +2,14 @@ package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
-import com.revrobotics.SparkMaxLimitSwitch.Type;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.utils.MoPIDF;
 import frc.robot.utils.MoPrefs;
-import frc.robot.utils.MotorMovement;
+import frc.robot.utils.TunerUtils;
 
 public class ArmSubsystem extends SubsystemBase {
-    public static final Type SHOULDER_LIMIT = Type.kNormallyOpen;
-    public static final Type WRIST_LIMIT = Type.kNormallyOpen;
-
     private final CANSparkMax leftShoulder = new CANSparkMax(
         Constants.ARM_SHOULDER_LEFT.address, CANSparkMaxLowLevel.MotorType.kBrushless);
     private final CANSparkMax rightShoulder = new CANSparkMax(
@@ -20,42 +17,38 @@ public class ArmSubsystem extends SubsystemBase {
     private final CANSparkMax wrist = new CANSparkMax(
         Constants.ARM_WRIST.address, CANSparkMaxLowLevel.MotorType.kBrushless);
 
+    private final MoPIDF leftShoulderVelocityPID = new MoPIDF();
+    private final MoPIDF rightShoulderVelocityPID = new MoPIDF();
+    private final MoPIDF wristVelocityPID = new MoPIDF();
+
+    private final MoPIDF shoulderPositionPID = new MoPIDF();
+    private final MoPIDF wristPositionPID = new MoPIDF();
+
     public ArmSubsystem() {
         rightShoulder.setInverted(true); // TODO: Verify
+
+        TunerUtils.forSparkMaxSmartMotion(leftShoulder, "Left Shoulder Vel. PID");
+        TunerUtils.forMoPID(rightShoulderVelocityPID, "Right Shoulder Vel. PID");
+        TunerUtils.forMoPID(wristVelocityPID, "Wrist Vel. PID");
+
+        TunerUtils.forMoPID(shoulderPositionPID, "Shoulder Pos. PID");
+        TunerUtils.forMoPID(wristPositionPID, "Wrist Pos. PID");
     }
 
     @Override
     public void periodic() {
-        if (MotorMovement.isOutOfBounds(leftShoulder, SHOULDER_LIMIT)) {
-            leftShoulder.stopMotor();
-        }
-        if (MotorMovement.isOutOfBounds(rightShoulder, SHOULDER_LIMIT)) {
-            rightShoulder.stopMotor();
-        }
-        if (MotorMovement.isOutOfBounds(wrist, WRIST_LIMIT)) {
-            wrist.stopMotor();
-        }
     }
 
-    public void adjustArm(double power) {
+    public void adjustShoulders(double power) {
         power *= MoPrefs.shoulderSetpointRpm.get();
 
-        MotorMovement.moveLimited(leftShoulder, power, SHOULDER_LIMIT);
-        MotorMovement.moveLimited(rightShoulder, power, SHOULDER_LIMIT);
+        leftShoulder.set(leftShoulderVelocityPID.calculate(leftShoulder.getEncoder().getVelocity(), power));
+        rightShoulder.set(rightShoulderVelocityPID.calculate(rightShoulder.getEncoder().getVelocity(), power));
     }
 
     public void adjustWrist(double power) {
         power *= MoPrefs.wristSetpointRpm.get();
 
-        MotorMovement.moveLimited(wrist, power, WRIST_LIMIT);
-    }
-
-    public void idleArm() {
-        leftShoulder.stopMotor();
-        rightShoulder.stopMotor();
-    }
-
-    public void idleWrist() {
-        wrist.stopMotor();
+        wrist.set(wristVelocityPID.calculate(wrist.getEncoder().getVelocity(), power));
     }
 }
