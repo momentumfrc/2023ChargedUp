@@ -7,18 +7,14 @@ package frc.robot;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.SerialPort;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.DefaultVisionCommand;
 import frc.robot.commands.TeleopDriveCommand;
 import frc.robot.commands.auto.BalanceScaleCommand;
 import frc.robot.input.MoInput;
 import frc.robot.input.SingleControllerInput;
 import frc.robot.subsystems.*;
-import frc.robot.utils.MoShuffleboard;
-import frc.robot.utils.PathFollowingUtils;
+import frc.robot.utils.AutoBuilder;
 
 public class RobotContainer {
     // Sensors
@@ -33,14 +29,10 @@ public class RobotContainer {
     // Commands
     private BalanceScaleCommand balanceScaleCommand = new BalanceScaleCommand(drive, gyro);
 
-    private Command pathFollowLinearX = PathFollowingUtils.getFollowTrajectoryCommand(drive, positioning, "Linear X", true);
-    private Command pathFollowCurved = PathFollowingUtils.getFollowTrajectoryCommand(drive, positioning, "Curve", true);
-    private Command pathFollowFigEight = PathFollowingUtils.getFollowTrajectoryCommand(drive, positioning, "FigureEight", true);
-
     private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
     private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, input);
 
-    private SendableChooser<Command> autoChooser = new SendableChooser<>();
+    private AutoBuilder autoBuilder = new AutoBuilder();
 
     public RobotContainer() {
         configureBindings();
@@ -48,18 +40,13 @@ public class RobotContainer {
         drive.setDefaultCommand(driveCommand);
         visionSubsystem.setDefaultCommand(defaultVisionCommand);
 
-        autoChooser.setDefaultOption("Balance Scale", balanceScaleCommand);
-        autoChooser.addOption("Path: Linear X", pathFollowLinearX);
-        autoChooser.addOption("Path: Curve", pathFollowCurved);
-        autoChooser.addOption("Path: Figure 8", pathFollowFigEight);
-
-        MoShuffleboard.getInstance().matchTab.add("Auto Chooser", autoChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
+        autoBuilder.initShuffleboard();
     }
 
     private void configureBindings() {}
 
     public Command getAutonomousCommand() {
-        return autoChooser.getSelected();
+        return autoBuilder.buildAutoCommand(drive, positioning, gyro);
     }
 
 }

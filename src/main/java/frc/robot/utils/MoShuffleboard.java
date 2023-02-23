@@ -16,11 +16,13 @@ public class MoShuffleboard {
 
     public final ShuffleboardTab matchTab;
     public final ShuffleboardTab settingsTab;
+    public final ShuffleboardTab autoTab;
     public final Field2d field;
 
     private MoShuffleboard() {
         matchTab = Shuffleboard.getTab("match");
         settingsTab = Shuffleboard.getTab("Settings");
+        autoTab = Shuffleboard.getTab("Auto");
 
         field = new Field2d();
         matchTab.add(field);
