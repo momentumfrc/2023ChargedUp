@@ -67,20 +67,24 @@ public class TunerUtils {
             .build();
     }
 
-    public static PIDTuner forSparkMaxSmartMotion(PIDGraphValues values, SparkMaxPIDController controller, String controllerName) {
-        return forSparkMaxSmartMotion(values, controller, controllerName, false);
+    public static PIDTuner forSparkMaxSmartMotion(MoSparkMaxPID sparkMax, String controllerName) {
+        return forSparkMaxSmartMotion(sparkMax, controllerName, false);
     }
 
-    public static PIDTuner forSparkMaxSmartMotion(PIDGraphValues values, SparkMaxPIDController controller, String controllerName, boolean hide) {
+    public static PIDTuner forSparkMaxSmartMotion(MoSparkMaxPID sparkMax, String controllerName, boolean hide) {
         return new PIDTunerBuilder(controllerName)
             .withTunerSettings(Constants.TUNER_SETTINGS.withShowOnShuffleboard(!hide))
-            .withP(controller::setP)
-            .withI(controller::setI)
-            .withD(controller::setD)
-            .withFF(controller::setFF)
-            .withProperty("maxVel", (v) -> controller.setSmartMotionMaxVelocity(v, 0))
-            .withProperty("maxAccel", (a) -> controller.setSmartMotionMaxAccel(a, 0))
-            .withGraphValues(values)
+            .withP(sparkMax.getPID()::setP)
+            .withI(sparkMax.getPID()::setI)
+            .withD(sparkMax.getPID()::setD)
+            .withFF(sparkMax.getPID()::setFF)
+            .withProperty("maxVel", (v) -> sparkMax.getPID().setSmartMotionMaxVelocity(v, 0))
+            .withProperty("maxAccel", (a) -> sparkMax.getPID().setSmartMotionMaxAccel(a, 0))
+            .buildGraphValues()
+            .withSetpointFrom(sparkMax::getReference)
+            .withLastMeasurementFrom(sparkMax::getMeasurement)
+            .withLastOutputFrom(sparkMax::getOutput)
+            .finishGraphValues()
             .build();
     }
 }
