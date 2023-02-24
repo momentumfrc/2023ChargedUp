@@ -60,9 +60,6 @@ public class AutoBuilder {
         LEVEL_HIGH
     };
 
-    private static final String MOB_L_TO_CHRG = "MOB_L to CHRG.path";
-    private static final String MOB_R_TO_CHRG = "MOB_R to CHRG.path";
-
     private SendableChooser<StartingPosition> startPosChooser;
     private SendableChooser<ScoreLevel> scoreLevelChooser;
     private SendableChooser<PieceType> heldPieceType;
