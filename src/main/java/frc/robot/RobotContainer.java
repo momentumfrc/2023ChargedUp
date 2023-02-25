@@ -22,14 +22,14 @@ public class RobotContainer {
     private MoInput input = new SingleControllerInput(Constants.F310);
 
     // Subsystems
-    private VisionSubsystem visionSubsystem = new VisionSubsystem();
+    //private VisionSubsystem visionSubsystem = new VisionSubsystem();
     private DriveSubsystem drive = new DriveSubsystem(gyro);
     private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
 
     // Commands
     private BalanceScaleCommand balanceScaleCommand = new BalanceScaleCommand(drive, gyro);
 
-    private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
+   // private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
     private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, input);
 
     private AutoBuilder autoBuilder = new AutoBuilder();
@@ -38,7 +38,7 @@ public class RobotContainer {
         configureBindings();
 
         drive.setDefaultCommand(driveCommand);
-        visionSubsystem.setDefaultCommand(defaultVisionCommand);
+        //visionSubsystem.setDefaultCommand(defaultVisionCommand);
 
         autoBuilder.initShuffleboard();
     }
