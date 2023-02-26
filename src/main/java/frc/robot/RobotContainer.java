@@ -31,7 +31,7 @@ public class RobotContainer {
     private VisionSubsystem visionSubsystem = new VisionSubsystem();
     private DriveSubsystem drive = new DriveSubsystem(gyro);
     private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
-    private ArmSubsystem arms = new ArmSubsystem();
+    private ArmSubsystem arms = new ArmSubsystem(input);
 
     // Commands
     private BalanceScaleCommand balanceScaleCommand = new BalanceScaleCommand(drive, gyro);
