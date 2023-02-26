@@ -42,27 +42,21 @@ public class RobotContainer {
 
     private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
     private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, input);
-    private TeleopArmCommand directArmControlCommand = new TeleopArmCommand.Direct(arms, input);
 
     private SendableChooser<Command> autoChooser = new SendableChooser<>();
-    private SendableChooser<Command> armChooser = new SendableChooser<>();
 
     public RobotContainer() {
         configureBindings();
 
         drive.setDefaultCommand(driveCommand);
         visionSubsystem.setDefaultCommand(defaultVisionCommand);
-        arms.setDefaultCommand(Optional.ofNullable(armChooser.getSelected()).orElse(directArmControlCommand));
 
         autoChooser.setDefaultOption("Balance Scale", balanceScaleCommand);
         autoChooser.addOption("Path: Linear X", pathFollowLinearX);
         autoChooser.addOption("Path: Curve", pathFollowCurved);
         autoChooser.addOption("Path: Figure 8", pathFollowFigEight);
 
-        armChooser.setDefaultOption("Direct", directArmControlCommand);
-
         MoShuffleboard.getInstance().matchTab.add("Auto Chooser", autoChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
-        MoShuffleboard.getInstance().matchTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
     }
 
     private void configureBindings() {

@@ -43,11 +43,11 @@ public class SingleControllerInput implements MoInput {
 
     @Override
     public double getDirectShoulderRequest() {
-        return this.controller.getRightTriggerAxis() - this.controller.getLeftTriggerAxis();
+        return applyInputTransforms(this.controller.getRightTriggerAxis() - this.controller.getLeftTriggerAxis());
     }
 
     @Override
     public double getDirectWristRequest() {
-        return this.controller.getRightY();
+        return applyInputTransforms(this.controller.getRightY());
     }
 }
