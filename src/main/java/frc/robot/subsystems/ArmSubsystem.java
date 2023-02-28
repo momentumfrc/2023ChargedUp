@@ -59,10 +59,8 @@ public class ArmSubsystem extends SubsystemBase {
      * @param target -1.0 to 1.0, each being the max speed in that direction
      */
     public void adjustShoulders(boolean pid, double target) {
-        target *= MoPrefs.shoulderSetpointRpm.get();
-
         if (pid) {
-            shoulderVelocityPID.setReference(target);
+            shoulderVelocityPID.setReference(target * MoPrefs.shoulderSetpointRpm.get());
         } else {
             leftShoulder.set(target);
         }
@@ -72,10 +70,8 @@ public class ArmSubsystem extends SubsystemBase {
      * @param target -1.0 to 1.0, each being the max speed in that direction
      */
     public void adjustWrist(boolean pid, double target) {
-        target *= MoPrefs.wristSetpointRpm.get();
-
         if (pid) {
-            wristVelocityPID.setReference(target);
+            wristVelocityPID.setReference(target * MoPrefs.wristSetpointRpm.get());
         } else {
             wrist.set(target);
         }
