@@ -38,7 +38,16 @@ public class SingleControllerInput implements MoInput {
 
     @Override
     public boolean getShouldUseSlowSpeed() {
-        return controller.getLeftBumper();
+        return controller.getLeftStickButton();
     }
 
+    @Override
+    public double getDirectShoulderRequest() {
+        return applyInputTransforms(this.controller.getRightTriggerAxis() - this.controller.getLeftTriggerAxis());
+    }
+
+    @Override
+    public double getDirectWristRequest() {
+        return applyInputTransforms(this.controller.getRightY());
+    }
 }

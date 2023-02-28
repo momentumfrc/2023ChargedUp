@@ -6,4 +6,7 @@ public interface MoInput {
     public double getTurnRequest();
 
     public boolean getShouldUseSlowSpeed();
+
+    public double getDirectShoulderRequest();
+    public double getDirectWristRequest();
 }
