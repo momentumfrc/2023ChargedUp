@@ -86,14 +86,11 @@ public class DriveSubsystem extends SubsystemBase {
 
     private final AHRS gyro;
 
-    private Rotation2d initialHeading;
     private Rotation2d maintainHeading;
 
     public GenericSubscriber shouldDriveFieldOriented = MoShuffleboard.getInstance().settingsTab
         .add("Field-Oriented Drive", true)
         .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
-
-    private ComplexWidget doResetOrientation;
 
     private GenericSubscriber shouldDrivePID = MoShuffleboard.getInstance().settingsTab
         .add("PID Drive", true)
@@ -105,14 +102,10 @@ public class DriveSubsystem extends SubsystemBase {
 
     public DriveSubsystem(AHRS gyro) {
         this.gyro = gyro;
-        initialHeading = gyro.getRotation2d();
         maintainHeading = gyro.getRotation2d();
 
         frontLeftMtr.motor.setInverted(true);
         rearLeftMtr.motor.setInverted(true);
-
-        doResetOrientation = MoShuffleboard.getInstance().settingsTab
-        .add("Reset Drive Orientation", new InstantCommand(() -> { initialHeading = gyro.getRotation2d(); }));
     }
 
     public MecanumDriveWheelPositions getWheelPositions() {
