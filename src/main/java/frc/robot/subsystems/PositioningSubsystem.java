@@ -104,10 +104,6 @@ public class PositioningSubsystem extends SubsystemBase {
         return robotPose;
     }
 
-    public Pose2d getReverseRobotPose() {
-        return new Pose2d(robotPose.getTranslation(), robotPose.getRotation().plus(Rotation2d.fromRotations(0.5)));
-    }
-
     /**
      * Get the robot pose in field coordinates.
      */

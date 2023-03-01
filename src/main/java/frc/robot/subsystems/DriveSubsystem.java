@@ -82,7 +82,7 @@ public class DriveSubsystem extends SubsystemBase {
     private final PIDTuner rotPathTuner = TunerUtils.forMoPID(rotPathController, "Rot Path", !PathFollowingUtils.USE_HOLONOMIC_DRIVE);
 
     private final MoPIDF headingController = new MoPIDF();
-    private final PIDTuner headingTuner = TunerUtils.forMoPIDF(headingController, "Drive Heading", false);
+    private final PIDTuner headingTuner = TunerUtils.forMoPIDF(headingController, "Drive Heading", true);
 
     private final AHRS gyro;
 
@@ -190,10 +190,10 @@ public class DriveSubsystem extends SubsystemBase {
             return;
         }
 
-        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, speeds.frontLeftMetersPerSecond * 60 * REVOLUTIONS_PER_METER);
-        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, speeds.frontRightMetersPerSecond * 60 * REVOLUTIONS_PER_METER);
-        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, speeds.rearLeftMetersPerSecond * 60 * REVOLUTIONS_PER_METER);
-        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, speeds.rearRightMetersPerSecond * 60 * REVOLUTIONS_PER_METER);
+        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.frontLeftMetersPerSecond * REVOLUTIONS_PER_METER);
+        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.frontRightMetersPerSecond * REVOLUTIONS_PER_METER);
+        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.rearLeftMetersPerSecond * REVOLUTIONS_PER_METER);
+        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.rearRightMetersPerSecond * REVOLUTIONS_PER_METER);
     }
 
     public void driveDifferentialWheelSpeeds(double leftMps, double rightMps) {
@@ -203,10 +203,10 @@ public class DriveSubsystem extends SubsystemBase {
             return;
         }
 
-        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, leftMps * 60 * REVOLUTIONS_PER_METER);
-        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, rightMps * 60 * REVOLUTIONS_PER_METER);
-        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, leftMps * 60 * REVOLUTIONS_PER_METER);
-        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, rightMps * 60 * REVOLUTIONS_PER_METER);
+        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * leftMps * 60 * REVOLUTIONS_PER_METER);
+        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * rightMps * 60 * REVOLUTIONS_PER_METER);
+        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * leftMps * 60 * REVOLUTIONS_PER_METER);
+        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * rightMps * 60 * REVOLUTIONS_PER_METER);
 
     }
 

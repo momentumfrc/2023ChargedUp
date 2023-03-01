@@ -9,7 +9,6 @@ import com.pathplanner.lib.commands.PPRamseteCommand;
 
 import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -30,7 +29,7 @@ public class PathFollowingUtils {
         if(USE_HOLONOMIC_DRIVE) {
             driveControllerCommand = new PPMecanumControllerCommand(
                 trajectory,
-                positioning::getReverseRobotPose,
+                positioning::getRobotPose,
                 positioning.kinematics,
                 drive.xPathController,
                 drive.yPathController,
@@ -43,7 +42,7 @@ public class PathFollowingUtils {
         } else {
             driveControllerCommand = new PPRamseteCommand(
                 trajectory,
-                positioning::getReverseRobotPose,
+                positioning::getRobotPose,
                 new RamseteController(),
                 positioning.getDifferentialKinematics(),
                 drive::driveDifferentialWheelSpeeds,
@@ -55,12 +54,13 @@ public class PathFollowingUtils {
         if(shouldAssumeRobotIsAtStart) {
             return new SequentialCommandGroup(
                 new InstantCommand(() -> {
-                    drive.resetMaintainHeading();
-                    PathPlannerState initialState = PathPlannerTrajectory.transformStateForAlliance(trajectory.getInitialState(), DriverStation.getAlliance());
-                    if(USE_HOLONOMIC_DRIVE) {
-                        positioning.setRobotPose(new Pose2d(initialState.poseMeters.getTranslation(), initialState.holonomicRotation.rotateBy(Rotation2d.fromRotations(0.5))));
-                    } else {
-                        positioning.setRobotPose(new Pose2d(initialState.poseMeters.getTranslation(), initialState.poseMeters.getRotation().rotateBy(Rotation2d.fromRotations(0.5))));
+                    if(shouldAssumeRobotIsAtStart) {
+                        PathPlannerState initialState = PathPlannerTrajectory.transformStateForAlliance(trajectory.getInitialState(), DriverStation.getAlliance());
+                        if(USE_HOLONOMIC_DRIVE) {
+                            positioning.setRobotPose(new Pose2d(initialState.poseMeters.getTranslation(), initialState.holonomicRotation));
+                        } else {
+                            positioning.setRobotPose(initialState.poseMeters);
+                        }
                     }
                 }),
                 driveControllerCommand
