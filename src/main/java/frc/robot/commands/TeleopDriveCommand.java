@@ -66,15 +66,8 @@ public class TeleopDriveCommand extends CommandBase {
         leftRequest = leftLimiter.calculate(leftRequest);
         turnRequest = turnLimiter.calculate(turnRequest);
 
-        Rotation2d fieldOrientedDriveAngle;
-
-        if(this.drive.shouldDriveFieldOriented.getBoolean(true)) {
-            fieldOrientedDriveAngle = positioning.getRobotPose().getRotation();
-        } else {
-            fieldOrientedDriveAngle = new Rotation2d();
-        }
-        drive.driveCartesian(fwdRequest, leftRequest, turnRequest, fieldOrientedDriveAngle);
-
+        var foHeading = positioning.getFieldOrientedDriveHeading();
+        drive.driveCartesian(fwdRequest, leftRequest, turnRequest, foHeading);
     }
 
     @Override

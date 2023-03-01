@@ -68,24 +68,10 @@ public class AutoBuilder {
     private GenericEntry chargeStationDocking;
     private GenericEntry chargeStationEngagement;
 
-    private <T extends Enum<?>> SendableChooser<T> enumToChooser(Class<T> toConvert) {
-        boolean setDefault = true;
-        var chooser = new SendableChooser<T>();
-        for(T entry : toConvert.getEnumConstants()) {
-            if(setDefault) {
-                chooser.setDefaultOption(entry.name(), entry);
-                setDefault = false;
-            } else {
-                chooser.addOption(entry.name(), entry);
-            }
-        }
-        return chooser;
-    }
-
     public void initShuffleboard() {
-        startPosChooser = enumToChooser(StartingPosition.class);
-        scoreLevelChooser = enumToChooser(ScoreLevel.class);
-        heldPieceType = enumToChooser(PieceType.class);
+        startPosChooser = MoShuffleboard.enumToChooser(StartingPosition.class);
+        scoreLevelChooser = MoShuffleboard.enumToChooser(ScoreLevel.class);
+        heldPieceType = MoShuffleboard.enumToChooser(PieceType.class);
 
         ShuffleboardTab tab = MoShuffleboard.getInstance().autoTab;
         masterAutoSwitch = tab.add("Master Auto Switch", true)

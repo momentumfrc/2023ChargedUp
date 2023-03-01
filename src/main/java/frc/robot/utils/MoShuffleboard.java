@@ -3,6 +3,7 @@ package frc.robot.utils;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 
 public class MoShuffleboard {
     private static MoShuffleboard instance;
@@ -26,6 +27,20 @@ public class MoShuffleboard {
 
         field = new Field2d();
         matchTab.add(field);
+    }
+
+    public static <T extends Enum<?>> SendableChooser<T> enumToChooser(Class<T> toConvert) {
+        boolean setDefault = true;
+        var chooser = new SendableChooser<T>();
+        for(T entry : toConvert.getEnumConstants()) {
+            if(setDefault) {
+                chooser.setDefaultOption(entry.name(), entry);
+                setDefault = false;
+            } else {
+                chooser.addOption(entry.name(), entry);
+            }
+        }
+        return chooser;
     }
 
 }

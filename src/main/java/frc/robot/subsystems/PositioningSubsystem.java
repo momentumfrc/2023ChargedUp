@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.Optional;
+
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,6 +15,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.sensors.Limelight;
 import frc.robot.utils.MoShuffleboard;
@@ -80,9 +83,22 @@ public class PositioningSubsystem extends SubsystemBase {
     );
     private MecanumDriveOdometry odometry;
 
+    private static enum FieldOrientedDriveMode {
+        GYRO,
+        ODOMETRY,
+        NONE
+    };
+
+    private SendableChooser<FieldOrientedDriveMode> fieldOrientedDriveMode =
+        MoShuffleboard.enumToChooser(FieldOrientedDriveMode.class);
+
+    private Optional<Rotation2d> fieldOrientedFwd = Optional.empty();
+
     public PositioningSubsystem(AHRS ahrs, DriveSubsystem drive) {
         this.gyro = ahrs;
         this.drive = drive;
+
+        MoShuffleboard.getInstance().settingsTab.add(fieldOrientedDriveMode);
 
         odometry = new MecanumDriveOdometry(
             kinematics,
@@ -93,6 +109,22 @@ public class PositioningSubsystem extends SubsystemBase {
 
     public DifferentialDriveKinematics getDifferentialKinematics() {
         return new DifferentialDriveKinematics(WHEEL_LEFT_POS * 2);
+    }
+
+    public Rotation2d getFieldOrientedDriveHeading() {
+        var foMode = fieldOrientedDriveMode.getSelected();
+        switch(foMode) {
+            case GYRO:
+                if(fieldOrientedFwd.isEmpty()) {
+                    fieldOrientedFwd = Optional.of(gyro.getRotation2d());
+                }
+                return gyro.getRotation2d().minus(fieldOrientedFwd.get());
+            case ODOMETRY:
+                return getRobotPose().getRotation();
+            case NONE:
+            default:
+                return new Rotation2d();
+        }
     }
 
     /**
@@ -144,5 +176,8 @@ public class PositioningSubsystem extends SubsystemBase {
 
         robotPose = odometry.update(gyro.getRotation2d(), drive.getWheelPositions());
         field.setRobotPose(getAbsoluteRobotPose());
+
+        if(fieldOrientedDriveMode.getSelected() != FieldOrientedDriveMode.GYRO && fieldOrientedFwd.isPresent())
+            fieldOrientedFwd = Optional.empty();
     }
 }
