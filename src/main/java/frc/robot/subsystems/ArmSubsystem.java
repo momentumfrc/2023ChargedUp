@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 
@@ -7,6 +9,7 @@ import edu.wpi.first.networktables.GenericSubscriber;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.commands.TeleopArmCommand;
@@ -48,6 +51,10 @@ public class ArmSubsystem extends SubsystemBase {
         armChooser.addOption("Direct (PID)", pidArmControlCommand);
 
         MoShuffleboard.getInstance().matchTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
+ 
+        this.zero();
+        MoShuffleboard.getInstance().settingsTab
+            .add("Recalculate Arm Position", new InstantCommand(this::zero));
     }
 
     @Override
@@ -55,10 +62,47 @@ public class ArmSubsystem extends SubsystemBase {
         this.updateDefaultCommand();
     }
 
+    public void zero() {
+        this.leftShoulder.getEncoder().setPosition(
+            ((this.leftShoulder.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle)
+                .getPosition() - MoPrefs.absShoulderZero.get() + 1) % 1) * MoPrefs.shoulderAbsToRel.get()
+        );
+        this.wrist.getEncoder().setPosition(
+            ((this.wrist.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle)
+                .getPosition() - MoPrefs.absWristZero.get() + 1) % 1) * MoPrefs.wristAbsToRel.get()
+        );
+    }
+
+    private boolean shoulderMoveLimited(double movement) {
+        double pos = this.leftShoulder.getEncoder().getPosition();
+        if (movement > 0) {
+            return pos >= MoPrefs.relShoulderMax.get();
+        }
+        if (movement < 0) {
+            return pos <= 0;
+        }
+        return false;
+    }
+
+    private boolean wristMoveLimited(double movement) {
+        double pos = this.wrist.getEncoder().getPosition();
+        if (movement > 0) {
+            return pos >= MoPrefs.relWristMax.get();
+        }
+        if (movement < 0) {
+            return pos <= 0;
+        }
+        return false;
+    }
+
     /**
      * @param target -1.0 to 1.0, each being the max speed in that direction
      */
     public void adjustShoulders(boolean pid, double target) {
+        if (shoulderMoveLimited(target)) {
+            leftShoulder.stopMotor();
+        }
+
         if (pid) {
             shoulderVelocityPID.setReference(target * MoPrefs.shoulderSetpointRpm.get());
         } else {
@@ -70,6 +114,10 @@ public class ArmSubsystem extends SubsystemBase {
      * @param target -1.0 to 1.0, each being the max speed in that direction
      */
     public void adjustWrist(boolean pid, double target) {
+        if (wristMoveLimited(target)) {
+            wrist.stopMotor();
+        }
+
         if (pid) {
             wristVelocityPID.setReference(target * MoPrefs.wristSetpointRpm.get());
         } else {
