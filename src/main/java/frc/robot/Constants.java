@@ -38,6 +38,7 @@ public class Constants {
     public static final CANAddress ARM_SHOULDER_LEFT = new CANAddress(2); // FIXME: Correct CAN ID
     public static final CANAddress ARM_SHOULDER_RIGHT = new CANAddress(6); // FIXME: Correct CAN ID
     public static final CANAddress ARM_WRIST = new CANAddress(7); // FIXME: Correct CAN ID
+    public static final CANAddress INTAKE_ROLLER = new CANAddress(1); // FIXME: Correct CAN ID
 
     public static final HIDPort F310 = new HIDPort(0);
 
