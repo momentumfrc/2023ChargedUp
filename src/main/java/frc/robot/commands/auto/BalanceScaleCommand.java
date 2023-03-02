@@ -17,7 +17,7 @@ public class BalanceScaleCommand extends CommandBase {
     private static final double LEVEL_DEFINITION = 1.5; // degrees
 
     private final MoPIDF balanceScalePid = new MoPIDF();
-    private final PIDTuner balanceScaleTuner = TunerUtils.forMoPID(balanceScalePid, "Balance Scale");
+    private final PIDTuner balanceScaleTuner = TunerUtils.forMoPID(balanceScalePid, "Balance Scale", true);
 
     private final DriveSubsystem drive;
     private final AHRS navx;
