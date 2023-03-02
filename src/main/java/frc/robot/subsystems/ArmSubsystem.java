@@ -53,8 +53,8 @@ public class ArmSubsystem extends SubsystemBase {
     private SuppliedValueWidget<Double> wristPosition;
 
     public ArmSubsystem(MoInput input) {
-        rightShoulder.setInverted(true); // TODO: Verify
-        rightShoulder.follow(leftShoulder);
+        leftShoulder.setInverted(false);
+        rightShoulder.follow(leftShoulder, true);
 
         TunerUtils.forSparkMaxSmartMotion(shoulderVelocityPID, "Shoulder Vel. PID");
         TunerUtils.forSparkMaxSmartMotion(wristVelocityPID, "Wrist Vel. PID");
@@ -68,8 +68,8 @@ public class ArmSubsystem extends SubsystemBase {
 
         MoShuffleboard.getInstance().matchTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
 
-        shoulderEncoder.setPositionConversionFactor(SHOULDER_RATIO);
-        wristEncoder.setPositionConversionFactor(WRIST_RATIO);
+        shoulderEncoder.setPositionConversionFactor(1/SHOULDER_RATIO);
+        wristEncoder.setPositionConversionFactor(1/WRIST_RATIO);
 
         shoulderPosition = MoShuffleboard.getInstance().matchTab.addDouble("Shoulder Position", shoulderEncoder::getPosition);
         shoulderAbsolutePosition = MoShuffleboard.getInstance().matchTab.addDouble("Shoulder Absolute Position", shoulderAbsEncoder::getPosition);
