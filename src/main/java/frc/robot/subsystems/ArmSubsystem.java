@@ -1,14 +1,16 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
-import com.revrobotics.SparkMaxRelativeEncoder;
+
+import java.util.Map;
+
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
 
-import edu.wpi.first.networktables.GenericSubscriber;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.LayoutType;
 import edu.wpi.first.wpilibj.shuffleboard.SuppliedValueWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -47,11 +49,6 @@ public class ArmSubsystem extends SubsystemBase {
     private final TeleopArmCommand directArmControlCommand;
     private final TeleopArmCommand pidArmControlCommand;
 
-    private SuppliedValueWidget<Double> shoulderAbsolutePosition;
-    private SuppliedValueWidget<Double> shoulderPosition;
-    private SuppliedValueWidget<Double> wristAbsolutePosition;
-    private SuppliedValueWidget<Double> wristPosition;
-
     public ArmSubsystem(MoInput input) {
         leftShoulder.setInverted(false);
         rightShoulder.follow(leftShoulder, true);
@@ -71,11 +68,19 @@ public class ArmSubsystem extends SubsystemBase {
         MoPrefs.absShoulderZero.subscribe(ratio -> shoulderEncoder.setPositionConversionFactor(1/ratio), true);
         MoPrefs.absWristZero.subscribe(ratio -> wristEncoder.setPositionConversionFactor(1/ratio), true);
 
-        shoulderPosition = MoShuffleboard.getInstance().matchTab.addDouble("Shoulder Position", shoulderEncoder::getPosition);
-        shoulderAbsolutePosition = MoShuffleboard.getInstance().matchTab.addDouble("Shoulder Absolute Position", shoulderAbsEncoder::getPosition);
+        var shoulderGroup = MoShuffleboard.getInstance().matchTab
+            .getLayout("Shoulder Position", BuiltInLayouts.kList)
+            .withSize(2, 1)
+            .withProperties(Map.of("Label position", "RIGHT"));
+        shoulderGroup.addDouble("Relative", shoulderEncoder::getPosition);
+        shoulderGroup.addDouble("Absolute", shoulderAbsEncoder::getPosition);
 
-        wristPosition = MoShuffleboard.getInstance().matchTab.addDouble("Wrist Position", wristEncoder::getPosition);
-        wristAbsolutePosition = MoShuffleboard.getInstance().matchTab.addDouble("Wrist Absolute Position", wristAbsEncoder::getPosition);
+        var wristGroup = MoShuffleboard.getInstance().matchTab
+            .getLayout("Wrist Position", BuiltInLayouts.kList)
+            .withSize(2, 1)
+            .withProperties(Map.of("Label position", "RIGHT"));
+        wristGroup.addDouble("Relative", wristEncoder::getPosition);
+        wristGroup.addDouble("Absolute", wristAbsEncoder::getPosition);
 
         this.zero();
         MoShuffleboard.getInstance().settingsTab
