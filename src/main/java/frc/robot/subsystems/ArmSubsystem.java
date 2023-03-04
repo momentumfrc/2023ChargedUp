@@ -60,7 +60,7 @@ public class ArmSubsystem extends SubsystemBase {
         this.pidArmControlCommand = new TeleopArmCommand.Direct(this, input, true);
         this.setDefaultCommand(directArmControlCommand);
 
-        armChooser.addOption("Direct", directArmControlCommand);
+        armChooser.setDefaultOption("Direct", directArmControlCommand);
         armChooser.addOption("Direct (PID)", pidArmControlCommand);
 
         MoShuffleboard.getInstance().matchTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
