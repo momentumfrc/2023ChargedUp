@@ -68,8 +68,8 @@ public class ArmSubsystem extends SubsystemBase {
 
         MoShuffleboard.getInstance().matchTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
 
-        shoulderEncoder.setPositionConversionFactor(1/SHOULDER_RATIO);
-        wristEncoder.setPositionConversionFactor(1/WRIST_RATIO);
+        MoPrefs.absShoulderZero.subscribe(ratio -> shoulderEncoder.setPositionConversionFactor(1/ratio), true);
+        MoPrefs.absWristZero.subscribe(ratio -> wristEncoder.setPositionConversionFactor(1/ratio), true);
 
         shoulderPosition = MoShuffleboard.getInstance().matchTab.addDouble("Shoulder Position", shoulderEncoder::getPosition);
         shoulderAbsolutePosition = MoShuffleboard.getInstance().matchTab.addDouble("Shoulder Absolute Position", shoulderAbsEncoder::getPosition);

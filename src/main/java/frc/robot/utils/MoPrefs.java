@@ -25,6 +25,9 @@ public final class MoPrefs {
     public static Pref<Double> wristMaxRevolutions = doublePref("Wrist Max (revs)", 0.8); // TODO: Find actual value
     public static Pref<Double> intakeSpeed = doublePref("Intake Speed", 1);
 
+    public static Pref<Double> shoulderEncoderRatio = doublePref("Shoulder Ratio", 100 * 36 / 15);
+    public static Pref<Double> wristEncoderRatio = doublePref("Wrist Ratio", 60 * 24 / 14);
+
     public final class Pref<T> {
         public final String key;
         private Function<NetworkTableValue, T> getter;
