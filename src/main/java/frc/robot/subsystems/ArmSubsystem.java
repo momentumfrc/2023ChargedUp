@@ -4,20 +4,17 @@ import com.revrobotics.SparkMaxAbsoluteEncoder;
 
 import java.util.Map;
 
+import com.momentum4999.utils.Utils;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
-import edu.wpi.first.wpilibj.shuffleboard.LayoutType;
-import edu.wpi.first.wpilibj.shuffleboard.SuppliedValueWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.commands.TeleopArmCommand;
 import frc.robot.input.MoInput;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
@@ -26,9 +23,13 @@ import frc.robot.utils.TunerUtils;
 import frc.robot.utils.MoSparkMaxPID.Type;
 
 public class ArmSubsystem extends SubsystemBase {
-    private static final double SHOULDER_RATIO = 100 * 36 / 15;
-    private static final double WRIST_RATIO = 60 * 24 / 14;
-    public final SendableChooser<Command> armChooser = new SendableChooser<>();
+    public enum ArmControlMode {
+        FALLBACK_DIRECT_POWER,
+        DIRECT_VELOCITY,
+        SMART_MOTION
+    };
+
+    public final SendableChooser<ArmControlMode> armChooser = MoShuffleboard.enumToChooser(ArmControlMode.class);
 
     private final CANSparkMax leftShoulder = new CANSparkMax(
         Constants.ARM_SHOULDER_LEFT.address, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -43,27 +44,21 @@ public class ArmSubsystem extends SubsystemBase {
     private final RelativeEncoder wristEncoder = wrist.getEncoder();
     private final SparkMaxAbsoluteEncoder wristAbsEncoder = wrist.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
 
-    private final MoSparkMaxPID shoulderVelocityPID = new MoSparkMaxPID(Type.VELOCITY, leftShoulder);
-    private final MoSparkMaxPID wristVelocityPID = new MoSparkMaxPID(Type.VELOCITY, wrist);
-
-    private final TeleopArmCommand directArmControlCommand;
-    private final TeleopArmCommand pidArmControlCommand;
+    private final MoSparkMaxPID shoulderVelocityPID = new MoSparkMaxPID(Type.VELOCITY, leftShoulder, 0);
+    private final MoSparkMaxPID wristVelocityPID = new MoSparkMaxPID(Type.VELOCITY, wrist, 0);
+    private final MoSparkMaxPID shoulderSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, leftShoulder, 1);
+    private final MoSparkMaxPID wristSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, wrist, 1);
 
     public ArmSubsystem(MoInput input) {
         leftShoulder.setInverted(false);
         rightShoulder.follow(leftShoulder, true);
 
-        TunerUtils.forSparkMaxSmartMotion(shoulderVelocityPID, "Shoulder Vel. PID");
-        TunerUtils.forSparkMaxSmartMotion(wristVelocityPID, "Wrist Vel. PID");
+        TunerUtils.forMoSparkMax(shoulderVelocityPID, "Shoulder Vel. PID", false);
+        TunerUtils.forMoSparkMax(wristVelocityPID, "Wrist Vel. PID", false);
+        TunerUtils.forMoSparkMax(shoulderSmartMotionPID, "Shoulder Pos. PID", false);
+        TunerUtils.forMoSparkMax(wristSmartMotionPID, "Wrist Pos. PID", false);
 
-        this.directArmControlCommand = new TeleopArmCommand.Direct(this, input, false);
-        this.pidArmControlCommand = new TeleopArmCommand.Direct(this, input, true);
-        this.setDefaultCommand(directArmControlCommand);
-
-        armChooser.setDefaultOption("Direct", directArmControlCommand);
-        armChooser.addOption("Direct (PID)", pidArmControlCommand);
-
-        MoShuffleboard.getInstance().matchTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
+        MoShuffleboard.getInstance().settingsTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
 
         MoPrefs.absShoulderZero.subscribe(ratio -> shoulderEncoder.setPositionConversionFactor(1/ratio), true);
         MoPrefs.absWristZero.subscribe(ratio -> wristEncoder.setPositionConversionFactor(1/ratio), true);
@@ -85,11 +80,6 @@ public class ArmSubsystem extends SubsystemBase {
         this.zero();
         MoShuffleboard.getInstance().settingsTab
             .add("Recalculate Arm Position", new InstantCommand(this::zero));
-    }
-
-    @Override
-    public void periodic() {
-        this.updateDefaultCommand();
     }
 
     public void zero() {
@@ -129,34 +119,25 @@ public class ArmSubsystem extends SubsystemBase {
         return target;
     }
 
-    /**
-     * @param target -1.0 to 1.0, each being the max speed in that direction
-     */
-    public void adjustShoulders(boolean pid, double target) {
-        target = limitShoulderMovement(target);
-        if (pid) {
-            shoulderVelocityPID.setReference(target * MoPrefs.shoulderMaxRpm.get());
-        } else {
-            leftShoulder.set(target);
-        }
+    public void adjustDirectPower(double shoulderPower, double wristPower) {
+        shoulderPower = limitShoulderMovement(shoulderPower);
+        wristPower = limitWristMovement(wristPower);
+        leftShoulder.set(shoulderPower);
+        wrist.set(wristPower);
     }
 
-    /**
-     * @param target -1.0 to 1.0, each being the max speed in that direction
-     */
-    public void adjustWrist(boolean pid, double target) {
-        target = limitWristMovement(target);
-
-        if (pid) {
-            wristVelocityPID.setReference(target * MoPrefs.wristMaxRpm.get());
-        } else {
-            wrist.set(target);
-        }
+    public void adjustVelocity(double shoulderVelocity, double wristVelocity) {
+        shoulderVelocity = limitShoulderMovement(shoulderVelocity);
+        wristVelocity = limitWristMovement(wristVelocity);
+        shoulderVelocityPID.setReference(shoulderVelocity);
+        wristVelocityPID.setReference(wristVelocity);
     }
 
-    public void updateDefaultCommand() {
-        if (armChooser.getSelected() != null && armChooser.getSelected() != this.getDefaultCommand()) {
-            this.setDefaultCommand(armChooser.getSelected());
-        }
+    public void adjustSmartPosition(double shoulderPosition, double wristPosition) {
+        shoulderPosition = Utils.clip(shoulderPosition, 0, MoPrefs.shoulderMaxRevolutions.get());
+        wristPosition = Utils.clip(wristPosition, 0, MoPrefs.wristMaxRevolutions.get());
+
+        shoulderSmartMotionPID.setReference(shoulderPosition);
+        wristSmartMotionPID.setReference(wristPosition);
     }
 }
