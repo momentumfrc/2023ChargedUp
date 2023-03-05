@@ -11,4 +11,6 @@ public interface MoInput {
 
     public double getDirectShoulderRequest();
     public double getDirectWristRequest();
+
+    public ArmPositionRequest getArmPositionRequest();
 }
