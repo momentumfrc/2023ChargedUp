@@ -3,14 +3,26 @@ package frc.robot.utils;
 import com.momentum4999.utils.PIDTuner;
 import com.momentum4999.utils.PIDTunerBuilder;
 import com.playingwithfusion.CANVenom;
+
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 
 public class TunerUtils {
+    private static PIDTuner tryBuild(PIDTunerBuilder builder) {
+        try {
+            return builder.build();
+        } catch(IllegalArgumentException e) {
+            DriverStation.reportError("Error building tuner: " + e.getMessage(), e.getStackTrace());
+            return null;
+        }
+    }
+
     public static PIDTuner forMoPIDF(MoPIDF controller, String controllerName) {
         return forMoPIDF(controller, controllerName, false);
     }
     public static PIDTuner forMoPIDF(MoPIDF controller, String controllerName, boolean hide) {
-        return new PIDTunerBuilder(controllerName)
+        return tryBuild(
+            new PIDTunerBuilder(controllerName)
             .withTunerSettings(Constants.TUNER_SETTINGS.withShowOnShuffleboard(!hide))
             .withP(controller::setP)
             .withI(controller::setI)
@@ -22,14 +34,15 @@ public class TunerUtils {
             .withLastMeasurementFrom(controller::getLastMeasurement)
             .withLastOutputFrom(controller::getLastOutput)
             .finishGraphValues()
-            .build();
+        );
     }
 
     public static PIDTuner forMoPID(MoPIDF controller, String controllerName) {
         return forMoPID(controller, controllerName, false);
     }
     public static PIDTuner forMoPID(MoPIDF controller, String controllerName, boolean hide) {
-        return new PIDTunerBuilder(controllerName)
+        return tryBuild(
+            new PIDTunerBuilder(controllerName)
             .withTunerSettings(Constants.TUNER_SETTINGS.withShowOnShuffleboard(!hide))
             .withP(controller::setP)
             .withI(controller::setI)
@@ -40,14 +53,15 @@ public class TunerUtils {
             .withLastMeasurementFrom(controller::getLastMeasurement)
             .withLastOutputFrom(controller::getLastOutput)
             .finishGraphValues()
-            .build();
+        );
     }
 
     public static PIDTuner forVenom(CANVenom venom, String controllerName) {
         return forVenom(venom, controllerName, false);
     }
     public static PIDTuner forVenom(CANVenom venom, String controllerName, boolean hide) {
-        return new PIDTunerBuilder(controllerName)
+        return tryBuild(
+            new PIDTunerBuilder(controllerName)
             .withTunerSettings(Constants.TUNER_SETTINGS.withShowOnShuffleboard(!hide))
             .withP(venom::setKP)
             .withI(venom::setKI)
@@ -58,7 +72,7 @@ public class TunerUtils {
             .withLastMeasurementFrom(venom::getSpeed)
             .withLastOutputFrom(venom::get)
             .finishGraphValues()
-            .build();
+        );
     }
 
     public static PIDTuner forMoSparkMax(MoSparkMaxPID sparkMax, String controllerName) {
@@ -79,8 +93,9 @@ public class TunerUtils {
                 .withProperty("maxAccel", (a) -> sparkMax.getPID().setSmartMotionMaxAccel(a, sparkMax.getPidSlot()));
         }
 
-        return builder
+        return tryBuild(
+            builder
             .withGraphValues(sparkMax)
-            .build();
+        );
     }
 }
