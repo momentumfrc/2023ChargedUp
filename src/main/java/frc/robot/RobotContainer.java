@@ -4,15 +4,13 @@
 
 package frc.robot;
 
-import java.util.Optional;
-
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.DefaultVisionCommand;
-import frc.robot.commands.TeleopArmCommand;
 import frc.robot.commands.TeleopDriveCommand;
+import frc.robot.commands.TeleopIntakeCommand;
 import frc.robot.commands.auto.BalanceScaleCommand;
 import frc.robot.input.MoInput;
 import frc.robot.input.SingleControllerInput;
@@ -29,12 +27,14 @@ public class RobotContainer {
     private DriveSubsystem drive = new DriveSubsystem(gyro);
     private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
     private ArmSubsystem arms = new ArmSubsystem(input);
+    private IntakeSubsystem intake = new IntakeSubsystem();
 
     // Commands
     private BalanceScaleCommand balanceScaleCommand = new BalanceScaleCommand(drive, gyro);
 
    // private DefaultVisionCommand defaultVisionCommand = new DefaultVisionCommand(visionSubsystem);
     private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, input);
+    private TeleopIntakeCommand intakeCommand = new TeleopIntakeCommand(input, intake);
 
     private AutoBuilder autoBuilder = new AutoBuilder();
 
@@ -42,6 +42,7 @@ public class RobotContainer {
         configureBindings();
 
         drive.setDefaultCommand(driveCommand);
+        intake.setDefaultCommand(intakeCommand);
         //visionSubsystem.setDefaultCommand(defaultVisionCommand);
 
         autoBuilder.initShuffleboard();

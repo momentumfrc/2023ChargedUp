@@ -50,4 +50,14 @@ public class SingleControllerInput implements MoInput {
     public double getDirectWristRequest() {
         return applyInputTransforms(this.controller.getRightY());
     }
+
+    @Override
+    public boolean getShouldIntake() {
+        return this.controller.getLeftBumper();
+    }
+
+    @Override
+    public boolean getShouldExhaust() {
+        return this.controller.getRightBumper();
+    }
 }
