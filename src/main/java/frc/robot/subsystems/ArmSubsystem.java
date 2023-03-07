@@ -60,8 +60,14 @@ public class ArmSubsystem extends SubsystemBase {
 
         MoShuffleboard.getInstance().settingsTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
 
-        MoPrefs.absShoulderZero.subscribe(ratio -> shoulderEncoder.setPositionConversionFactor(1/ratio), true);
-        MoPrefs.absWristZero.subscribe(ratio -> wristEncoder.setPositionConversionFactor(1/ratio), true);
+        MoPrefs.shoulderEncoderRatio.subscribe(ratio -> {
+            shoulderEncoder.setPositionConversionFactor(1/ratio);
+            shoulderEncoder.setVelocityConversionFactor(1/ratio);
+        }, true);
+        MoPrefs.wristEncoderRatio.subscribe(ratio -> {
+            wristEncoder.setPositionConversionFactor(1/ratio);
+            wristEncoder.setVelocityConversionFactor(1/ratio);
+        }, true);
 
         var shoulderGroup = MoShuffleboard.getInstance().matchTab
             .getLayout("Shoulder Position", BuiltInLayouts.kList)
