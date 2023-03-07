@@ -58,8 +58,8 @@ public class ArmPositionRequest {
             for(Object untypedEntry : json.entrySet()) {
                 Entry<String, JSONObject> entry = (Entry<String, JSONObject>) untypedEntry;
                 ArmPositionRequest request = new ArmPositionRequest(
-                    parseNumeric(entry.getValue().get("shoulder")),
-                    parseNumeric(entry.getValue().get("wrist"))
+                    parseNumeric(entry.getValue().get("wrist")),
+                    parseNumeric(entry.getValue().get("shoulder"))
                 );
                 output.put(entry.getKey(), request);
             }
