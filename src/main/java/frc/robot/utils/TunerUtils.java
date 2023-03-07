@@ -85,7 +85,8 @@ public class TunerUtils {
             .withP(sparkMax::setP)
             .withI(sparkMax::setI)
             .withD(sparkMax::setD)
-            .withFF(sparkMax::setFF);
+            .withFF(sparkMax::setFF)
+            .withIZone(sparkMax::setIZone);
 
         if(sparkMax.getType() == MoSparkMaxPID.Type.SMARTMOTION) {
             builder = builder
