@@ -28,6 +28,44 @@ public class ArmSubsystem extends SubsystemBase {
         SMART_MOTION
     };
 
+    public static class ArmPosition {
+        public final double shoulderRotations;
+        public final double wristRotations;
+
+        public ArmPosition(double shoulderRotations, double wristRotations) {
+            this.shoulderRotations = shoulderRotations;
+            this.wristRotations = wristRotations;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("ArmPosition(shoulder=%.2f, wrist=%.2f)", shoulderRotations, wristRotations);
+        }
+    }
+
+    public static class ArmMovementRequest {
+        public final double shoulderPower;
+        public final double wristPower;
+        public final double shoulderVelocity;
+        public final double wristVelocity;
+
+        public ArmMovementRequest(double shoulder, double wrist) {
+            this.shoulderPower = shoulder;
+            this.wristPower = wrist;
+            this.shoulderVelocity = shoulder * MoPrefs.shoulderMaxRpm.get();
+            this.wristVelocity = wrist * MoPrefs.wristMaxRpm.get();
+        }
+
+        public boolean isZero() {
+            return shoulderPower == 0 && wristPower == 0;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("ArmMovementRequest(shoulderPower=%.2f, wristPower=%.2f)", shoulderPower, wristPower);
+        }
+    }
+
     public final SendableChooser<ArmControlMode> armChooser = MoShuffleboard.enumToChooser(ArmControlMode.class);
 
     private final CANSparkMax leftShoulder = new CANSparkMax(
@@ -101,6 +139,13 @@ public class ArmSubsystem extends SubsystemBase {
         }, true);
     }
 
+    public ArmPosition getPosition() {
+        return new ArmPosition(
+            shoulderEncoder.getPosition(),
+            wristEncoder.getPosition()
+        );
+    }
+
     private double limitShoulderMovement(double target) {
         if(target > 0) {
             if(this.shoulderEncoder.getPosition() > MoPrefs.shoulderMaxRevolutions.get()) {
@@ -127,25 +172,37 @@ public class ArmSubsystem extends SubsystemBase {
         return target;
     }
 
-    public void adjustDirectPower(double shoulderPower, double wristPower) {
-        shoulderPower = limitShoulderMovement(shoulderPower);
-        wristPower = limitWristMovement(wristPower);
-        leftShoulder.set(shoulderPower);
-        wrist.set(wristPower);
+    private ArmMovementRequest limitArmMovement(ArmMovementRequest request) {
+        return new ArmMovementRequest(
+            limitShoulderMovement(request.shoulderPower),
+            limitWristMovement(request.wristPower)
+        );
     }
 
-    public void adjustVelocity(double shoulderVelocity, double wristVelocity) {
-        shoulderVelocity = limitShoulderMovement(shoulderVelocity);
-        wristVelocity = limitWristMovement(wristVelocity);
-        shoulderVelocityPID.setReference(shoulderVelocity);
-        wristVelocityPID.setReference(wristVelocity);
+    private ArmPosition limitArmPosition(ArmPosition position) {
+        return new ArmPosition(
+            Utils.clip(position.shoulderRotations, 0, MoPrefs.shoulderMaxRevolutions.get()),
+            Utils.clip(position.wristRotations, 0, MoPrefs.shoulderMaxRevolutions.get())
+        );
     }
 
-    public void adjustSmartPosition(double shoulderPosition, double wristPosition) {
-        shoulderPosition = Utils.clip(shoulderPosition, 0, MoPrefs.shoulderMaxRevolutions.get());
-        wristPosition = Utils.clip(wristPosition, 0, MoPrefs.wristMaxRevolutions.get());
+    public void adjustDirectPower(ArmMovementRequest movement) {
+        movement = limitArmMovement(movement);
+        leftShoulder.set(movement.shoulderPower);
+        wrist.set(movement.wristPower);
+    }
 
-        shoulderSmartMotionPID.setReference(shoulderPosition);
-        wristSmartMotionPID.setReference(wristPosition);
+    public void adjustVelocity(ArmMovementRequest movement) {
+        movement = limitArmMovement(movement);
+        leftShoulder.set(movement.shoulderPower);
+        wrist.set(movement.wristPower);
+        shoulderVelocityPID.setReference(movement.shoulderVelocity);
+        wristVelocityPID.setReference(movement.wristVelocity);
+    }
+
+    public void adjustSmartPosition(ArmPosition position) {
+        position = limitArmPosition(position);
+        shoulderSmartMotionPID.setReference(position.shoulderRotations);
+        wristSmartMotionPID.setReference(position.wristRotations);
     }
 }

@@ -7,7 +7,9 @@ import java.util.Optional;
 
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants;
+import frc.robot.subsystems.ArmSubsystem.ArmMovementRequest;
 import frc.robot.utils.MoPrefs;
+import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 import frc.robot.utils.MoPrefs.Pref;
 
 public class SingleControllerInput implements MoInput {
@@ -16,16 +18,8 @@ public class SingleControllerInput implements MoInput {
     private Pref<Double> deadzone = MoPrefs.driveDeadzone;
     private Pref<Double> curve = MoPrefs.driveCurve;
 
-    private Map<String, ArmPositionRequest> armPositions = ArmPositionRequest.loadPositionsFromFile();
-    private ArmPositionRequest lastRequestedPosition;
-
     public SingleControllerInput(Constants.HIDPort port) {
         this.controller = new XboxController(port.port);
-
-        lastRequestedPosition = armPositions.get("stowed");
-        if(lastRequestedPosition == null) {
-            lastRequestedPosition = new ArmPositionRequest(0, 0);
-        }
     }
 
     private double applyInputTransforms(double input) {
@@ -52,14 +46,17 @@ public class SingleControllerInput implements MoInput {
         return controller.getLeftStickButton();
     }
 
-    @Override
-    public double getDirectShoulderRequest() {
+    private double getDirectShoulderRequest() {
         return applyInputTransforms(this.controller.getRightTriggerAxis() - this.controller.getLeftTriggerAxis());
     }
 
-    @Override
-    public double getDirectWristRequest() {
+    private double getDirectWristRequest() {
         return applyInputTransforms(this.controller.getRightY());
+    }
+
+    @Override
+    public ArmMovementRequest getArmMovementRequest() {
+        return new ArmMovementRequest(getDirectShoulderRequest(), getDirectWristRequest());
     }
 
     @Override
@@ -73,38 +70,44 @@ public class SingleControllerInput implements MoInput {
     }
 
     @Override
-    public ArmPositionRequest getArmPositionRequest() {
+    public Optional<ArmSetpoint> getRequestedArmSetpoint() {
         double pov = this.controller.getPOV();
         boolean cubes = this.controller.getXButton();
         boolean cones = this.controller.getAButton();
-        ArmPositionRequest retval = null;
-        if(pov == 90) {
-            retval = armPositions.get("stowed");
-        } else if(pov == 180) {
-            if(cubes || cones) {
-                retval = armPositions.get("hybrid_node");
-            } else {
-                retval = armPositions.get("ground_pickup");
-            }
-        } else if(pov == 270) {
-            if(cubes) {
-                retval = armPositions.get("med_cube_node");
-            } else if(cones) {
-                retval = armPositions.get("med_cone_node");
-            }
-        } else if(pov == 0) {
-            if(cubes) {
-                retval = armPositions.get("high_cube_node");
-            } else if(cones) {
-                retval = armPositions.get("high_cone_node");
+
+        if(cubes) {
+            if(pov == 0) {
+                return Optional.of(ArmSetpoint.CUBE_HIGH);
+            } else if(pov == 90) {
+                return Optional.of(ArmSetpoint.CUBE_PICKUP);
+            } else if(pov == 180) {
+                return Optional.of(ArmSetpoint.CUBE_LOW);
+            } else if(pov == 270) {
+                return Optional.of(ArmSetpoint.CUBE_MED);
             }
         }
 
-        if(retval == null) {
-            retval = lastRequestedPosition;
-        } else {
-            lastRequestedPosition = retval;
+        if(cones) {
+            if(pov == 0) {
+                return Optional.of(ArmSetpoint.CONE_HIGH);
+            } else if(pov == 90) {
+                return Optional.of(ArmSetpoint.CONE_PICKUP);
+            } else if(pov == 180) {
+                return Optional.of(ArmSetpoint.CONE_LOW);
+            } else if(pov == 270) {
+                return Optional.of(ArmSetpoint.CONE_MED);
+            }
         }
-        return retval;
+
+        if(pov != -1) {
+            return Optional.of(ArmSetpoint.STOW);
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public boolean getSaveArmSetpoint() {
+        return controller.getStartButton();
     }
 }
