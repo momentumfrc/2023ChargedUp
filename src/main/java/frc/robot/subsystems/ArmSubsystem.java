@@ -83,20 +83,17 @@ public class ArmSubsystem extends SubsystemBase {
         wristGroup.addDouble("Relative", wristEncoder::getPosition);
         wristGroup.addDouble("Absolute", wristAbsEncoder::getPosition);
 
-        this.zero();
-        MoShuffleboard.getInstance().settingsTab
-            .add("Recalculate Arm Position", new InstantCommand(this::zero));
-    }
+        MoPrefs.absShoulderZero.subscribe(zero -> {
+            double shoulder = this.shoulderAbsEncoder.getPosition();
+            shoulder = (shoulder + 1 - zero) % 1;
+            this.shoulderEncoder.setPosition(shoulder);
+        }, true);
 
-    public void zero() {
-        double shoulder = this.shoulderAbsEncoder.getPosition();
-        double wrist = this.wristAbsEncoder.getPosition();
-
-        shoulder = (shoulder + 1 - MoPrefs.absShoulderZero.get()) % 1;
-        wrist = (wrist + 1 - MoPrefs.absWristZero.get()) % 1;
-
-        this.shoulderEncoder.setPosition(shoulder);
-        this.wristEncoder.setPosition(wrist);
+        MoPrefs.absWristZero.subscribe(zero -> {
+            double wrist = this.wristAbsEncoder.getPosition();
+            wrist = (wrist + 1 - zero) % 1;
+            this.wristEncoder.setPosition(wrist);
+        }, true);
     }
 
     private double limitShoulderMovement(double target) {
