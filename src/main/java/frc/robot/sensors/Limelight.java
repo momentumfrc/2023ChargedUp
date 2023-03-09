@@ -7,6 +7,8 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
@@ -57,10 +59,10 @@ public class Limelight {
 
     private final NetworkTable limelightTable = NetworkTableInstance.getDefault().getTable("limelight");
     private final IntegerPublisher pipelinePublisher = limelightTable.getIntegerTopic("pipeline").publish();
-    private final IntegerPublisher ledPublisher = limelightTable.getIntegerTopic("ledMode").publish();
-    private final IntegerSubscriber tvSubscriber = limelightTable.getIntegerTopic("tv").subscribe(0);
-    private final IntegerSubscriber txSubscriber = limelightTable.getIntegerTopic("tx").subscribe(0);
-    private final IntegerSubscriber tySubscriber = limelightTable.getIntegerTopic("ty").subscribe(0);
+    private final DoublePublisher ledPublisher = limelightTable.getDoubleTopic("ledMode").publish();
+    private final DoubleSubscriber tvSubscriber = limelightTable.getDoubleTopic("tv").subscribe(0);
+    private final DoubleSubscriber txSubscriber = limelightTable.getDoubleTopic("tx").subscribe(0);
+    private final DoubleSubscriber tySubscriber = limelightTable.getDoubleTopic("ty").subscribe(0);
 
     private final DoubleArraySubscriber botposeBlueSubscriber = limelightTable.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[6]);
     private final DoubleArraySubscriber botposeRedSubscriber = limelightTable.getDoubleArrayTopic("botpose_wpired").subscribe(new double[6]);
