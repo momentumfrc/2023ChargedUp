@@ -98,7 +98,7 @@ public class PositioningSubsystem extends SubsystemBase {
         this.gyro = ahrs;
         this.drive = drive;
 
-        MoShuffleboard.getInstance().settingsTab.add(fieldOrientedDriveMode);
+        MoShuffleboard.getInstance().settingsTab.add("Field Oriented Mode", fieldOrientedDriveMode);
 
         odometry = new MecanumDriveOdometry(
             kinematics,
