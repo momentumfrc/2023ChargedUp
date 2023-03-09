@@ -21,7 +21,7 @@ public class TeleopArmCommand extends CommandBase {
         var controlMode = arms.armChooser.getSelected();
         switch(controlMode) {
             case FALLBACK_DIRECT_POWER:
-                arms.adjustDirectPower(input.getDirectShoulderRequest(), input.getDirectWristRequest());
+                arms.adjustDirectPower(input.getDirectShoulderRequest(), input.getDirectWristRequest() * MoPrefs.wristFallbackPower.get());
             return;
             case DIRECT_VELOCITY:
                 arms.adjustVelocity(
