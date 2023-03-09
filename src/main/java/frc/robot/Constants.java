@@ -40,7 +40,8 @@ public class Constants {
     public static final CANAddress ARM_WRIST = new CANAddress(9);
     public static final CANAddress INTAKE_ROLLER = new CANAddress(1);
 
-    public static final HIDPort F310 = new HIDPort(0);
+    public static final HIDPort DRIVE_F310 = new HIDPort(0);
+    public static final HIDPort ARMS_F310 = new HIDPort(1);
 
     public static final PIDTunerSettings TUNER_SETTINGS = new PIDTunerSettings();
 

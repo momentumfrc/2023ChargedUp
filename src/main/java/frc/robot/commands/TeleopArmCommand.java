@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.input.MoInput;
@@ -12,19 +13,19 @@ import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 
 public class TeleopArmCommand extends CommandBase {
     protected final ArmSubsystem arms;
-    protected final MoInput input;
+    protected final Supplier<MoInput> inputSupplier;
 
     private ArmSetpoint lastSetpoint = ArmSetpoint.STOW;
     private boolean smartMotionPositionOverride = false;
 
-    public TeleopArmCommand(ArmSubsystem arms, MoInput input) {
+    public TeleopArmCommand(ArmSubsystem arms, Supplier<MoInput> inputSupplier) {
         this.arms = arms;
-        this.input = input;
+        this.inputSupplier = inputSupplier;
 
         this.addRequirements(arms);
     }
 
-    private void smartMotion() {
+    private void smartMotion(MoInput input) {
         Optional<ArmSetpoint> requestedSetpoint = input.getRequestedArmSetpoint();
         ArmMovementRequest requestedMovement = input.getArmMovementRequest();
         boolean shouldSaveSetpoint = input.getSaveArmSetpoint();
@@ -52,6 +53,7 @@ public class TeleopArmCommand extends CommandBase {
 
     @Override
     public void execute() {
+        MoInput input = inputSupplier.get();
         var controlMode = arms.armChooser.getSelected();
         switch(controlMode) {
             case FALLBACK_DIRECT_POWER:
@@ -61,7 +63,7 @@ public class TeleopArmCommand extends CommandBase {
                 arms.adjustVelocity(input.getArmMovementRequest());
             return;
             case SMART_MOTION:
-                this.smartMotion();
+                this.smartMotion(input);
             return;
         }
     }

@@ -1,5 +1,7 @@
 package frc.robot.commands;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -12,7 +14,7 @@ import frc.robot.utils.MoPrefs.Pref;
 public class TeleopDriveCommand extends CommandBase {
     private final DriveSubsystem drive;
     private final PositioningSubsystem positioning;
-    private final MoInput input;
+    private final Supplier<MoInput> inputSupplier;
 
     private Pref<Double> rampTime = MoPrefs.driveRampTime;
 
@@ -20,10 +22,10 @@ public class TeleopDriveCommand extends CommandBase {
     private SlewRateLimiter leftLimiter;
     private SlewRateLimiter turnLimiter;
 
-    public TeleopDriveCommand(DriveSubsystem drive, PositioningSubsystem positioning, MoInput input) {
+    public TeleopDriveCommand(DriveSubsystem drive, PositioningSubsystem positioning, Supplier<MoInput> inputSupplier) {
         this.drive = drive;
         this.positioning = positioning;
-        this.input = input;
+        this.inputSupplier = inputSupplier;
 
         rampTime.subscribe(rampTime -> {
             double slewRate = 1.0 / rampTime;
@@ -51,6 +53,7 @@ public class TeleopDriveCommand extends CommandBase {
 
     @Override
     public void execute() {
+        MoInput input = inputSupplier.get();
         double fwdRequest = input.getForwardSpeedRequest();
         double leftRequest = input.getLeftSpeedRequest();
         double turnRequest = input.getTurnRequest();
