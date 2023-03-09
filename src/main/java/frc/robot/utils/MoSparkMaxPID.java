@@ -70,6 +70,7 @@ public class MoSparkMaxPID implements PIDGraphValues {
             case SMARTMOTION:
                 return this.encoder.getPosition();
             case VELOCITY:
+            case SMARTVELOCITY:
                 return this.encoder.getVelocity();
         }
 
@@ -84,7 +85,8 @@ public class MoSparkMaxPID implements PIDGraphValues {
     public enum Type {
         POSITION(CANSparkMax.ControlType.kPosition),
         SMARTMOTION(CANSparkMax.ControlType.kSmartMotion),
-        VELOCITY(CANSparkMax.ControlType.kVelocity);
+        VELOCITY(CANSparkMax.ControlType.kVelocity),
+        SMARTVELOCITY(CANSparkMax.ControlType.kSmartVelocity);
 
         public final CANSparkMax.ControlType innerType;
         private Type(CANSparkMax.ControlType innerType) {
