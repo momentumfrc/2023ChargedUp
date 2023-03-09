@@ -12,7 +12,6 @@ import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.input.MoInput;
@@ -86,12 +85,18 @@ public class ArmSubsystem extends SubsystemBase {
         MoPrefs.absShoulderZero.subscribe(zero -> {
             double shoulder = this.shoulderAbsEncoder.getPosition();
             shoulder = (shoulder + 1 - zero) % 1;
+            if(shoulder > 0.5) {
+                shoulder -= 1;
+            }
             this.shoulderEncoder.setPosition(shoulder);
         }, true);
 
         MoPrefs.absWristZero.subscribe(zero -> {
             double wrist = this.wristAbsEncoder.getPosition();
             wrist = (wrist + 1 - zero) % 1;
+            if(wrist > 0.5) {
+                wrist -= 1;
+            }
             this.wristEncoder.setPosition(wrist);
         }, true);
     }
