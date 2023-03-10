@@ -17,16 +17,21 @@ public final class MoPrefs {
     public static Pref<Double> driveCurve = doublePref("Drive Curve", 1);
     public static Pref<Double> driveSlowSpeed = doublePref("Drive Slow Speed", 0.5);
     public static Pref<Double> driveRampTime = doublePref("Drive Ramp Time", 0.25);
-    public static Pref<Double> shoulderMaxRpm = doublePref("Shoulder Maximum RPM", 200.0); // TODO: Find actual value
-    public static Pref<Double> wristMaxRpm = doublePref("Wrist Maximum RPM", 200.0); // TODO: Find actual value
-    public static Pref<Double> absShoulderZero = doublePref("Abs. Shoulder Zero", 0); // TODO: Find actual value
-    public static Pref<Double> shoulderMaxRevolutions = doublePref("Shouler Max (revs)", 0.25); // TODO: Find actual value
-    public static Pref<Double> absWristZero = doublePref("Abs. Wrist Zero", 0); // TODO: Find actual value
-    public static Pref<Double> wristMaxRevolutions = doublePref("Wrist Max (revs)", 0.8); // TODO: Find actual value
-    public static Pref<Double> intakeSpeed = doublePref("Intake Speed", 1);
 
+    public static Pref<Double> shoulderMaxRpm = doublePref("Shoulder Maximum RPM", 200.0);
+    public static Pref<Double> absShoulderZero = doublePref("Abs. Shoulder Zero", 0);
     public static Pref<Double> shoulderEncoderRatio = doublePref("Shoulder Ratio", 100 * 36 / 15);
+    public static Pref<Double> shoulderMaxRevolutions = doublePref("Shouler Max (revs)", 0.25);
+
+    public static Pref<Double> wristMaxRpm = doublePref("Wrist Maximum RPM", 200.0);
+    public static Pref<Double> absWristZero = doublePref("Abs. Wrist Zero", 0);
     public static Pref<Double> wristEncoderRatio = doublePref("Wrist Ratio", 60 * 24 / 14);
+    public static Pref<Double> wristMaxRevolutions = doublePref("Wrist Max (revs)", 0.8);
+
+    public static Pref<Double> wristFallbackPower = doublePref("Wrist Fallback Max Power", 0.5);
+    public static Pref<Double> armRampTime = doublePref("Arm Ramp Time", 0.25);
+
+    public static Pref<Double> intakeSpeed = doublePref("Intake Speed", 1);
 
     public final class Pref<T> {
         public final String key;

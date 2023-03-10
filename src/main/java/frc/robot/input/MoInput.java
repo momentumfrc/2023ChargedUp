@@ -1,5 +1,10 @@
 package frc.robot.input;
 
+import java.util.Optional;
+
+import frc.robot.subsystems.ArmSubsystem.ArmMovementRequest;
+import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
+
 public interface MoInput {
     public double getForwardSpeedRequest();
     public double getLeftSpeedRequest();
@@ -9,6 +14,8 @@ public interface MoInput {
     public boolean getShouldIntake();
     public boolean getShouldExhaust();
 
-    public double getDirectShoulderRequest();
-    public double getDirectWristRequest();
+    public ArmMovementRequest getArmMovementRequest();
+
+    public Optional<ArmSetpoint> getRequestedArmSetpoint();
+    public boolean getSaveArmSetpoint();
 }

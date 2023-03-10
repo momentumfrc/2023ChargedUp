@@ -6,7 +6,6 @@ import com.playingwithfusion.CANVenom;
 import com.playingwithfusion.CANVenom.BrakeCoastMode;
 import com.playingwithfusion.CANVenom.ControlMode;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
@@ -14,8 +13,6 @@ import edu.wpi.first.networktables.GenericSubscriber;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
-import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.MoPIDF;
@@ -87,10 +84,6 @@ public class DriveSubsystem extends SubsystemBase {
     private final AHRS gyro;
 
     private Rotation2d maintainHeading;
-
-    public GenericSubscriber shouldDriveFieldOriented = MoShuffleboard.getInstance().settingsTab
-        .add("Field-Oriented Drive", true)
-        .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
     private GenericSubscriber shouldDrivePID = MoShuffleboard.getInstance().settingsTab
         .add("PID Drive", true)
