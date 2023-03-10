@@ -205,4 +205,9 @@ public class ArmSubsystem extends SubsystemBase {
         shoulderSmartMotionPID.setReference(position.shoulderRotations);
         wristSmartMotionPID.setReference(position.wristRotations);
     }
+
+    public void stop() {
+        leftShoulder.set(0);
+        wrist.set(0);
+    }
 }
