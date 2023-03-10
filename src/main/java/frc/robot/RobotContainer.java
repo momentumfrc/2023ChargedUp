@@ -59,6 +59,6 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return autoBuilder.buildAutoCommand(drive, positioning, gyro);
+        return autoBuilder.buildAutoCommand(drive, positioning, arms, intake, gyro);
     }
 }

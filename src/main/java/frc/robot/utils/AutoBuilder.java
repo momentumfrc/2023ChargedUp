@@ -10,15 +10,25 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.commands.auto.BalanceScaleCommand;
 import frc.robot.commands.auto.CenterLimelightCrosshairsCommand;
+import frc.robot.commands.auto.DriveHoldPositionCommand;
+import frc.robot.commands.auto.HoldArmPositionCommand;
+import frc.robot.commands.auto.MoveArmToPositionCommand;
+import frc.robot.commands.auto.RunIntakeCommand;
+import frc.robot.commands.auto.StopIntakeCommand;
 import frc.robot.sensors.Limelight;
 import frc.robot.sensors.Limelight.LimelightPipeline;
+import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.PositioningSubsystem;
+import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 
 public class AutoBuilder {
     public enum MobilityPosition {
@@ -115,7 +125,50 @@ public class AutoBuilder {
 
     }
 
-    public Command buildAutoCommand(DriveSubsystem drive, PositioningSubsystem pos, AHRS navx) {
+    private ArmSetpoint getArmSetpoint(PieceType pieceType, ScoreLevel scoreLevel) {
+        switch(pieceType) {
+            case NONE:
+                return ArmSetpoint.STOW;
+            case CONE:
+                switch(scoreLevel) {
+                    case LEVEL_NONE:
+                        return ArmSetpoint.STOW;
+                    case LEVEL_HYBRID:
+                        return ArmSetpoint.CONE_LOW;
+                    case LEVEL_LOW:
+                        return ArmSetpoint.CONE_MED;
+                    case LEVEL_HIGH:
+                        return ArmSetpoint.CONE_HIGH;
+                }
+            case CUBE:
+                switch(scoreLevel) {
+                    case LEVEL_NONE:
+                        return ArmSetpoint.STOW;
+                    case LEVEL_HYBRID:
+                        return ArmSetpoint.CUBE_LOW;
+                    case LEVEL_LOW:
+                        return ArmSetpoint.CUBE_MED;
+                    case LEVEL_HIGH:
+                        return ArmSetpoint.CUBE_HIGH;
+                }
+        }
+        return ArmSetpoint.STOW;
+    }
+
+
+    private RunIntakeCommand.IntakeDirection getIntakeDirection(PieceType pieceType) {
+        switch(pieceType) {
+            case CUBE:
+                return RunIntakeCommand.IntakeDirection.CUBE_EXHAUST;
+            case CONE:
+                return RunIntakeCommand.IntakeDirection.CONE_EXHAUST;
+            case NONE:
+            default:
+                return RunIntakeCommand.IntakeDirection.CUBE_EXHAUST;
+        }
+    }
+
+    public Command buildAutoCommand(DriveSubsystem drive, PositioningSubsystem pos, ArmSubsystem arm, IntakeSubsystem intake, AHRS navx) {
         boolean masterAutoSwitch = this.masterAutoSwitch.getBoolean(false);
         StartingPosition startPos = this.startPosChooser.getSelected();
         ScoreLevel selectedScoreLevel = this.scoreLevelChooser.getSelected();
@@ -124,16 +177,17 @@ public class AutoBuilder {
         boolean chargeStationDocking = this.chargeStationDocking.getBoolean(false);
         boolean chargeStationEngagement = this.chargeStationEngagement.getBoolean(false);
 
-        // 1
+        // 1: If the master autonomous switch is disabled, exit this algorithm
         if(!masterAutoSwitch) {
             return new RunCommand(() -> {});
         }
 
-        ArrayList<Command> commands = new ArrayList<>();
+        SequentialCommandGroup autoCommand = new SequentialCommandGroup();
 
-        // 2
+        // 2: If the starting position is a GRID and the specified scoring level is not LEVEL_NONE
         if(startPos.pieceType != PieceType.NONE && selectedScoreLevel != ScoreLevel.LEVEL_NONE) {
-            // 2.a
+            // 2.a: If limelight alignment is enabled, perform fine-alignment based on limelight
+            //      crosshairs
             if(limelightAlignment) {
                 LimelightPipeline pipeline;
                 if(startPos.pieceType == PieceType.CUBE) {
@@ -141,38 +195,76 @@ public class AutoBuilder {
                 } else {
                     pipeline = LimelightPipeline.REFLECTORS;
                 }
-                commands.add(new CenterLimelightCrosshairsCommand(drive, pos.limelight, pipeline));
+                autoCommand.addCommands(new ParallelDeadlineGroup(
+                    new CenterLimelightCrosshairsCommand(drive, pos.limelight, pipeline),
+                    HoldArmPositionCommand.fromSetpoint(arm, ArmSetpoint.STOW),
+                    new StopIntakeCommand(intake)
+                ));
             }
 
-            // 2.b
+            // 2.b: Determine the actual scoring level
             ScoreLevel actualScoreLevel;
+            // 2.b.i: If the game piece type and starting position agree, then use the specified
+            //        scoring level
             if(heldGamePiece == startPos.pieceType) {
                 actualScoreLevel = selectedScoreLevel;
-            } else {
+            }
+            // 2.b.ii: Otherwise, if the selected starting position and game piece type are
+            //         incompatible, then use the HYBRID NODE
+            else {
                 actualScoreLevel = ScoreLevel.LEVEL_HYBRID;
             }
 
-            // TODO: 2.3: Score the preload in the determined level
-            //       Cannot implement until the ArmSubsystem has been implemented
+            // 2.c: Score the preloaded game piece in the determined level
+            ArmSetpoint scoreSetpoint = getArmSetpoint(heldGamePiece, actualScoreLevel);
+            RunIntakeCommand.IntakeDirection intakeDirection = getIntakeDirection(heldGamePiece);
+
+            autoCommand.addCommands(new ParallelDeadlineGroup(
+                new SequentialCommandGroup(
+                    new ParallelDeadlineGroup(
+                        MoveArmToPositionCommand.fromSetpoint(arm, scoreSetpoint),
+                        new StopIntakeCommand(intake)
+                    ),
+                    new ParallelDeadlineGroup(
+                        new RunIntakeCommand(intake, intakeDirection),
+                        HoldArmPositionCommand.fromSetpoint(arm, scoreSetpoint)
+                    ),
+                    new ParallelDeadlineGroup(
+                        MoveArmToPositionCommand.fromSetpoint(arm, ArmSetpoint.STOW),
+                        new StopIntakeCommand(intake)
+                    )
+                ),
+                new DriveHoldPositionCommand(drive)
+            ));
         }
 
-        // 3
+        SequentialCommandGroup driveCommands = new SequentialCommandGroup();
+
+        // 3: Drive to the mobility position that corresponds to the specified starting position
         String driveToMobPointPathName = String.format("%s to %s", startPos.name(), startPos.mobPos.name());
         var driveToMobPointCommand = PathFollowingUtils.getFollowTrajectoryCommand(drive, pos, driveToMobPointPathName, true);
-        commands.add(driveToMobPointCommand);
+        driveCommands.addCommands(driveToMobPointCommand);
 
-        // 4
+        // 4: If charge station docking has been enabled, then drive to the charge station position
         if(chargeStationDocking) {
             String driveToChrgPathName = String.format("%s to CHRG", startPos.mobPos.name());
             var driveToChrgPointCommand = PathFollowingUtils.getFollowTrajectoryCommand(drive, pos, driveToChrgPathName, false);
-            commands.add(driveToChrgPointCommand);
+            driveCommands.addCommands(driveToChrgPointCommand);
 
-            // 4.a
+            // 4.a: If charge station engagement is enabled, then try to  balance the charge station
             if(chargeStationEngagement) {
-                commands.add(new BalanceScaleCommand(drive, navx));
+                driveCommands.addCommands(new BalanceScaleCommand(drive, navx));
             }
         }
 
-        return new SequentialCommandGroup(commands.toArray(Command[]::new));
+        driveCommands.addCommands(new DriveHoldPositionCommand(drive));
+
+        autoCommand.addCommands(new ParallelCommandGroup(
+            driveCommands,
+            HoldArmPositionCommand.fromSetpoint(arm, ArmSetpoint.STOW),
+            new StopIntakeCommand(intake)
+        ));
+
+        return autoCommand;
     }
 }
