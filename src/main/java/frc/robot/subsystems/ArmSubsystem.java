@@ -148,6 +148,12 @@ public class ArmSubsystem extends SubsystemBase {
             }
             this.wristEncoder.setPosition(wrist);
         }, true);
+
+        MoPrefs.shoulderCurrentLimit.subscribe(limit -> {
+            leftShoulder.setSecondaryCurrentLimit(limit);
+            rightShoulder.setSecondaryCurrentLimit(limit);
+        }, true);
+        MoPrefs.wristCurrentLimit.subscribe(wrist::setSecondaryCurrentLimit, true);
     }
 
     public ArmPosition getPosition() {
