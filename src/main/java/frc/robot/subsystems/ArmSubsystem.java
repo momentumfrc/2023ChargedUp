@@ -22,6 +22,8 @@ import frc.robot.utils.TunerUtils;
 import frc.robot.utils.MoSparkMaxPID.Type;
 
 public class ArmSubsystem extends SubsystemBase {
+    private static final double ARM_ZERO_ZONE = 0.2;
+
     public enum ArmControlMode {
         FALLBACK_DIRECT_POWER,
         DIRECT_VELOCITY,
@@ -123,7 +125,7 @@ public class ArmSubsystem extends SubsystemBase {
         MoPrefs.absShoulderZero.subscribe(zero -> {
             double shoulder = this.shoulderAbsEncoder.getPosition();
             shoulder = (shoulder + 1 - zero) % 1;
-            if(shoulder > 0.5) {
+            if(shoulder > (1 - ARM_ZERO_ZONE)) {
                 shoulder -= 1;
             }
             this.shoulderEncoder.setPosition(shoulder);
@@ -132,7 +134,7 @@ public class ArmSubsystem extends SubsystemBase {
         MoPrefs.absWristZero.subscribe(zero -> {
             double wrist = this.wristAbsEncoder.getPosition();
             wrist = (wrist + 1 - zero) % 1;
-            if(wrist > 0.5) {
+            if(wrist > (1 - ARM_ZERO_ZONE)) {
                 wrist -= 1;
             }
             this.wristEncoder.setPosition(wrist);
