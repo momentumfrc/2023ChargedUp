@@ -131,6 +131,15 @@ public class ArmSubsystem extends SubsystemBase {
             this.shoulderEncoder.setPosition(shoulder);
         }, true);
 
+        var currentGroup = MoShuffleboard.getInstance().matchTab
+            .getLayout("Arm Currents", BuiltInLayouts.kList)
+            .withSize(2, 2)
+            .withProperties(Map.of("Label position", "RIGHT"));
+
+        currentGroup.addDouble("Left Shoulder", leftShoulder::getOutputCurrent);
+        currentGroup.addDouble("Right Shoulder", rightShoulder::getOutputCurrent);
+        currentGroup.addDouble("Wrist", wrist::getOutputCurrent);
+
         MoPrefs.absWristZero.subscribe(zero -> {
             double wrist = this.wristAbsEncoder.getPosition();
             wrist = (wrist + 1 - zero) % 1;
