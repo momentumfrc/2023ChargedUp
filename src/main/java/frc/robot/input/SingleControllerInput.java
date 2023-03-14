@@ -8,6 +8,7 @@ import java.util.Optional;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants;
 import frc.robot.subsystems.ArmSubsystem.ArmMovementRequest;
+import frc.robot.subsystems.ArmSubsystem.ArmPosition;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 import frc.robot.utils.MoPrefs.Pref;
@@ -55,8 +56,13 @@ public class SingleControllerInput implements MoInput {
     }
 
     @Override
-    public ArmMovementRequest getArmMovementRequest() {
+    public ArmMovementRequest getDirectArmMovementRequest() {
         return new ArmMovementRequest(getDirectShoulderRequest(), getDirectWristRequest());
+    }
+
+    @Override
+    public ArmPosition getCraneControlArmMovementRequest() {
+        return new ArmPosition(this.controller.getRightTriggerAxis(), this.controller.getLeftTriggerAxis());
     }
 
     @Override
@@ -70,7 +76,7 @@ public class SingleControllerInput implements MoInput {
     }
 
     @Override
-    public Optional<ArmSetpoint> getRequestedArmSetpoint() {
+    public Optional<ArmSetpoint> getFineControlArmSetpoint() {
         double pov = this.controller.getPOV();
         boolean cubes = this.controller.getXButton();
         boolean cones = this.controller.getAButton();
@@ -109,5 +115,25 @@ public class SingleControllerInput implements MoInput {
     @Override
     public boolean getSaveArmSetpoint() {
         return controller.getStartButton();
+    }
+
+    @Override
+    public Optional<ArmSetpoint> getCraneControlArmSetpoint() {
+        if (this.controller.getAButton()) {
+            return Optional.of(ArmSetpoint.CONE_LOW);
+        }
+        if (this.controller.getXButton()) {
+            return Optional.of(ArmSetpoint.CONE_MED);
+        }
+        if (this.controller.getYButton()) {
+            return Optional.of(ArmSetpoint.CONE_HIGH);
+        }
+        if (this.getShouldIntake()) {
+            return Optional.of(ArmSetpoint.CONE_PICKUP);
+        }
+        if (this.getShouldExhaust()) {
+            return Optional.of(ArmSetpoint.CUBE_PICKUP);
+        }
+        return Optional.empty();
     }
 }

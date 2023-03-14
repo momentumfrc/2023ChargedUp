@@ -5,6 +5,7 @@ import java.util.Optional;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants;
 import frc.robot.subsystems.ArmSubsystem.ArmMovementRequest;
+import frc.robot.subsystems.ArmSubsystem.ArmPosition;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 import frc.robot.utils.MoPrefs.Pref;
@@ -64,7 +65,7 @@ public class DualControllerInput implements MoInput {
     }
 
     @Override
-    public ArmMovementRequest getArmMovementRequest() {
+    public ArmMovementRequest getDirectArmMovementRequest() {
         return new ArmMovementRequest(
             applyArmInputTransforms(armController.getLeftY()),
             applyArmInputTransforms(armController.getRightY())
@@ -72,7 +73,7 @@ public class DualControllerInput implements MoInput {
     }
 
     @Override
-    public Optional<ArmSetpoint> getRequestedArmSetpoint() {
+    public Optional<ArmSetpoint> getFineControlArmSetpoint() {
         double pov = armController.getPOV();
         boolean cubes = armController.getXButton();
         boolean cones = armController.getAButton();
@@ -114,4 +115,29 @@ public class DualControllerInput implements MoInput {
         return armController.getStartButton();
     }
 
+    @Override
+    public ArmPosition getCraneControlArmMovementRequest() {
+        return new ArmPosition(this.armController.getLeftTriggerAxis(), this.armController.getRightTriggerAxis());
+    }
+
+    @Override
+    public Optional<ArmSetpoint> getCraneControlArmSetpoint() {
+        // Duplicate of single controller, could be improved to take advantage of the whole controller
+        if (this.armController.getAButton()) {
+            return Optional.of(ArmSetpoint.CONE_LOW);
+        }
+        if (this.armController.getXButton()) {
+            return Optional.of(ArmSetpoint.CONE_MED);
+        }
+        if (this.armController.getYButton()) {
+            return Optional.of(ArmSetpoint.CONE_HIGH);
+        }
+        if (this.getShouldIntake()) {
+            return Optional.of(ArmSetpoint.CONE_PICKUP);
+        }
+        if (this.getShouldExhaust()) {
+            return Optional.of(ArmSetpoint.CUBE_PICKUP);
+        }
+        return Optional.empty();
+    }
 }

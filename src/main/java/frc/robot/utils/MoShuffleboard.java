@@ -1,5 +1,7 @@
 package frc.robot.utils;
 
+import java.util.List;
+
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -43,4 +45,17 @@ public class MoShuffleboard {
         return chooser;
     }
 
+    public static <T extends Nameable> SendableChooser<T> listToChooser(List<T> toConvert) {
+        boolean setDefault = true;
+        var chooser = new SendableChooser<T>();
+        for(T entry : toConvert) {
+            if(setDefault) {
+                chooser.setDefaultOption(entry.getName(), entry);
+                setDefault = false;
+            } else {
+                chooser.addOption(entry.getName(), entry);
+            }
+        }
+        return chooser;
+    }
 }
