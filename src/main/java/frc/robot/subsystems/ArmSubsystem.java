@@ -9,12 +9,13 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
 
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.input.MoInput;
+import frc.robot.utils.ArmControlMode;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
 import frc.robot.utils.MoSparkMaxPID;
@@ -23,12 +24,6 @@ import frc.robot.utils.MoSparkMaxPID.Type;
 
 public class ArmSubsystem extends SubsystemBase {
     private static final double ARM_ZERO_ZONE = 0.2;
-
-    public enum ArmControlMode {
-        FALLBACK_DIRECT_POWER,
-        DIRECT_VELOCITY,
-        SMART_MOTION
-    };
 
     public static class ArmPosition {
         public final double shoulderRotations;
@@ -68,7 +63,7 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
-    public final SendableChooser<ArmControlMode> armChooser = MoShuffleboard.enumToChooser(ArmControlMode.class);
+    public final SendableChooser<ArmControlMode> armChooser = MoShuffleboard.listToChooser(ArmControlMode.ALL_CONTROL_TYPES);
 
     private final CANSparkMax leftShoulder = new CANSparkMax(
         Constants.ARM_SHOULDER_LEFT.address, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -87,6 +82,9 @@ public class ArmSubsystem extends SubsystemBase {
     private final MoSparkMaxPID wristVelocityPID = new MoSparkMaxPID(Type.SMARTVELOCITY, wrist, 0);
     private final MoSparkMaxPID shoulderSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, leftShoulder, 1);
     private final MoSparkMaxPID wristSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, wrist, 1);
+
+    private SlewRateLimiter shoulderLimiter;
+    private SlewRateLimiter wristLimiter;
 
     public ArmSubsystem() {
         leftShoulder.setInverted(false);
@@ -154,6 +152,13 @@ public class ArmSubsystem extends SubsystemBase {
             rightShoulder.setSecondaryCurrentLimit(limit);
         }, true);
         MoPrefs.wristCurrentLimit.subscribe(wrist::setSecondaryCurrentLimit, true);
+
+        MoPrefs.armRampTime.subscribe(rampTime -> {
+            double slewRate = 1.0 / rampTime;
+
+            shoulderLimiter = new SlewRateLimiter(slewRate);
+            wristLimiter = new SlewRateLimiter(slewRate);
+        }, true);
     }
 
     public ArmPosition getPosition() {
@@ -226,5 +231,12 @@ public class ArmSubsystem extends SubsystemBase {
     public void stop() {
         leftShoulder.set(0);
         wrist.set(0);
+    }
+
+    public ArmMovementRequest limitedMovementOf(ArmMovementRequest request) {
+        return new ArmMovementRequest(
+            shoulderLimiter.calculate(request.shoulderPower),
+            wristLimiter.calculate(request.wristPower)
+        );
     }
 }

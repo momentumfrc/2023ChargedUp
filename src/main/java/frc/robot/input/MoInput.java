@@ -3,6 +3,7 @@ package frc.robot.input;
 import java.util.Optional;
 
 import frc.robot.subsystems.ArmSubsystem.ArmMovementRequest;
+import frc.robot.subsystems.ArmSubsystem.ArmPosition;
 import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 
 public interface MoInput {
@@ -14,8 +15,10 @@ public interface MoInput {
     public boolean getShouldIntake();
     public boolean getShouldExhaust();
 
-    public ArmMovementRequest getArmMovementRequest();
+    public ArmMovementRequest getDirectArmMovementRequest();
+    public ArmPosition getCraneControlArmMovementRequest();
 
-    public Optional<ArmSetpoint> getRequestedArmSetpoint();
+    public Optional<ArmSetpoint> getFineControlArmSetpoint();
+    public Optional<ArmSetpoint> getCraneControlArmSetpoint();
     public boolean getSaveArmSetpoint();
 }
