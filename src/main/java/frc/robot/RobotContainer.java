@@ -20,6 +20,7 @@ import frc.robot.utils.AutoBuilder;
 import frc.robot.utils.MoShuffleboard;
 
 public class RobotContainer {
+
     // Sensors
     private AHRS gyro = new AHRS(SerialPort.Port.kMXP);
 
@@ -28,6 +29,7 @@ public class RobotContainer {
     private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
     private ArmSubsystem arms = new ArmSubsystem();
     private IntakeSubsystem intake = new IntakeSubsystem();
+    private LEDSubsystem leds = new LEDSubsystem();
 
     // Commands
     private TeleopArmCommand armCommand = new TeleopArmCommand(arms, this::getInput);
