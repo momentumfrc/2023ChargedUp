@@ -2,6 +2,8 @@ package frc.robot.sensors;
 
 import java.util.Optional;
 
+import org.usfirst.frc.team4999.lights.compositor.AnimationCompositor;
+
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -10,12 +12,10 @@ import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.IntegerPublisher;
-import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.utils.PoseFilter;
 
 public class Limelight {
@@ -36,6 +36,7 @@ public class Limelight {
      */
     private static final double ZSCORE_CUTOFF = 3;
 
+    private static final double CROSSHAIR_ALIGNMENT_CUTOFF = 0.05;
 
     private static final double DEGS_TO_RADS = Math.PI / 180;
 
@@ -67,6 +68,8 @@ public class Limelight {
     private final DoubleArraySubscriber botposeBlueSubscriber = limelightTable.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[6]);
     private final DoubleArraySubscriber botposeRedSubscriber = limelightTable.getDoubleArrayTopic("botpose_wpired").subscribe(new double[6]);
 
+    private Optional<AnimationCompositor.View> alignmentView = Optional.empty();
+
     public void setPipeline(LimelightPipeline pipeline) {
         this.currentPipeline = pipeline;
     }
@@ -81,6 +84,14 @@ public class Limelight {
 
     public Optional<Translation2d> getCrosshair() {
         return lastReportedCrosshair;
+    }
+
+    public void setAlignmentAnimation(AnimationCompositor.View alignmentView) {
+        this.alignmentView = Optional.of(alignmentView);
+    }
+
+    public static boolean areCrosshairsZeroed(Translation2d crosshairs) {
+        return crosshairs.getDistance(new Translation2d()) < CROSSHAIR_ALIGNMENT_CUTOFF;
     }
 
     /**
@@ -123,6 +134,14 @@ public class Limelight {
             return;
         } else {
             this.lastReportedCrosshair = Optional.of(crosshairs);
+
+            alignmentView.ifPresent(view -> {
+                if(Limelight.areCrosshairsZeroed(crosshairs)) {
+                    view.show();
+                } else {
+                    view.hide();
+                }
+            });
 
             if(currentPipeline == LimelightPipeline.FIDUCIAL && isPoseDataValid(rawPoseData)) {
                 Pose3d pose = new Pose3d(

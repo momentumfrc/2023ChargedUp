@@ -11,7 +11,6 @@ import frc.robot.utils.MoPIDF;
 import frc.robot.utils.TunerUtils;
 
 public class CenterLimelightCrosshairsCommand extends CommandBase {
-    private static final double ACCURACY_CUTOFF = 0.05;
     private static final int CROSSHAIR_NOT_FOUND_CUTOFF = 10;
 
     private final DriveSubsystem drive;
@@ -56,7 +55,7 @@ public class CenterLimelightCrosshairsCommand extends CommandBase {
             return noCrosshairsCount > CROSSHAIR_NOT_FOUND_CUTOFF;
         } else {
             noCrosshairsCount = 0;
-            return maybeCrosshair.get().getDistance(new Translation2d()) < ACCURACY_CUTOFF;
+            return Limelight.areCrosshairsZeroed(maybeCrosshair.get());
         }
     }
 
