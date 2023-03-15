@@ -64,6 +64,16 @@ public class DualControllerInput implements MoInput {
     }
 
     @Override
+    public boolean getShouldAlignCones() {
+        return driveController.getAButton();
+    }
+
+    @Override
+    public boolean getShouldAlignCubes() {
+        return driveController.getXButton();
+    }
+
+    @Override
     public ArmMovementRequest getArmMovementRequest() {
         return new ArmMovementRequest(
             applyArmInputTransforms(armController.getLeftY()),

@@ -70,6 +70,16 @@ public class SingleControllerInput implements MoInput {
     }
 
     @Override
+    public boolean getShouldAlignCones() {
+        return controller.getAButton() && controller.getLeftStickButton();
+    }
+
+    @Override
+    public boolean getShouldAlignCubes() {
+        return controller.getXButton() && controller.getLeftStickButton();
+    }
+
+    @Override
     public Optional<ArmSetpoint> getRequestedArmSetpoint() {
         double pov = this.controller.getPOV();
         boolean cubes = this.controller.getXButton();
