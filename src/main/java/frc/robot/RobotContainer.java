@@ -45,11 +45,11 @@ public class RobotContainer {
     }
 
     public RobotContainer() {
-        configureBindings();
-
         inputChooser.setDefaultOption("Dual Controllers", new DualControllerInput(Constants.DRIVE_F310, Constants.ARMS_F310));
         inputChooser.addOption("Single Controller", new SingleControllerInput(Constants.DRIVE_F310));
         MoShuffleboard.getInstance().settingsTab.add("Controller Mode", inputChooser);
+
+        configureBindings();
 
         drive.setDefaultCommand(driveCommand);
         intake.setDefaultCommand(intakeCommand);
