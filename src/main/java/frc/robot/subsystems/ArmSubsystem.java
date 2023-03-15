@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.revrobotics.CANSparkMax.SoftLimitDirection;
 
 import java.util.Map;
 
@@ -135,15 +136,6 @@ public class ArmSubsystem extends SubsystemBase {
             this.shoulderEncoder.setPosition(shoulder);
         }, true);
 
-        var currentGroup = MoShuffleboard.getInstance().matchTab
-            .getLayout("Arm Currents", BuiltInLayouts.kList)
-            .withSize(2, 2)
-            .withProperties(Map.of("Label position", "RIGHT"));
-
-        currentGroup.addDouble("Left Shoulder", leftShoulder::getOutputCurrent);
-        currentGroup.addDouble("Right Shoulder", rightShoulder::getOutputCurrent);
-        currentGroup.addDouble("Wrist", wrist::getOutputCurrent);
-
         MoPrefs.absWristZero.subscribe(zero -> {
             double wrist = this.wristAbsEncoder.getPosition();
             wrist = (wrist + 1 - zero) % 1;
@@ -153,11 +145,26 @@ public class ArmSubsystem extends SubsystemBase {
             this.wristEncoder.setPosition(wrist);
         }, true);
 
+        var currentGroup = MoShuffleboard.getInstance().matchTab
+            .getLayout("Arm Currents", BuiltInLayouts.kList)
+            .withSize(2, 2)
+            .withProperties(Map.of("Label position", "RIGHT"));
+
+        currentGroup.addDouble("Left Shoulder", leftShoulder::getOutputCurrent);
+        currentGroup.addDouble("Right Shoulder", rightShoulder::getOutputCurrent);
+        currentGroup.addDouble("Wrist", wrist::getOutputCurrent);
+
         MoPrefs.shoulderCurrentLimit.subscribe(limit -> {
             leftShoulder.setSecondaryCurrentLimit(limit);
             rightShoulder.setSecondaryCurrentLimit(limit);
         }, true);
         MoPrefs.wristCurrentLimit.subscribe(wrist::setSecondaryCurrentLimit, true);
+
+        leftShoulder.setSoftLimit(SoftLimitDirection.kReverse, 0);
+        wrist.setSoftLimit(SoftLimitDirection.kReverse, 0);
+
+        MoPrefs.shoulderMaxRevolutions.subscribe(limit -> leftShoulder.setSoftLimit(SoftLimitDirection.kForward, limit.floatValue()), true);
+        MoPrefs.wristMaxRevolutions.subscribe(limit -> wrist.setSoftLimit(SoftLimitDirection.kForward, limit.floatValue()), true);
     }
 
     public ArmPosition getPosition() {
