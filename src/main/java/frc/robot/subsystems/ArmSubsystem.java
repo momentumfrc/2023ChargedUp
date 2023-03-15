@@ -89,6 +89,10 @@ public class ArmSubsystem extends SubsystemBase {
     private final MoSparkMaxPID wristSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, wrist, 1);
 
     public ArmSubsystem() {
+        leftShoulder.restoreFactoryDefaults();
+        rightShoulder.restoreFactoryDefaults();
+        wrist.restoreFactoryDefaults();
+
         leftShoulder.setInverted(false);
         rightShoulder.follow(leftShoulder, true);
 
