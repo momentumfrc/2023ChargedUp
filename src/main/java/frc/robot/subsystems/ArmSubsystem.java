@@ -84,8 +84,8 @@ public class ArmSubsystem extends SubsystemBase {
     private final RelativeEncoder wristEncoder = wrist.getEncoder();
     private final SparkMaxAbsoluteEncoder wristAbsEncoder = wrist.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
 
-    private final MoSparkMaxPID shoulderVelocityPID = new MoSparkMaxPID(Type.SMARTVELOCITY, leftShoulder, 0);
-    private final MoSparkMaxPID wristVelocityPID = new MoSparkMaxPID(Type.SMARTVELOCITY, wrist, 0);
+    private final MoSparkMaxPID shoulderVelocityPID = new MoSparkMaxPID(Type.VELOCITY, leftShoulder, 0);
+    private final MoSparkMaxPID wristVelocityPID = new MoSparkMaxPID(Type.VELOCITY, wrist, 0);
     private final MoSparkMaxPID shoulderSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, leftShoulder, 1);
     private final MoSparkMaxPID wristSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, wrist, 1);
 
