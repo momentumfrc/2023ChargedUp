@@ -2,7 +2,6 @@ package frc.robot.input;
 
 import static com.momentum4999.utils.Utils.*;
 
-import java.util.Map;
 import java.util.Optional;
 
 import edu.wpi.first.wpilibj.XboxController;
@@ -84,6 +83,7 @@ public class SingleControllerInput implements MoInput {
         double pov = this.controller.getPOV();
         boolean cubes = this.controller.getXButton();
         boolean cones = this.controller.getAButton();
+        boolean stow = this.controller.getBButton();
 
         if(cubes) {
             if(pov == 0) {
@@ -109,7 +109,7 @@ public class SingleControllerInput implements MoInput {
             }
         }
 
-        if(pov != -1) {
+        if(stow) {
             return Optional.of(ArmSetpoint.STOW);
         }
 
