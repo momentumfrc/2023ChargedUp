@@ -74,7 +74,7 @@ public class PathFollowingUtils {
         DriveSubsystem drive, PositioningSubsystem positioning,
         String trajectoryName, boolean shouldAssumeRobotIsAtStart
     ) {
-        PathPlannerTrajectory trajectory = PathPlanner.loadPath(trajectoryName, PATH_CONSTRAINTS);
+        PathPlannerTrajectory trajectory = PathPlanner.loadPath(trajectoryName, PATH_CONSTRAINTS, true);
         return getFollowTrajectoryCommand(drive, positioning, trajectory, shouldAssumeRobotIsAtStart);
     }
 }
