@@ -58,7 +58,7 @@ public class Limelight {
     private Optional<Translation2d> lastReportedCrosshair = Optional.empty();
 
     private final NetworkTable limelightTable = NetworkTableInstance.getDefault().getTable("limelight");
-    private final IntegerPublisher pipelinePublisher = limelightTable.getIntegerTopic("pipeline").publish();
+    private final DoublePublisher pipelinePublisher = limelightTable.getDoubleTopic("pipeline").publish();
     private final DoublePublisher ledPublisher = limelightTable.getDoubleTopic("ledMode").publish();
     private final DoubleSubscriber tvSubscriber = limelightTable.getDoubleTopic("tv").subscribe(0);
     private final DoubleSubscriber txSubscriber = limelightTable.getDoubleTopic("tx").subscribe(0);
