@@ -94,6 +94,8 @@ public class ArmSubsystem extends SubsystemBase {
         rightShoulder.restoreFactoryDefaults();
         wrist.restoreFactoryDefaults();
 
+        wristAbsEncoder.setInverted(true);
+
         leftShoulder.setInverted(false);
         rightShoulder.follow(leftShoulder, true);
 
