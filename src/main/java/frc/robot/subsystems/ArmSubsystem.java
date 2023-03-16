@@ -222,7 +222,7 @@ public class ArmSubsystem extends SubsystemBase {
     private ArmPosition limitArmPosition(ArmPosition position) {
         return new ArmPosition(
             Utils.clip(position.shoulderRotations, 0, MoPrefs.shoulderMaxRevolutions.get()),
-            Utils.clip(position.wristRotations, 0, MoPrefs.shoulderMaxRevolutions.get())
+            Utils.clip(position.wristRotations, 0, MoPrefs.wristMaxRevolutions.get())
         );
     }
 

@@ -55,7 +55,7 @@ public class TeleopArmCommand extends CommandBase {
 
         if(requestedSetpoint.isPresent()) {
             if(shouldSaveSetpoint) {
-                ArmSetpointManager.getInstance().setSetpoint(lastSetpoint, arms.getPosition());
+                ArmSetpointManager.getInstance().setSetpoint(requestedSetpoint.get(), arms.getPosition());
             } else {
                 smartMotionPositionOverride = false;
                 lastSetpoint = requestedSetpoint.get();
