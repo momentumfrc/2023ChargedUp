@@ -43,7 +43,7 @@ public class ArmSubsystem extends SubsystemBase {
 
         @Override
         public boolean equals(Object other) {
-            if(other instanceof Object) {
+            if(other instanceof ArmPosition) {
                 ArmPosition posOth = (ArmPosition) other;
                 return posOth.shoulderRotations == shoulderRotations
                     && posOth.wristRotations == wristRotations;
