@@ -156,8 +156,8 @@ public class ArmSubsystem extends SubsystemBase {
         currentGroup.addDouble("Wrist", wrist::getOutputCurrent);
 
         MoPrefs.shoulderCurrentLimit.subscribe(limit -> {
-            leftShoulder.setSecondaryCurrentLimit(limit);
-            rightShoulder.setSecondaryCurrentLimit(limit);
+            leftShoulder.setSmartCurrentLimit(limit.intValue());
+            rightShoulder.setSmartCurrentLimit(limit.intValue());
         }, true);
         MoPrefs.wristCurrentLimit.subscribe(wrist::setSecondaryCurrentLimit, true);
 
