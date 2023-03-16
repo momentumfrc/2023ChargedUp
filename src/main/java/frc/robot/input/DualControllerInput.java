@@ -40,12 +40,12 @@ public class DualControllerInput implements MoInput {
 
     @Override
     public double getLeftSpeedRequest() {
-        return applyDriveInputTransforms(driveController.getLeftX());
+        return -1 * applyDriveInputTransforms(driveController.getLeftX());
     }
 
     @Override
     public double getTurnRequest() {
-        return applyDriveInputTransforms(driveController.getRightX());
+        return -1 * applyDriveInputTransforms(driveController.getRightX());
     }
 
     @Override
@@ -77,7 +77,7 @@ public class DualControllerInput implements MoInput {
     public ArmMovementRequest getArmMovementRequest() {
         return new ArmMovementRequest(
             applyArmInputTransforms(armController.getLeftY()),
-            applyArmInputTransforms(armController.getRightY())
+            -1 * applyArmInputTransforms(armController.getRightY())
         );
     }
 
