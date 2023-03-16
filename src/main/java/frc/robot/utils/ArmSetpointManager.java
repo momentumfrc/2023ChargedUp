@@ -34,21 +34,25 @@ public class ArmSetpointManager {
     private static class ArmSetpointEntry {
         public final NetworkTableEntry shoulderEntry;
         public final NetworkTableEntry wristEntry;
+        private double shoulder;
+        private double wrist;
 
         public ArmSetpointEntry(NetworkTableEntry shoulderEntry, NetworkTableEntry wristEntry) {
             this.shoulderEntry = shoulderEntry;
             this.wristEntry = wristEntry;
+            this.shoulder = shoulderEntry.getDouble(0);
+            this.wrist = wristEntry.getDouble(0);
         }
 
         public ArmPosition getValue() {
-            return new ArmPosition(
-                shoulderEntry.getDouble(0),
-                wristEntry.getDouble(0)
-            );
+            return new ArmPosition(this.shoulder, this.wrist);
         }
 
         public void setValue(ArmPosition position) {
+            this.shoulder = position.shoulderRotations;
             shoulderEntry.setDouble(position.shoulderRotations);
+            
+            this.wrist = position.wristRotations;
             wristEntry.setDouble(position.wristRotations);
         }
     }
