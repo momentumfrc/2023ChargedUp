@@ -19,11 +19,12 @@ import frc.robot.input.MoInput;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
 import frc.robot.utils.MoSparkMaxPID;
+import frc.robot.utils.MoUtils;
 import frc.robot.utils.TunerUtils;
 import frc.robot.utils.MoSparkMaxPID.Type;
 
 public class ArmSubsystem extends SubsystemBase {
-    private static final double ARM_ZERO_ZONE = 0.2;
+    private static final double ENCODER_MAX_DRIFT = 0.5;
 
     public enum ArmControlMode {
         FALLBACK_DIRECT_POWER,
@@ -116,14 +117,12 @@ public class ArmSubsystem extends SubsystemBase {
 
         MoShuffleboard.getInstance().settingsTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
 
-        MoPrefs.shoulderEncoderRatio.subscribe(ratio -> {
-            shoulderEncoder.setPositionConversionFactor(1/ratio);
-            shoulderEncoder.setVelocityConversionFactor(1/ratio);
-        }, true);
-        MoPrefs.wristEncoderRatio.subscribe(ratio -> {
-            wristEncoder.setPositionConversionFactor(1/ratio);
-            wristEncoder.setVelocityConversionFactor(1/ratio);
-        }, true);
+        MoPrefs.shoulderEncoderRatio.subscribe(ratio ->
+            MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), MoPrefs.absShoulderZero.get(), ratio)
+        );
+        MoPrefs.wristEncoderRatio.subscribe(ratio ->
+            MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), MoPrefs.absWristZero.get(), ratio)
+        );
 
         var shoulderGroup = MoShuffleboard.getInstance().matchTab
             .getLayout("Shoulder Position", BuiltInLayouts.kList)
@@ -139,23 +138,13 @@ public class ArmSubsystem extends SubsystemBase {
         wristGroup.addDouble("Relative", wristEncoder::getPosition);
         wristGroup.addDouble("Absolute", wristAbsEncoder::getPosition);
 
-        MoPrefs.absShoulderZero.subscribe(zero -> {
-            double shoulder = this.shoulderAbsEncoder.getPosition();
-            shoulder = (shoulder + 1 - zero) % 1;
-            if(shoulder > (1 - ARM_ZERO_ZONE)) {
-                shoulder -= 1;
-            }
-            this.shoulderEncoder.setPosition(shoulder);
-        }, true);
+        MoPrefs.absShoulderZero.subscribe(zero ->
+            MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), zero, MoPrefs.shoulderEncoderRatio.get())
+        );
 
-        MoPrefs.absWristZero.subscribe(zero -> {
-            double wrist = this.wristAbsEncoder.getPosition();
-            wrist = (wrist + 1 - zero) % 1;
-            if(wrist > (1 - ARM_ZERO_ZONE)) {
-                wrist -= 1;
-            }
-            this.wristEncoder.setPosition(wrist);
-        }, true);
+        MoPrefs.absWristZero.subscribe(zero ->
+            MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), zero, MoPrefs.wristEncoderRatio.get())
+        );
 
         var currentGroup = MoShuffleboard.getInstance().matchTab
             .getLayout("Arm Currents", BuiltInLayouts.kList)
@@ -177,6 +166,9 @@ public class ArmSubsystem extends SubsystemBase {
 
         MoPrefs.shoulderMaxRevolutions.subscribe(limit -> leftShoulder.setSoftLimit(SoftLimitDirection.kForward, limit.floatValue()), true);
         MoPrefs.wristMaxRevolutions.subscribe(limit -> wrist.setSoftLimit(SoftLimitDirection.kForward, limit.floatValue()), true);
+
+        MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), MoPrefs.absShoulderZero.get(), MoPrefs.shoulderEncoderRatio.get());
+        MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), MoPrefs.absWristZero.get(), MoPrefs.wristEncoderRatio.get());
     }
 
     public ArmPosition getPosition() {
@@ -249,5 +241,15 @@ public class ArmSubsystem extends SubsystemBase {
     public void stop() {
         leftShoulder.set(0);
         wrist.set(0);
+    }
+
+    @Override
+    public void periodic() {
+        if(Math.abs(shoulderEncoder.getPosition() - shoulderAbsEncoder.getPosition()) > ENCODER_MAX_DRIFT) {
+            MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), MoPrefs.absShoulderZero.get(), MoPrefs.shoulderEncoderRatio.get());
+        }
+        if(Math.abs(wristEncoder.getPosition() - wristAbsEncoder.getPosition()) > ENCODER_MAX_DRIFT) {
+            MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), MoPrefs.absWristZero.get(), MoPrefs.wristEncoderRatio.get());
+        }
     }
 }
