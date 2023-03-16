@@ -13,6 +13,6 @@ public class DriveHoldPositionCommand extends CommandBase {
 
     @Override
     public void execute() {
-        drive.driveCartesian(0, 0, 0);
+        drive.stop();
     }
 }
