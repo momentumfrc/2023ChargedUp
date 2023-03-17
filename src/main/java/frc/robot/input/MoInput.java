@@ -17,6 +17,8 @@ public interface MoInput {
     public boolean getShouldAlignCubes();
     public boolean getShouldAlignCones();
 
+    public boolean getShouldBrake();
+
     public ArmMovementRequest getArmMovementRequest();
 
     public Optional<ArmSetpoint> getRequestedArmSetpoint();

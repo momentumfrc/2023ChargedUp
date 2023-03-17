@@ -124,4 +124,12 @@ public class DualControllerInput implements MoInput {
         return armController.getStartButton();
     }
 
+    @Override
+    public boolean getShouldBrake() {
+        return driveController.getLeftStickButton() &&
+            driveController.getRightStickButton() &&
+            armController.getLeftStickButton() &&
+            armController.getRightStickButton();
+    }
+
 }
