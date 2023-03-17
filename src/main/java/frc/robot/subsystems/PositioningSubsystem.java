@@ -118,7 +118,7 @@ public class PositioningSubsystem extends SubsystemBase {
                 if(fieldOrientedFwd.isEmpty()) {
                     fieldOrientedFwd = Optional.of(gyro.getRotation2d());
                 }
-                return gyro.getRotation2d().minus(fieldOrientedFwd.get());
+                return gyro.getRotation2d().minus(fieldOrientedFwd.get()).rotateBy(Rotation2d.fromRotations(0.5));
             case ODOMETRY:
                 return getRobotPose().getRotation();
             case NONE:
