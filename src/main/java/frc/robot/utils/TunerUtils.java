@@ -91,7 +91,8 @@ public class TunerUtils {
         if(sparkMax.getType() == MoSparkMaxPID.Type.SMARTMOTION) {
             builder = builder
                 .withProperty("maxVel", (v) -> sparkMax.getPID().setSmartMotionMaxVelocity(v, sparkMax.getPidSlot()))
-                .withProperty("maxAccel", (a) -> sparkMax.getPID().setSmartMotionMaxAccel(a, sparkMax.getPidSlot()));
+                .withProperty("maxAccel", (a) -> sparkMax.getPID().setSmartMotionMaxAccel(a, sparkMax.getPidSlot()))
+                .withProperty("allowedError", (e) -> sparkMax.getPID().setSmartMotionAllowedClosedLoopError(e, sparkMax.getPidSlot()));
         }
 
         return tryBuild(
