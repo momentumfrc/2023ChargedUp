@@ -29,9 +29,9 @@ public class ArmSubsystem extends SubsystemBase {
     private static final double ENCODER_MAX_DRIFT = 0.5;
 
     public enum ArmControlMode {
-        FALLBACK_DIRECT_POWER,
+        SMART_MOTION,
         DIRECT_VELOCITY,
-        SMART_MOTION
+        FALLBACK_DIRECT_POWER
     };
 
     public static class ArmPosition {

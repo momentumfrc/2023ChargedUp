@@ -84,8 +84,8 @@ public class PositioningSubsystem extends SubsystemBase {
     private MecanumDriveOdometry odometry;
 
     private static enum FieldOrientedDriveMode {
-        GYRO,
         ODOMETRY,
+        GYRO,
         NONE
     };
 
