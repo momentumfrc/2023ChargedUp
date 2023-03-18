@@ -10,8 +10,10 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
 
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -99,6 +101,8 @@ public class ArmSubsystem extends SubsystemBase {
     private final MoSparkMaxPID wristVelocityPID = new MoSparkMaxPID(Type.VELOCITY, wrist, 0);
     private final MoSparkMaxPID shoulderSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, leftShoulder, 1);
     private final MoSparkMaxPID wristSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, wrist, 1);
+
+    // private final GenericEntry burnFlash = MoShuffleboard.getInstance().settingsTab.add("Burn Flash", false).getEntry();
 
     public ArmSubsystem() {
         leftShoulder.restoreFactoryDefaults();
@@ -255,5 +259,14 @@ public class ArmSubsystem extends SubsystemBase {
         if(Math.abs(wristEncoder.getPosition() - wristAbsEncoder.getPosition()) > ENCODER_MAX_DRIFT) {
             MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), MoPrefs.absWristZero.get(), MoPrefs.wristEncoderRatio.get());
         }
+
+        /*if(burnFlash.getBoolean(false)) {
+            System.out.println("BURNING SPARKMAX FLASH!!!");
+            burnFlash.setBoolean(false);
+
+            leftShoulder.burnFlash();
+            rightShoulder.burnFlash();
+            wrist.burnFlash();
+        }*/
     }
 }
