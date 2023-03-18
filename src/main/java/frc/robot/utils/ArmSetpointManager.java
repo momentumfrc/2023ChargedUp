@@ -65,6 +65,7 @@ public class ArmSetpointManager {
         CONE_MED,
         CONE_LOW,
         CONE_PICKUP,
+        LOADING,
         STOW
     };
 

@@ -87,6 +87,11 @@ public class DualControllerInput implements MoInput {
         boolean cubes = armController.getXButton();
         boolean cones = armController.getAButton();
         boolean stow = armController.getBButton();
+        boolean load = armController.getYButton();
+
+        if (load) {
+            return Optional.of(ArmSetpoint.LOADING);
+        }
 
         if(cubes) {
             if(pov == 0) {
