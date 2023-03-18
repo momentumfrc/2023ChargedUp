@@ -243,6 +243,11 @@ public class ArmSubsystem extends SubsystemBase {
         wrist.set(0);
     }
 
+    public void reZero() {
+        MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), MoPrefs.absShoulderZero.get(), MoPrefs.shoulderEncoderRatio.get());
+        MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), MoPrefs.absWristZero.get(), MoPrefs.wristEncoderRatio.get());
+    }
+
     @Override
     public void periodic() {
         if(Math.abs(shoulderEncoder.getPosition() - shoulderAbsEncoder.getPosition()) > ENCODER_MAX_DRIFT) {

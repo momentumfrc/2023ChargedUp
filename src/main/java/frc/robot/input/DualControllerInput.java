@@ -137,4 +137,8 @@ public class DualControllerInput implements MoInput {
             armController.getRightStickButton();
     }
 
+    public boolean getReZeroArms() {
+        return armController.getBackButtonPressed();
+    }
+
 }

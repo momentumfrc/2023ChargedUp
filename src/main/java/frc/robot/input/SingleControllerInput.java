@@ -125,4 +125,9 @@ public class SingleControllerInput implements MoInput {
     public boolean getShouldBrake() {
         return controller.getLeftStickButton() && controller.getRightStickButton();
     }
+
+    @Override
+    public boolean getReZeroArms() {
+        return false;
+    }
 }

@@ -23,4 +23,6 @@ public interface MoInput {
 
     public Optional<ArmSetpoint> getRequestedArmSetpoint();
     public boolean getSaveArmSetpoint();
+
+    public boolean getReZeroArms();
 }
