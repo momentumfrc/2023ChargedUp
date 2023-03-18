@@ -224,10 +224,9 @@ public class ArmSubsystem extends SubsystemBase {
         wrist.set(movement.wristPower);
     }
 
+
     public void adjustVelocity(ArmMovementRequest movement) {
         movement = limitArmMovement(movement);
-        leftShoulder.set(movement.shoulderPower);
-        wrist.set(movement.wristPower);
         shoulderVelocityPID.setReference(movement.shoulderVelocity);
         wristVelocityPID.setReference(movement.wristVelocity);
     }
