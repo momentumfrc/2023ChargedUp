@@ -253,12 +253,12 @@ public class ArmSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if(Math.abs(shoulderEncoder.getPosition() - shoulderAbsEncoder.getPosition()) > ENCODER_MAX_DRIFT) {
-            MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), MoPrefs.absShoulderZero.get(), MoPrefs.shoulderEncoderRatio.get());
-        }
-        if(Math.abs(wristEncoder.getPosition() - wristAbsEncoder.getPosition()) > ENCODER_MAX_DRIFT) {
-            MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), MoPrefs.absWristZero.get(), MoPrefs.wristEncoderRatio.get());
-        }
+        // if(Math.abs(shoulderEncoder.getPosition() - shoulderAbsEncoder.getPosition()) > ENCODER_MAX_DRIFT) {
+        //     MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), MoPrefs.absShoulderZero.get(), MoPrefs.shoulderEncoderRatio.get());
+        // }
+        // if(Math.abs(wristEncoder.getPosition() - wristAbsEncoder.getPosition()) > ENCODER_MAX_DRIFT) {
+        //     MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), MoPrefs.absWristZero.get(), MoPrefs.wristEncoderRatio.get());
+        // }
 
         /*if(burnFlash.getBoolean(false)) {
             System.out.println("BURNING SPARKMAX FLASH!!!");
