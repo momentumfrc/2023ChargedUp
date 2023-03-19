@@ -18,8 +18,8 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.commands.auto.BalanceScaleCommand;
 import frc.robot.commands.auto.CenterLimelightCrosshairsCommand;
 import frc.robot.commands.auto.DriveHoldPositionCommand;
-import frc.robot.commands.auto.HoldArmPositionCommand;
-import frc.robot.commands.auto.MoveArmToPositionCommand;
+import frc.robot.commands.auto.HoldArmSetpointCommand;
+import frc.robot.commands.auto.MoveArmToSetpointCommand;
 import frc.robot.commands.auto.RunIntakeCommand;
 import frc.robot.commands.auto.StopIntakeCommand;
 import frc.robot.sensors.Limelight;
@@ -197,7 +197,7 @@ public class AutoBuilder {
                 }
                 autoCommand.addCommands(new ParallelDeadlineGroup(
                     new CenterLimelightCrosshairsCommand(drive, pos.limelight, pipeline),
-                    HoldArmPositionCommand.fromSetpoint(arm, ArmSetpoint.STOW),
+                    new HoldArmSetpointCommand(arm, ArmSetpoint.STOW),
                     new StopIntakeCommand(intake)
                 ));
             }
@@ -222,15 +222,15 @@ public class AutoBuilder {
             autoCommand.addCommands(new ParallelDeadlineGroup(
                 new SequentialCommandGroup(
                     new ParallelDeadlineGroup(
-                        MoveArmToPositionCommand.fromSetpoint(arm, scoreSetpoint),
+                        new MoveArmToSetpointCommand(arm, scoreSetpoint),
                         new StopIntakeCommand(intake)
                     ),
                     new ParallelDeadlineGroup(
                         new RunIntakeCommand(intake, intakeDirection),
-                        HoldArmPositionCommand.fromSetpoint(arm, scoreSetpoint)
+                        new HoldArmSetpointCommand(arm, scoreSetpoint)
                     ),
                     new ParallelDeadlineGroup(
-                        MoveArmToPositionCommand.fromSetpoint(arm, ArmSetpoint.STOW),
+                        new MoveArmToSetpointCommand(arm, ArmSetpoint.STOW),
                         new StopIntakeCommand(intake)
                     )
                 ),
@@ -261,7 +261,7 @@ public class AutoBuilder {
 
         autoCommand.addCommands(new ParallelCommandGroup(
             driveCommands,
-            HoldArmPositionCommand.fromSetpoint(arm, ArmSetpoint.STOW),
+            new HoldArmSetpointCommand(arm, ArmSetpoint.STOW),
             new StopIntakeCommand(intake)
         ));
 
