@@ -36,6 +36,8 @@ public final class MoPrefs {
     public static Pref<Double> shoulderCurrentLimit = doublePref("Shoulder Current Limit", 10);
     public static Pref<Double> wristCurrentLimit = doublePref("Wrist Current Limit", 10);
 
+    public static Pref<Double> autoScoreXDist = doublePref("Auto Score X Dist", 2.50);
+
     public final class Pref<T> {
         public final String key;
         private Function<NetworkTableValue, T> getter;
