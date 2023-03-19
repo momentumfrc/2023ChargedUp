@@ -19,7 +19,7 @@ import frc.robot.subsystems.PositioningSubsystem;
 public class PathFollowingUtils {
     public static final boolean USE_HOLONOMIC_DRIVE = false;
 
-    private static final PathConstraints PATH_CONSTRAINTS = new PathConstraints(4, 0.5);
+    private static final PathConstraints PATH_CONSTRAINTS = new PathConstraints(2, 0.5);
 
     public static Command getFollowTrajectoryCommand(
         DriveSubsystem drive, PositioningSubsystem positioning,
