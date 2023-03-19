@@ -19,7 +19,7 @@ public class CenterLimelightCrosshairsCommand extends CommandBase {
     private final LimelightPipeline pipeline;
 
     private final MoPIDF alignmentController = new MoPIDF();
-    private final PIDTuner tuner = TunerUtils.forMoPID(alignmentController, "Limelight Fine Alignment");
+    private final PIDTuner tuner = TunerUtils.forMoPID(alignmentController, "Limelight Fine Alignment", true);
 
     private int noCrosshairsCount = 0;
 

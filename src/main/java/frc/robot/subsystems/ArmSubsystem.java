@@ -114,10 +114,10 @@ public class ArmSubsystem extends SubsystemBase {
         leftShoulder.setInverted(false);
         rightShoulder.follow(leftShoulder, true);
 
-        TunerUtils.forMoSparkMax(shoulderVelocityPID, "Shoulder Vel. PID", false);
-        TunerUtils.forMoSparkMax(wristVelocityPID, "Wrist Vel. PID", false);
-        TunerUtils.forMoSparkMax(shoulderSmartMotionPID, "Shoulder Pos. PID", false);
-        TunerUtils.forMoSparkMax(wristSmartMotionPID, "Wrist Pos. PID", false);
+        TunerUtils.forMoSparkMax(shoulderVelocityPID, "Shoulder Vel. PID", true);
+        TunerUtils.forMoSparkMax(wristVelocityPID, "Wrist Vel. PID", true);
+        TunerUtils.forMoSparkMax(shoulderSmartMotionPID, "Shoulder Pos. PID", true);
+        TunerUtils.forMoSparkMax(wristSmartMotionPID, "Wrist Pos. PID", true);
 
         MoShuffleboard.getInstance().settingsTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
 
