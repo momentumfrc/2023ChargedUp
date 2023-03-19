@@ -141,4 +141,9 @@ public class DualControllerInput implements MoInput {
         return armController.getBackButtonPressed();
     }
 
+    @Override
+    public boolean getShouldBalance() {
+        return driveController.getBButton();
+    }
+
 }

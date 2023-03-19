@@ -130,4 +130,9 @@ public class SingleControllerInput implements MoInput {
     public boolean getReZeroArms() {
         return false;
     }
+
+    @Override
+    public boolean getShouldBalance() {
+        return false;
+    }
 }

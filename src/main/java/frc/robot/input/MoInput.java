@@ -25,4 +25,5 @@ public interface MoInput {
     public boolean getSaveArmSetpoint();
 
     public boolean getReZeroArms();
+    public boolean getShouldBalance();
 }

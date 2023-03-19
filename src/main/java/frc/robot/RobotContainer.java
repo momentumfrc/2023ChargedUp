@@ -9,11 +9,13 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.TeleopArmCommand;
 import frc.robot.commands.TeleopBrakeCommand;
 import frc.robot.commands.TeleopDriveCommand;
 import frc.robot.commands.TeleopIntakeCommand;
+import frc.robot.commands.auto.BalanceScaleCommand;
 import frc.robot.commands.auto.CenterLimelightCrosshairsCommand;
 import frc.robot.input.DualControllerInput;
 import frc.robot.input.MoInput;
@@ -65,9 +67,11 @@ public class RobotContainer {
     private void configureBindings() {
         Trigger alignCones = new Trigger(() -> inputChooser.getSelected().getShouldAlignCones());
         Trigger alignCubes = new Trigger(() -> inputChooser.getSelected().getShouldAlignCubes());
+        Trigger balance = new Trigger(() -> inputChooser.getSelected().getShouldBalance());
 
         alignCones.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.REFLECTORS));
         alignCubes.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.FIDUCIAL));
+        balance.whileTrue(new BalanceScaleCommand(drive, gyro));
     }
 
     public Command getAutonomousCommand() {
