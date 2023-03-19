@@ -16,6 +16,7 @@ public final class MoPrefs {
     public static Pref<Double> driveDeadzone = doublePref("Drive Deadzone", 0.05);
     public static Pref<Double> driveCurve = doublePref("Drive Curve", 1);
     public static Pref<Double> driveSlowSpeed = doublePref("Drive Slow Speed", 0.5);
+    public static Pref<Double> turnSlowSpeed = doublePref("Turn Slow Speed", 0.25);
     public static Pref<Double> driveRampTime = doublePref("Drive Ramp Time", 0.25);
 
     public static Pref<Double> shoulderMaxRpm = doublePref("Shoulder Maximum RPM", 200.0);

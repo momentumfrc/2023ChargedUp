@@ -60,9 +60,10 @@ public class TeleopDriveCommand extends CommandBase {
 
         if(input.getShouldUseSlowSpeed()) {
             double slowSpeed = MoPrefs.driveSlowSpeed.get();
+            double turnSlowSpeed = MoPrefs.turnSlowSpeed.get();
             fwdRequest *= slowSpeed;
             leftRequest *= slowSpeed;
-            turnRequest *= slowSpeed;
+            turnRequest *= turnSlowSpeed;
         }
 
         fwdRequest = fwdLimiter.calculate(fwdRequest);
