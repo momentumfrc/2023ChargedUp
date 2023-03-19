@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.TeleopArmCommand;
+import frc.robot.commands.TeleopBrakeCommand;
 import frc.robot.commands.TeleopDriveCommand;
 import frc.robot.commands.TeleopIntakeCommand;
 import frc.robot.commands.auto.CenterLimelightCrosshairsCommand;
@@ -31,11 +32,13 @@ public class RobotContainer {
     private PositioningSubsystem positioning = new PositioningSubsystem(gyro, drive);
     private ArmSubsystem arms = new ArmSubsystem();
     private IntakeSubsystem intake = new IntakeSubsystem();
+    private BrakeSubsystem brakes = new BrakeSubsystem();
 
     // Commands
     private TeleopArmCommand armCommand = new TeleopArmCommand(arms, this::getInput);
     private TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, positioning, this::getInput);
     private TeleopIntakeCommand intakeCommand = new TeleopIntakeCommand(intake, this::getInput);
+    private TeleopBrakeCommand brakeCommand = new TeleopBrakeCommand(brakes, this::getInput);
 
     private AutoBuilder autoBuilder = new AutoBuilder();
     private SendableChooser<MoInput> inputChooser = new SendableChooser<>();
@@ -54,6 +57,7 @@ public class RobotContainer {
         drive.setDefaultCommand(driveCommand);
         intake.setDefaultCommand(intakeCommand);
         arms.setDefaultCommand(armCommand);
+        brakes.setDefaultCommand(brakeCommand);
 
         autoBuilder.initShuffleboard();
     }

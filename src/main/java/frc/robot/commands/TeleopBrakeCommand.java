@@ -22,6 +22,11 @@ public class TeleopBrakeCommand extends CommandBase {
     }
 
     @Override
+    public void initialize() {
+        this.brakes.setBrakesExtended(false);
+    }
+
+    @Override
     public void execute() {
         var input = inputSupplier.get();
         if (input.getShouldBrake()) {
