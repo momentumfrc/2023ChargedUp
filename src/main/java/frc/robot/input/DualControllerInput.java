@@ -40,12 +40,12 @@ public class DualControllerInput implements MoInput {
 
     @Override
     public double getLeftSpeedRequest() {
-        return applyDriveInputTransforms(driveController.getLeftX());
+        return -1 * applyDriveInputTransforms(driveController.getLeftX());
     }
 
     @Override
     public double getTurnRequest() {
-        return applyDriveInputTransforms(driveController.getRightX());
+        return -1 * applyDriveInputTransforms(driveController.getRightX());
     }
 
     @Override
@@ -64,10 +64,20 @@ public class DualControllerInput implements MoInput {
     }
 
     @Override
+    public boolean getShouldAlignCones() {
+        return driveController.getAButton();
+    }
+
+    @Override
+    public boolean getShouldAlignCubes() {
+        return driveController.getXButton();
+    }
+
+    @Override
     public ArmMovementRequest getArmMovementRequest() {
         return new ArmMovementRequest(
             applyArmInputTransforms(armController.getLeftY()),
-            applyArmInputTransforms(armController.getRightY())
+            -1 * applyArmInputTransforms(armController.getRightY())
         );
     }
 
@@ -77,6 +87,11 @@ public class DualControllerInput implements MoInput {
         boolean cubes = armController.getXButton();
         boolean cones = armController.getAButton();
         boolean stow = armController.getBButton();
+        boolean load = armController.getYButton();
+
+        if (load) {
+            return Optional.of(ArmSetpoint.LOADING);
+        }
 
         if(cubes) {
             if(pov == 0) {
@@ -112,6 +127,33 @@ public class DualControllerInput implements MoInput {
     @Override
     public boolean getSaveArmSetpoint() {
         return armController.getStartButton();
+    }
+
+    @Override
+    public boolean getShouldBrake() {
+        return driveController.getLeftStickButton() &&
+            driveController.getRightStickButton() &&
+            armController.getLeftStickButton() &&
+            armController.getRightStickButton();
+    }
+
+    public boolean getReZeroArms() {
+        return armController.getBackButtonPressed();
+    }
+
+    @Override
+    public boolean getShouldBalance() {
+        return driveController.getBButton();
+    }
+
+    @Override
+    public boolean getReZeroGyro() {
+        return driveController.getBackButtonPressed();
+    }
+
+    @Override
+    public boolean getShouldDriveAligned() {
+        return driveController.getLeftBumper();
     }
 
 }

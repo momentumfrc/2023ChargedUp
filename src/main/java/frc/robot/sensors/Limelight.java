@@ -51,14 +51,14 @@ public class Limelight {
 
     private LimelightPipeline currentPipeline = LimelightPipeline.FIDUCIAL;
 
-    private boolean shouldForceLedsOff = true;
+    private boolean shouldForceLedsOff = false;
 
     private PoseFilter poseFilter = new PoseFilter(LIMELIGHT_DATAPOINTS, STDDEV_CUTOFF, ZSCORE_CUTOFF);
     private Optional<Pose3d> lastReportedPose = Optional.empty();
     private Optional<Translation2d> lastReportedCrosshair = Optional.empty();
 
     private final NetworkTable limelightTable = NetworkTableInstance.getDefault().getTable("limelight");
-    private final IntegerPublisher pipelinePublisher = limelightTable.getIntegerTopic("pipeline").publish();
+    private final DoublePublisher pipelinePublisher = limelightTable.getDoubleTopic("pipeline").publish();
     private final DoublePublisher ledPublisher = limelightTable.getDoubleTopic("ledMode").publish();
     private final DoubleSubscriber tvSubscriber = limelightTable.getDoubleTopic("tv").subscribe(0);
     private final DoubleSubscriber txSubscriber = limelightTable.getDoubleTopic("tx").subscribe(0);

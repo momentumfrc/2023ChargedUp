@@ -8,7 +8,7 @@ import frc.robot.subsystems.ArmSubsystem.ArmPosition;
 import frc.robot.utils.ArmSetpointManager;
 import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 
-public class MoveArmToPositionCommand extends HoldArmPositionCommand {
+public class MoveArmToSetpointCommand extends HoldArmSetpointCommand {
     /**
      * The duration (in seconds) for which the arm subsystem must be within ON_TARGET_ZONE of the
      * requested position before the arms are considered to be at the requested position.
@@ -23,23 +23,21 @@ public class MoveArmToPositionCommand extends HoldArmPositionCommand {
 
     private final Timer targetTimer = new Timer();
 
-    public MoveArmToPositionCommand(ArmSubsystem arms, ArmPosition position) {
-        super(arms, position);
-    }
-
-    public static MoveArmToPositionCommand fromSetpoint(ArmSubsystem arms, ArmSetpoint setpoint) {
-        return new MoveArmToPositionCommand(arms, ArmSetpointManager.getInstance().getSetpoint(setpoint));
+    public MoveArmToSetpointCommand(ArmSubsystem arms, ArmSetpoint setpoint) {
+        super(arms, setpoint);
     }
 
     private boolean atTarget() {
         ArmPosition currPos = arms.getPosition();
-        return Math.abs(currPos.shoulderRotations - targetPosition.shoulderRotations) < ON_TARGET_ZONE
-            && Math.abs(currPos.wristRotations - targetPosition.wristRotations) < ON_TARGET_ZONE;
+        ArmPosition target = manager.getSetpoint(targetSetpoint);
+        return Math.abs(currPos.shoulderRotations - target.shoulderRotations) < ON_TARGET_ZONE
+            && Math.abs(currPos.wristRotations - target.wristRotations) < ON_TARGET_ZONE;
     }
 
     @Override
     public boolean isFinished() {
-        if(atTarget()) {
+        boolean atTarget = this.atTarget();
+        if(atTarget) {
             return targetTimer.hasElapsed(ON_TARGET_TIME);
         } else {
             targetTimer.restart();

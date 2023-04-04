@@ -2,7 +2,6 @@ package frc.robot.input;
 
 import static com.momentum4999.utils.Utils.*;
 
-import java.util.Map;
 import java.util.Optional;
 
 import edu.wpi.first.wpilibj.XboxController;
@@ -70,10 +69,21 @@ public class SingleControllerInput implements MoInput {
     }
 
     @Override
+    public boolean getShouldAlignCones() {
+        return controller.getAButton() && controller.getLeftStickButton();
+    }
+
+    @Override
+    public boolean getShouldAlignCubes() {
+        return controller.getXButton() && controller.getLeftStickButton();
+    }
+
+    @Override
     public Optional<ArmSetpoint> getRequestedArmSetpoint() {
         double pov = this.controller.getPOV();
         boolean cubes = this.controller.getXButton();
         boolean cones = this.controller.getAButton();
+        boolean stow = this.controller.getBButton();
 
         if(cubes) {
             if(pov == 0) {
@@ -99,7 +109,7 @@ public class SingleControllerInput implements MoInput {
             }
         }
 
-        if(pov != -1) {
+        if(stow) {
             return Optional.of(ArmSetpoint.STOW);
         }
 
@@ -109,5 +119,32 @@ public class SingleControllerInput implements MoInput {
     @Override
     public boolean getSaveArmSetpoint() {
         return controller.getStartButton();
+    }
+
+    @Override
+    public boolean getShouldBrake() {
+        return controller.getLeftStickButton() && controller.getRightStickButton();
+    }
+
+    @Override
+    public boolean getReZeroArms() {
+        return false;
+    }
+
+    @Override
+    public boolean getShouldBalance() {
+        return false;
+    }
+
+    @Override
+    public boolean getReZeroGyro() {
+        // Not available in single
+        return false;
+    }
+
+    @Override
+    public boolean getShouldDriveAligned() {
+        // Not available in single
+        return false;
     }
 }

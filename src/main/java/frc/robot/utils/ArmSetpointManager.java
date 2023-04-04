@@ -1,14 +1,60 @@
 package frc.robot.utils;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Optional;
 
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import org.ini4j.Ini;
+
 import frc.robot.subsystems.ArmSubsystem.ArmPosition;
 
 public class ArmSetpointManager {
-    private static final String TABLE_NAME = "ArmSetpoints";
+    private static class DataStore {
+        private static HashMap<File, DataStore> instances = new HashMap<>();
+        public static DataStore getInstance(File file) {
+            if(!instances.containsKey(file)) {
+                instances.put(file, new DataStore(file));
+            }
+            return instances.get(file);
+        }
+
+        private final File file;
+        private final Ini ini;
+
+        private DataStore(File file) {
+            this.file = file;
+            ini = new Ini();
+            if(file.isFile()) {
+                try {
+                    ini.load(file);
+                } catch(IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public void putValue(String section, String property, double value) {
+            ini.put(section, property, value);
+        }
+
+        public Optional<Double> getValue(String section, String property) {
+            if(ini.containsKey(section) && ini.get(section).containsKey(property)) {
+                return Optional.of(ini.get(section, property, Double.class));
+            } else {
+                return Optional.empty();
+            }
+        }
+
+        public void save() {
+            try {
+                ini.store(file);
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public static enum ArmSetpoint {
         CUBE_HIGH,
@@ -19,6 +65,7 @@ public class ArmSetpointManager {
         CONE_MED,
         CONE_LOW,
         CONE_PICKUP,
+        LOADING,
         STOW
     };
 
@@ -32,44 +79,44 @@ public class ArmSetpointManager {
     }
 
     private static class ArmSetpointEntry {
-        public final NetworkTableEntry shoulderEntry;
-        public final NetworkTableEntry wristEntry;
+        private String sectionName;
+        private DataStore store;
 
-        public ArmSetpointEntry(NetworkTableEntry shoulderEntry, NetworkTableEntry wristEntry) {
-            this.shoulderEntry = shoulderEntry;
-            this.wristEntry = wristEntry;
+        private ArmPosition position;
+
+        public ArmSetpointEntry(String sectionName, DataStore store) {
+            this.sectionName = sectionName;
+            this.store = store;
+
+            double shoulder = store.getValue(sectionName, "shoulder").orElse(0.0);
+            double wrist = store.getValue(sectionName, "wrist").orElse(0.0);
+
+            this.position = new ArmPosition(shoulder, wrist);
         }
 
         public ArmPosition getValue() {
-            return new ArmPosition(
-                shoulderEntry.getDouble(0),
-                wristEntry.getDouble(0)
-            );
+            return position;
         }
 
         public void setValue(ArmPosition position) {
-            shoulderEntry.setDouble(position.shoulderRotations);
-            wristEntry.setDouble(position.wristRotations);
+            if(position.equals(this.position))
+                return;
+            this.position = position;
+
+            store.putValue(sectionName, "shoulder", position.shoulderRotations);
+            store.putValue(sectionName, "wrist", position.wristRotations);
+            store.save();
         }
     }
 
-    private NetworkTable table;
-
+    private DataStore store = DataStore.getInstance(new File("/home/lvuser/arm_setpoints.ini"));
     private EnumMap<ArmSetpoint, ArmSetpointEntry> entries = new EnumMap<>(ArmSetpoint.class);
 
     private void initSetpoint(ArmSetpoint setpoint) {
-        NetworkTableEntry shoulderEntry = table.getEntry(setpoint.name() + "_shoulder");
-        NetworkTableEntry wristEntry = table.getEntry(setpoint.name() + "_wrist");
-        shoulderEntry.setDefaultDouble(0);
-        wristEntry.setDefaultDouble(0);
-        shoulderEntry.setPersistent();
-        wristEntry.setPersistent();
-        entries.put(setpoint, new ArmSetpointEntry(shoulderEntry, wristEntry));
+        entries.put(setpoint, new ArmSetpointEntry(setpoint.name(), store));
     }
 
     private ArmSetpointManager() {
-        table = NetworkTableInstance.getDefault().getTable(TABLE_NAME);
-
         for(ArmSetpoint setpoint : ArmSetpoint.values()) {
             initSetpoint(setpoint);
         }

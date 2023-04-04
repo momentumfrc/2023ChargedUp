@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.revrobotics.CANSparkMax.IdleMode;
+import com.revrobotics.CANSparkMax.SoftLimitDirection;
 
 import java.util.Map;
 
@@ -9,8 +11,10 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
 
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -18,16 +22,17 @@ import frc.robot.input.MoInput;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
 import frc.robot.utils.MoSparkMaxPID;
+import frc.robot.utils.MoUtils;
 import frc.robot.utils.TunerUtils;
 import frc.robot.utils.MoSparkMaxPID.Type;
 
 public class ArmSubsystem extends SubsystemBase {
-    private static final double ARM_ZERO_ZONE = 0.2;
+    private static final double ENCODER_MAX_DRIFT = 0.5;
 
     public enum ArmControlMode {
-        FALLBACK_DIRECT_POWER,
+        SMART_MOTION,
         DIRECT_VELOCITY,
-        SMART_MOTION
+        FALLBACK_DIRECT_POWER
     };
 
     public static class ArmPosition {
@@ -37,6 +42,16 @@ public class ArmSubsystem extends SubsystemBase {
         public ArmPosition(double shoulderRotations, double wristRotations) {
             this.shoulderRotations = shoulderRotations;
             this.wristRotations = wristRotations;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if(other instanceof ArmPosition) {
+                ArmPosition posOth = (ArmPosition) other;
+                return posOth.shoulderRotations == shoulderRotations
+                    && posOth.wristRotations == wristRotations;
+            }
+            return false;
         }
 
         @Override
@@ -83,30 +98,40 @@ public class ArmSubsystem extends SubsystemBase {
     private final RelativeEncoder wristEncoder = wrist.getEncoder();
     private final SparkMaxAbsoluteEncoder wristAbsEncoder = wrist.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
 
-    private final MoSparkMaxPID shoulderVelocityPID = new MoSparkMaxPID(Type.SMARTVELOCITY, leftShoulder, 0);
-    private final MoSparkMaxPID wristVelocityPID = new MoSparkMaxPID(Type.SMARTVELOCITY, wrist, 0);
+    private final MoSparkMaxPID shoulderVelocityPID = new MoSparkMaxPID(Type.VELOCITY, leftShoulder, 0);
+    private final MoSparkMaxPID wristVelocityPID = new MoSparkMaxPID(Type.VELOCITY, wrist, 0);
     private final MoSparkMaxPID shoulderSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, leftShoulder, 1);
     private final MoSparkMaxPID wristSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, wrist, 1);
 
+    // private final GenericEntry burnFlash = MoShuffleboard.getInstance().settingsTab.add("Burn Flash", false).getEntry();
+
     public ArmSubsystem() {
+        leftShoulder.restoreFactoryDefaults();
+        rightShoulder.restoreFactoryDefaults();
+        wrist.restoreFactoryDefaults();
+
+        wrist.setIdleMode(IdleMode.kBrake);
+        leftShoulder.setIdleMode(IdleMode.kBrake);
+        rightShoulder.setIdleMode(IdleMode.kBrake);
+
+        wristAbsEncoder.setInverted(true);
+
         leftShoulder.setInverted(false);
         rightShoulder.follow(leftShoulder, true);
 
-        TunerUtils.forMoSparkMax(shoulderVelocityPID, "Shoulder Vel. PID", false);
-        TunerUtils.forMoSparkMax(wristVelocityPID, "Wrist Vel. PID", false);
-        TunerUtils.forMoSparkMax(shoulderSmartMotionPID, "Shoulder Pos. PID", false);
-        TunerUtils.forMoSparkMax(wristSmartMotionPID, "Wrist Pos. PID", false);
+        TunerUtils.forMoSparkMax(shoulderVelocityPID, "Shoulder Vel. PID", true);
+        TunerUtils.forMoSparkMax(wristVelocityPID, "Wrist Vel. PID", true);
+        TunerUtils.forMoSparkMax(shoulderSmartMotionPID, "Shoulder Pos. PID", true);
+        TunerUtils.forMoSparkMax(wristSmartMotionPID, "Wrist Pos. PID", true);
 
         MoShuffleboard.getInstance().settingsTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
 
-        MoPrefs.shoulderEncoderRatio.subscribe(ratio -> {
-            shoulderEncoder.setPositionConversionFactor(1/ratio);
-            shoulderEncoder.setVelocityConversionFactor(1/ratio);
-        }, true);
-        MoPrefs.wristEncoderRatio.subscribe(ratio -> {
-            wristEncoder.setPositionConversionFactor(1/ratio);
-            wristEncoder.setVelocityConversionFactor(1/ratio);
-        }, true);
+        MoPrefs.shoulderEncoderRatio.subscribe(ratio ->
+            MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), MoPrefs.absShoulderZero.get(), ratio)
+        );
+        MoPrefs.wristEncoderRatio.subscribe(ratio ->
+            MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), MoPrefs.absWristZero.get(), ratio)
+        );
 
         var shoulderGroup = MoShuffleboard.getInstance().matchTab
             .getLayout("Shoulder Position", BuiltInLayouts.kList)
@@ -122,14 +147,13 @@ public class ArmSubsystem extends SubsystemBase {
         wristGroup.addDouble("Relative", wristEncoder::getPosition);
         wristGroup.addDouble("Absolute", wristAbsEncoder::getPosition);
 
-        MoPrefs.absShoulderZero.subscribe(zero -> {
-            double shoulder = this.shoulderAbsEncoder.getPosition();
-            shoulder = (shoulder + 1 - zero) % 1;
-            if(shoulder > (1 - ARM_ZERO_ZONE)) {
-                shoulder -= 1;
-            }
-            this.shoulderEncoder.setPosition(shoulder);
-        }, true);
+        MoPrefs.absShoulderZero.subscribe(zero ->
+            MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), zero, MoPrefs.shoulderEncoderRatio.get())
+        );
+
+        MoPrefs.absWristZero.subscribe(zero ->
+            MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), zero, MoPrefs.wristEncoderRatio.get())
+        );
 
         var currentGroup = MoShuffleboard.getInstance().matchTab
             .getLayout("Arm Currents", BuiltInLayouts.kList)
@@ -140,20 +164,20 @@ public class ArmSubsystem extends SubsystemBase {
         currentGroup.addDouble("Right Shoulder", rightShoulder::getOutputCurrent);
         currentGroup.addDouble("Wrist", wrist::getOutputCurrent);
 
-        MoPrefs.absWristZero.subscribe(zero -> {
-            double wrist = this.wristAbsEncoder.getPosition();
-            wrist = (wrist + 1 - zero) % 1;
-            if(wrist > (1 - ARM_ZERO_ZONE)) {
-                wrist -= 1;
-            }
-            this.wristEncoder.setPosition(wrist);
-        }, true);
-
         MoPrefs.shoulderCurrentLimit.subscribe(limit -> {
-            leftShoulder.setSecondaryCurrentLimit(limit);
-            rightShoulder.setSecondaryCurrentLimit(limit);
+            leftShoulder.setSmartCurrentLimit(limit.intValue());
+            rightShoulder.setSmartCurrentLimit(limit.intValue());
         }, true);
         MoPrefs.wristCurrentLimit.subscribe(wrist::setSecondaryCurrentLimit, true);
+
+        leftShoulder.setSoftLimit(SoftLimitDirection.kReverse, 0);
+        wrist.setSoftLimit(SoftLimitDirection.kReverse, 0);
+
+        MoPrefs.shoulderMaxRevolutions.subscribe(limit -> leftShoulder.setSoftLimit(SoftLimitDirection.kForward, limit.floatValue()), true);
+        MoPrefs.wristMaxRevolutions.subscribe(limit -> wrist.setSoftLimit(SoftLimitDirection.kForward, limit.floatValue()), true);
+
+        MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), MoPrefs.absShoulderZero.get(), MoPrefs.shoulderEncoderRatio.get());
+        MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), MoPrefs.absWristZero.get(), MoPrefs.wristEncoderRatio.get());
     }
 
     public ArmPosition getPosition() {
@@ -199,7 +223,7 @@ public class ArmSubsystem extends SubsystemBase {
     private ArmPosition limitArmPosition(ArmPosition position) {
         return new ArmPosition(
             Utils.clip(position.shoulderRotations, 0, MoPrefs.shoulderMaxRevolutions.get()),
-            Utils.clip(position.wristRotations, 0, MoPrefs.shoulderMaxRevolutions.get())
+            Utils.clip(position.wristRotations, 0, MoPrefs.wristMaxRevolutions.get())
         );
     }
 
@@ -209,10 +233,9 @@ public class ArmSubsystem extends SubsystemBase {
         wrist.set(movement.wristPower);
     }
 
+
     public void adjustVelocity(ArmMovementRequest movement) {
         movement = limitArmMovement(movement);
-        leftShoulder.set(movement.shoulderPower);
-        wrist.set(movement.wristPower);
         shoulderVelocityPID.setReference(movement.shoulderVelocity);
         wristVelocityPID.setReference(movement.wristVelocity);
     }
@@ -226,5 +249,29 @@ public class ArmSubsystem extends SubsystemBase {
     public void stop() {
         leftShoulder.set(0);
         wrist.set(0);
+    }
+
+    public void reZero() {
+        MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), MoPrefs.absShoulderZero.get(), MoPrefs.shoulderEncoderRatio.get());
+        MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), MoPrefs.absWristZero.get(), MoPrefs.wristEncoderRatio.get());
+    }
+
+    @Override
+    public void periodic() {
+        // if(Math.abs(shoulderEncoder.getPosition() - shoulderAbsEncoder.getPosition()) > ENCODER_MAX_DRIFT) {
+        //     MoUtils.setupRelativeEncoder(shoulderEncoder, shoulderAbsEncoder.getPosition(), MoPrefs.absShoulderZero.get(), MoPrefs.shoulderEncoderRatio.get());
+        // }
+        // if(Math.abs(wristEncoder.getPosition() - wristAbsEncoder.getPosition()) > ENCODER_MAX_DRIFT) {
+        //     MoUtils.setupRelativeEncoder(wristEncoder, wristAbsEncoder.getPosition(), MoPrefs.absWristZero.get(), MoPrefs.wristEncoderRatio.get());
+        // }
+
+        /*if(burnFlash.getBoolean(false)) {
+            System.out.println("BURNING SPARKMAX FLASH!!!");
+            burnFlash.setBoolean(false);
+
+            leftShoulder.burnFlash();
+            rightShoulder.burnFlash();
+            wrist.burnFlash();
+        }*/
     }
 }

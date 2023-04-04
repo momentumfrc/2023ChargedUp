@@ -95,10 +95,21 @@ public class DriveSubsystem extends SubsystemBase {
 
     public DriveSubsystem(AHRS gyro) {
         this.gyro = gyro;
-        maintainHeading = gyro.getRotation2d();
+        maintainHeading = getCurrHeading();
 
         frontLeftMtr.motor.setInverted(true);
         rearLeftMtr.motor.setInverted(true);
+
+        headingController.enableContinuousInput(-Math.PI, Math.PI);
+    }
+
+    /**
+     * Gets the current heading, within the range (-PI, PI]
+     * @return the current heading
+     */
+    private Rotation2d getCurrHeading() {
+        Rotation2d gyroHeading = gyro.getRotation2d();
+        return new Rotation2d(gyroHeading.getCos(), gyroHeading.getSin());
     }
 
     public MecanumDriveWheelPositions getWheelPositions() {
@@ -148,7 +159,7 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest, Rotation2d fieldOrientedDriveAngle) {
-        var wheelSpeeds = MecanumDrive.driveCartesianIK(fwdRequest, leftRequest, calculateTurn(turnRequest, gyro.getRotation2d()), fieldOrientedDriveAngle.unaryMinus());
+        var wheelSpeeds = MecanumDrive.driveCartesianIK(fwdRequest, leftRequest, calculateTurn(turnRequest, getCurrHeading()), fieldOrientedDriveAngle.unaryMinus());
         double maxSpeedRpm = MoPrefs.maxDriveRpm.get();
 
         if(shouldDrivePID.getBoolean(true)) {
@@ -213,5 +224,12 @@ public class DriveSubsystem extends SubsystemBase {
 
     public void resetMaintainHeading() {
         turnState = TurnState.TURNING;
+    }
+
+    @Override
+    public void periodic() {
+        if(DriverStation.isDisabled()) {
+            this.stop();
+        }
     }
 }

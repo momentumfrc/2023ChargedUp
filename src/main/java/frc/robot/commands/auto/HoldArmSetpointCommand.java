@@ -10,18 +10,17 @@ import frc.robot.subsystems.ArmSubsystem.ArmPosition;
 import frc.robot.utils.ArmSetpointManager;
 import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 
-public class HoldArmPositionCommand extends CommandBase {
+public class HoldArmSetpointCommand extends CommandBase {
 
-    protected final ArmPosition targetPosition;
+    protected final ArmSetpoint targetSetpoint;
     protected final ArmSubsystem arms;
+    protected final ArmSetpointManager manager = ArmSetpointManager.getInstance();
 
-    public HoldArmPositionCommand(ArmSubsystem arms, ArmPosition position) {
-        this.targetPosition = position;
+    public HoldArmSetpointCommand(ArmSubsystem arms, ArmSetpoint setpoint) {
+        this.targetSetpoint = setpoint;
         this.arms = arms;
-    }
 
-    public static HoldArmPositionCommand fromSetpoint(ArmSubsystem arms, ArmSetpoint setpoint) {
-        return new HoldArmPositionCommand(arms, ArmSetpointManager.getInstance().getSetpoint(setpoint));
+        addRequirements(arms);
     }
 
     @Override
@@ -33,6 +32,6 @@ public class HoldArmPositionCommand extends CommandBase {
             return;
         }
 
-        arms.adjustSmartPosition(targetPosition);
+        arms.adjustSmartPosition(manager.getSetpoint(targetSetpoint));
     }
 }

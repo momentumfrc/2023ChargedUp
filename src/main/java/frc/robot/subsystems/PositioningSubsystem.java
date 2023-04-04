@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.sensors.Limelight;
+import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
 
 /**
@@ -59,6 +60,9 @@ public class PositioningSubsystem extends SubsystemBase {
      * into field-relative coordinates.
      */
     private static final Translation2d fieldSize = new Translation2d(16.54175, 8.0137);
+
+    private static final double GRID_DIST_ALIGN_TOLERANCE = 0.05;
+
     /**
      * The limelight. Should be used by auto scoring commands for fine targeting.
      */
@@ -92,7 +96,7 @@ public class PositioningSubsystem extends SubsystemBase {
     private SendableChooser<FieldOrientedDriveMode> fieldOrientedDriveMode =
         MoShuffleboard.enumToChooser(FieldOrientedDriveMode.class);
 
-    private Optional<Rotation2d> fieldOrientedFwd = Optional.empty();
+    private Rotation2d fieldOrientedFwd;
 
     public PositioningSubsystem(AHRS ahrs, DriveSubsystem drive) {
         this.gyro = ahrs;
@@ -105,6 +109,14 @@ public class PositioningSubsystem extends SubsystemBase {
             gyro.getRotation2d(),
             drive.getWheelPositions()
         );
+
+        resetFieldOrientedFwd();
+
+        MoShuffleboard.getInstance().autoTab
+            .addBoolean("At score dist?", this::atScoringDistFromGrid)
+            .withPosition(4, 1)
+            .withSize(1, 1)
+            .withWidget(BuiltInWidgets.kBooleanBox);
     }
 
     public DifferentialDriveKinematics getDifferentialKinematics() {
@@ -115,10 +127,7 @@ public class PositioningSubsystem extends SubsystemBase {
         var foMode = fieldOrientedDriveMode.getSelected();
         switch(foMode) {
             case GYRO:
-                if(fieldOrientedFwd.isEmpty()) {
-                    fieldOrientedFwd = Optional.of(gyro.getRotation2d());
-                }
-                return gyro.getRotation2d().minus(fieldOrientedFwd.get());
+                return gyro.getRotation2d().minus(fieldOrientedFwd).rotateBy(Rotation2d.fromRotations(0.5));
             case ODOMETRY:
                 return getRobotPose().getRotation();
             case NONE:
@@ -159,6 +168,13 @@ public class PositioningSubsystem extends SubsystemBase {
         this.odometry.resetPosition(gyro.getRotation2d(), drive.getWheelPositions(), pose);
     }
 
+    public boolean atScoringDistFromGrid() {
+        return Math.abs(this.getRobotPose().getTranslation().getX() - MoPrefs.autoScoreXDist.get()) < GRID_DIST_ALIGN_TOLERANCE;
+    }
+
+    public void resetFieldOrientedFwd() {
+        this.fieldOrientedFwd = gyro.getRotation2d();
+    }
 
     @Override
     public void periodic() {
@@ -177,7 +193,7 @@ public class PositioningSubsystem extends SubsystemBase {
         robotPose = odometry.update(gyro.getRotation2d(), drive.getWheelPositions());
         field.setRobotPose(getAbsoluteRobotPose());
 
-        if(fieldOrientedDriveMode.getSelected() != FieldOrientedDriveMode.GYRO && fieldOrientedFwd.isPresent())
-            fieldOrientedFwd = Optional.empty();
+        if(fieldOrientedDriveMode.getSelected() != FieldOrientedDriveMode.GYRO)
+            resetFieldOrientedFwd();
     }
 }

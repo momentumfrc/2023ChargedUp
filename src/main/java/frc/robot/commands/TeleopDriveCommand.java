@@ -60,9 +60,10 @@ public class TeleopDriveCommand extends CommandBase {
 
         if(input.getShouldUseSlowSpeed()) {
             double slowSpeed = MoPrefs.driveSlowSpeed.get();
+            double turnSlowSpeed = MoPrefs.turnSlowSpeed.get();
             fwdRequest *= slowSpeed;
             leftRequest *= slowSpeed;
-            turnRequest *= slowSpeed;
+            turnRequest *= turnSlowSpeed;
         }
 
         fwdRequest = fwdLimiter.calculate(fwdRequest);
@@ -71,6 +72,10 @@ public class TeleopDriveCommand extends CommandBase {
 
         var foHeading = positioning.getFieldOrientedDriveHeading();
         drive.driveCartesian(fwdRequest, leftRequest, turnRequest, foHeading);
+
+        if (input.getReZeroGyro()) {
+            this.positioning.resetFieldOrientedFwd();
+        }
     }
 
     @Override

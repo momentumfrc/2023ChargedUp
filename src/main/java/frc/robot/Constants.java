@@ -45,6 +45,9 @@ public class Constants {
 
     public static final PIDTunerSettings TUNER_SETTINGS = new PIDTunerSettings();
 
+    public static final int EXTEND_BRAKE = 0;
+    public static final int RETRACT_BRAKE = 1;
+
     static {
         if(RobotBase.isReal()) {
             TUNER_SETTINGS.saveValuesLocation = new File("/home/lvuser/pid_constants.ini");

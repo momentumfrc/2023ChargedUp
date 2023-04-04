@@ -3,6 +3,7 @@ package frc.robot.commands.auto;
 import com.momentum4999.utils.PIDTuner;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.sensors.Limelight;
 import frc.robot.sensors.Limelight.LimelightPipeline;
@@ -11,8 +12,9 @@ import frc.robot.utils.MoPIDF;
 import frc.robot.utils.TunerUtils;
 
 public class CenterLimelightCrosshairsCommand extends CommandBase {
-    private static final double ACCURACY_CUTOFF = 0.05;
+    private static final double ACCURACY_CUTOFF = 0.15;
     private static final int CROSSHAIR_NOT_FOUND_CUTOFF = 10;
+    private static final double SETTINGS_TIME = 0.3;
 
     private final DriveSubsystem drive;
     private final Limelight limelight;
@@ -22,6 +24,8 @@ public class CenterLimelightCrosshairsCommand extends CommandBase {
     private final PIDTuner tuner = TunerUtils.forMoPID(alignmentController, "Limelight Fine Alignment");
 
     private int noCrosshairsCount = 0;
+
+    private Timer setsettingsTimer = new Timer();
 
     public CenterLimelightCrosshairsCommand(DriveSubsystem drive, Limelight limelight, LimelightPipeline pipeline) {
         this.drive = drive;
@@ -35,28 +39,36 @@ public class CenterLimelightCrosshairsCommand extends CommandBase {
     public void initialize() {
         limelight.forceLedsOff(pipeline != LimelightPipeline.REFLECTORS);
         limelight.setPipeline(pipeline);
+
+        setsettingsTimer.restart();
     }
 
     @Override
     public void execute() {
+        if(!setsettingsTimer.hasElapsed(SETTINGS_TIME)) {
+            return;
+        }
         var maybeCrosshair = limelight.getCrosshair();
         if(maybeCrosshair.isEmpty()) {
             return;
         }
         var crosshair = maybeCrosshair.get();
-        double leftRequest = alignmentController.calculate(crosshair.getX(), 0);
-        drive.driveCartesian(0, leftRequest, 0);
+        double turnRequest = alignmentController.calculate(crosshair.getX(), 0);
+        drive.driveCartesian(0, 0, turnRequest);
     }
 
     @Override
     public boolean isFinished() {
+        if(!setsettingsTimer.hasElapsed(SETTINGS_TIME)) {
+            return false;
+        }
         var maybeCrosshair = limelight.getCrosshair();
         if(maybeCrosshair.isEmpty()) {
             noCrosshairsCount += 1;
             return noCrosshairsCount > CROSSHAIR_NOT_FOUND_CUTOFF;
         } else {
             noCrosshairsCount = 0;
-            return maybeCrosshair.get().getDistance(new Translation2d()) < ACCURACY_CUTOFF;
+            return Math.abs(maybeCrosshair.get().getX()) < ACCURACY_CUTOFF;
         }
     }
 

@@ -55,7 +55,7 @@ public class TeleopArmCommand extends CommandBase {
 
         if(requestedSetpoint.isPresent()) {
             if(shouldSaveSetpoint) {
-                ArmSetpointManager.getInstance().setSetpoint(lastSetpoint, arms.getPosition());
+                ArmSetpointManager.getInstance().setSetpoint(requestedSetpoint.get(), arms.getPosition());
             } else {
                 smartMotionPositionOverride = false;
                 lastSetpoint = requestedSetpoint.get();
@@ -78,6 +78,11 @@ public class TeleopArmCommand extends CommandBase {
     public void execute() {
         MoInput input = inputSupplier.get();
         var controlMode = arms.armChooser.getSelected();
+
+        if(input.getReZeroArms()) {
+            arms.reZero();
+        }
+
         switch(controlMode) {
             case FALLBACK_DIRECT_POWER:
                 arms.adjustDirectPower(getLimitedMovementRequest(input));
