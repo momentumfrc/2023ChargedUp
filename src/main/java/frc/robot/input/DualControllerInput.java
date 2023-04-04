@@ -146,4 +146,14 @@ public class DualControllerInput implements MoInput {
         return driveController.getBButton();
     }
 
+    @Override
+    public boolean getReZeroGyro() {
+        return driveController.getBackButtonPressed();
+    }
+
+    @Override
+    public boolean getShouldDriveAligned() {
+        return driveController.getLeftBumper();
+    }
+
 }

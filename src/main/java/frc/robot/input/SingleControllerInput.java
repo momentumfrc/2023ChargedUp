@@ -135,4 +135,16 @@ public class SingleControllerInput implements MoInput {
     public boolean getShouldBalance() {
         return false;
     }
+
+    @Override
+    public boolean getReZeroGyro() {
+        // Not available in single
+        return false;
+    }
+
+    @Override
+    public boolean getShouldDriveAligned() {
+        // Not available in single
+        return false;
+    }
 }

@@ -11,6 +11,7 @@ public interface MoInput {
     public double getTurnRequest();
 
     public boolean getShouldUseSlowSpeed();
+    public boolean getShouldDriveAligned();
     public boolean getShouldIntake();
     public boolean getShouldExhaust();
 
@@ -25,5 +26,6 @@ public interface MoInput {
     public boolean getSaveArmSetpoint();
 
     public boolean getReZeroArms();
+    public boolean getReZeroGyro();
     public boolean getShouldBalance();
 }

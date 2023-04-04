@@ -72,6 +72,10 @@ public class TeleopDriveCommand extends CommandBase {
 
         var foHeading = positioning.getFieldOrientedDriveHeading();
         drive.driveCartesian(fwdRequest, leftRequest, turnRequest, foHeading);
+
+        if (input.getReZeroGyro()) {
+            this.positioning.resetFieldOrientedFwd();
+        }
     }
 
     @Override

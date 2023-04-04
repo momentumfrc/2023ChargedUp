@@ -88,15 +88,15 @@ public class PositioningSubsystem extends SubsystemBase {
     private MecanumDriveOdometry odometry;
 
     private static enum FieldOrientedDriveMode {
-        ODOMETRY,
         GYRO,
+        ODOMETRY,
         NONE
     };
 
     private SendableChooser<FieldOrientedDriveMode> fieldOrientedDriveMode =
         MoShuffleboard.enumToChooser(FieldOrientedDriveMode.class);
 
-    private Optional<Rotation2d> fieldOrientedFwd = Optional.empty();
+    private Rotation2d fieldOrientedFwd;
 
     public PositioningSubsystem(AHRS ahrs, DriveSubsystem drive) {
         this.gyro = ahrs;
@@ -109,6 +109,8 @@ public class PositioningSubsystem extends SubsystemBase {
             gyro.getRotation2d(),
             drive.getWheelPositions()
         );
+
+        resetFieldOrientedFwd();
 
         MoShuffleboard.getInstance().autoTab
             .addBoolean("At score dist?", this::atScoringDistFromGrid)
@@ -125,10 +127,7 @@ public class PositioningSubsystem extends SubsystemBase {
         var foMode = fieldOrientedDriveMode.getSelected();
         switch(foMode) {
             case GYRO:
-                if(fieldOrientedFwd.isEmpty()) {
-                    fieldOrientedFwd = Optional.of(gyro.getRotation2d());
-                }
-                return gyro.getRotation2d().minus(fieldOrientedFwd.get()).rotateBy(Rotation2d.fromRotations(0.5));
+                return gyro.getRotation2d().minus(fieldOrientedFwd).rotateBy(Rotation2d.fromRotations(0.5));
             case ODOMETRY:
                 return getRobotPose().getRotation();
             case NONE:
@@ -173,6 +172,10 @@ public class PositioningSubsystem extends SubsystemBase {
         return Math.abs(this.getRobotPose().getTranslation().getX() - MoPrefs.autoScoreXDist.get()) < GRID_DIST_ALIGN_TOLERANCE;
     }
 
+    public void resetFieldOrientedFwd() {
+        this.fieldOrientedFwd = gyro.getRotation2d();
+    }
+
     @Override
     public void periodic() {
         limelight.periodic();
@@ -190,7 +193,7 @@ public class PositioningSubsystem extends SubsystemBase {
         robotPose = odometry.update(gyro.getRotation2d(), drive.getWheelPositions());
         field.setRobotPose(getAbsoluteRobotPose());
 
-        if(fieldOrientedDriveMode.getSelected() != FieldOrientedDriveMode.GYRO && fieldOrientedFwd.isPresent())
-            fieldOrientedFwd = Optional.empty();
+        if(fieldOrientedDriveMode.getSelected() != FieldOrientedDriveMode.GYRO)
+            resetFieldOrientedFwd();
     }
 }

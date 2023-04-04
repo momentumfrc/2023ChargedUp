@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 
 import java.util.Map;
@@ -108,6 +109,10 @@ public class ArmSubsystem extends SubsystemBase {
         leftShoulder.restoreFactoryDefaults();
         rightShoulder.restoreFactoryDefaults();
         wrist.restoreFactoryDefaults();
+
+        wrist.setIdleMode(IdleMode.kBrake);
+        leftShoulder.setIdleMode(IdleMode.kBrake);
+        rightShoulder.setIdleMode(IdleMode.kBrake);
 
         wristAbsEncoder.setInverted(true);
 

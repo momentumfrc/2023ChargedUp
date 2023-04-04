@@ -225,4 +225,11 @@ public class DriveSubsystem extends SubsystemBase {
     public void resetMaintainHeading() {
         turnState = TurnState.TURNING;
     }
+
+    @Override
+    public void periodic() {
+        if(DriverStation.isDisabled()) {
+            this.stop();
+        }
+    }
 }
