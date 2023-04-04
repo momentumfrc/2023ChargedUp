@@ -4,9 +4,6 @@
 
 package frc.robot;
 
-import org.usfirst.frc.team4999.lights.Color;
-import org.usfirst.frc.team4999.lights.animations.Solid;
-
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.SerialPort;
@@ -58,10 +55,6 @@ public class RobotContainer {
         arms.setDefaultCommand(armCommand);
 
         autoBuilder.initShuffleboard();
-
-        positioning.limelight.setAlignmentAnimation(
-            leds.getCompositor().getOpaqueView(new Solid(Color.GREEN), 100)
-        );
     }
 
     private void configureBindings() {
