@@ -10,6 +10,7 @@ import org.usfirst.frc.team4999.lights.compositor.AnimationCompositor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 
+import org.usfirst.frc.team4999.lights.AddressableLEDDisplay;
 import org.usfirst.frc.team4999.lights.AsyncAnimator;
 import org.usfirst.frc.team4999.lights.Color;
 import org.usfirst.frc.team4999.lights.ColorTools;
@@ -38,28 +39,28 @@ public class LEDSubsystem {
 
     AnimationSequence mainAnimation = new AnimationSequence(
         new AnimationSequence.AnimationSequenceMember(
-            new Snake(7, rainbowTails),
+            new Snake(20, rainbowTails),
             5000
         ),
         new AnimationSequence.AnimationSequenceMember(
-            new Snake(5, ColorTools.getSmearedColors(rainbowcolors, 16)),
+            new Snake(15, ColorTools.getSmearedColors(rainbowcolors, 16)),
             1500
         ),
         new AnimationSequence.AnimationSequenceMember(
-            new Snake(7, momentumTails),
+            new Snake(20, momentumTails),
             5000
         ),
         new AnimationSequence.AnimationSequenceMember(
-            new Stack(20, 20, rainbowcolors),
+            new Stack(20, 60, rainbowcolors),
             1500
         )
     );
 
     public LEDSubsystem() {
         try {
-            this.display = NeoPixels.getInstance(SPI.Port.kOnboardCS0);
+            this.display = new AddressableLEDDisplay(0, 120);
             this.animator = new AsyncAnimator(display);
-            this.compositor = new AnimationCompositor();
+            this.compositor = new AnimationCompositor(animator);
         } catch(RuntimeException e) {
             DriverStation.reportError("Error instantiating LEDSubsystem: " + e.getMessage(), e.getStackTrace());
             return;
