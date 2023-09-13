@@ -31,7 +31,6 @@ public class BalanceScaleCommand extends CommandBase {
 
     @Override
     public void initialize() {
-        drive.resetMaintainHeading();
     }
 
     @Override

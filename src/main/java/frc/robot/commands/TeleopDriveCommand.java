@@ -3,7 +3,6 @@ package frc.robot.commands;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.input.MoInput;
 import frc.robot.subsystems.DriveSubsystem;
@@ -40,15 +39,6 @@ public class TeleopDriveCommand extends CommandBase {
 
     @Override
     public void initialize() {
-        // We need to make sure the robot doesn't try to snap back to zero if it was pushed
-        // around while it was disabled.
-        // Since runsWhenDisabled() returns false, this command will be canceled
-        // whenever the robot is disabled. Then, when the robot is re-enabled, it will be
-        // rescheduled (since it is the default command of DriveSubsystem) and init will
-        // be called again.
-        // Thus, every time teleop is started, this method will be called and the drive
-        // will reset its heading to the current value.
-        drive.resetMaintainHeading();
     }
 
     @Override
