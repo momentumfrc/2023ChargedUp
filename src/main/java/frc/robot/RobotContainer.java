@@ -81,8 +81,8 @@ public class RobotContainer {
         Trigger alignCubes = new Trigger(() -> inputChooser.getSelected().getShouldAlignCubes());
         Trigger balance = new Trigger(() -> inputChooser.getSelected().getShouldBalance());
 
-        alignCones.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.REFLECTORS, false));
-        alignCubes.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.FIDUCIAL, false));
+        alignCones.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.REFLECTORS));
+        alignCubes.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.FIDUCIAL));
         balance.whileTrue(new BalanceScaleCommand(drive, gyro));
     }
 

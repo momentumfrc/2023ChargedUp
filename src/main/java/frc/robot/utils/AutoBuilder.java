@@ -196,7 +196,7 @@ public class AutoBuilder {
                     pipeline = LimelightPipeline.REFLECTORS;
                 }
                 autoCommand.addCommands(new ParallelDeadlineGroup(
-                    new CenterLimelightCrosshairsCommand(drive, pos.limelight, pipeline, false),
+                    new CenterLimelightCrosshairsCommand(drive, pos.limelight, pipeline),
                     new HoldArmSetpointCommand(arm, ArmSetpoint.STOW),
                     new StopIntakeCommand(intake)
                 ));
