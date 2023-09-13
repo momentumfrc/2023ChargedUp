@@ -7,23 +7,25 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.momentum4999.utils.PIDTuner;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxAnalogSensor;
+import com.revrobotics.SparkMaxAnalogSensor.Mode;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import frc.robot.utils.MoPrefs.Pref;
 
 public class SwerveModule {
+    private static final double ABSOLUTE_ENCODER_SCALE = 1/3.3;
+
     private final String key;
     public final CANSparkMax turnMotor;
     public final WPI_TalonFX driveMotor;
 
     // Note: the absolute encoder returns rotations, in the range [0, 1)
-    public final AnalogEncoder absoluteEncoder;
+    public final SparkMaxAnalogSensor absoluteEncoder;
 
     private final MoSparkMaxPID turnPID;
     private final MoTalonFxPID drivePID;
@@ -38,14 +40,16 @@ public class SwerveModule {
     private final Pref<Double> encoderScale;
     private final Pref<Double> driveMtrScale;
 
-    public SwerveModule(String key, CANSparkMax turnMotor, WPI_TalonFX driveMotor, AnalogEncoder absoluteEncoder, Pref<Double> encoderZero, Pref<Double> encoderScale, Pref<Double> driveMtrScale, boolean showPidTuners) {
+    public SwerveModule(String key, CANSparkMax turnMotor, WPI_TalonFX driveMotor, Pref<Double> encoderZero, Pref<Double> encoderScale, Pref<Double> driveMtrScale, boolean showPidTuners) {
         this.key = key;
         this.turnMotor = turnMotor;
         this.driveMotor = driveMotor;
-        this.absoluteEncoder = absoluteEncoder;
         this.encoderZero = encoderZero;
         this.encoderScale = encoderScale;
         this.driveMtrScale = driveMtrScale;
+
+        this.absoluteEncoder = turnMotor.getAnalog(Mode.kAbsolute);
+        this.absoluteEncoder.setPositionConversionFactor(ABSOLUTE_ENCODER_SCALE);
 
         this.turnPID = new MoSparkMaxPID(MoSparkMaxPID.Type.POSITION, turnMotor, 0);
         this.drivePID = new MoTalonFxPID(MoTalonFxPID.Type.VELOCITY, driveMotor);
@@ -60,23 +64,23 @@ public class SwerveModule {
 
         relativeEncoder = turnMotor.getEncoder();
 
-        encoderZero.subscribe(zero -> this.setupRelativeEncoder(absoluteEncoder.get(), zero, encoderScale.get()), false);
-        encoderScale.subscribe(scale -> this.setupRelativeEncoder(absoluteEncoder.get(), encoderZero.get(), scale), false);
+        encoderZero.subscribe(zero -> this.setupRelativeEncoder(absoluteEncoder.getPosition(), zero, encoderScale.get()), false);
+        encoderScale.subscribe(scale -> this.setupRelativeEncoder(absoluteEncoder.getPosition(), encoderZero.get(), scale), false);
         setupRelativeEncoder();
 
         var layout = Shuffleboard.getTab("match").getLayout(key, BuiltInLayouts.kList)
             .withSize(2, 1)
             .withProperties(Map.of("Label position", "LEFT"));
         layout.addDouble("Relative", () -> (MoUtils.radToRot(relativeEncoder.getPosition())));
-        layout.addDouble("Absolute", absoluteEncoder::get);
+        layout.addDouble("Absolute", absoluteEncoder::getPosition);
     }
 
     public void setupRelativeEncoder() {
-        setupRelativeEncoder(absoluteEncoder.get(), encoderZero.get(), encoderScale.get());
+        setupRelativeEncoder(absoluteEncoder.getPosition(), encoderZero.get(), encoderScale.get());
     }
 
     public void setRelativePosition() {
-        setRelativePosition(absoluteEncoder.get(), encoderZero.get());
+        setRelativePosition(absoluteEncoder.getPosition(), encoderZero.get());
     }
 
     private void setupRelativeEncoder(double absPos, double absZero, double scale) {

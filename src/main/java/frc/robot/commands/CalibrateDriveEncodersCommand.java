@@ -126,10 +126,10 @@ public class CalibrateDriveEncodersCommand extends CommandBase {
     public CalibrateDriveEncodersCommand(DriveSubsystem drive) {
         this.drive = drive;
 
-        frontLeft = new Calibrator(drive.frontLeft.absoluteEncoder::get, drive.frontLeft.turnMotor.getEncoder()::getPosition);
-        frontRight = new Calibrator(drive.frontRight.absoluteEncoder::get, drive.frontRight.turnMotor.getEncoder()::getPosition);
-        rearLeft = new Calibrator(drive.rearLeft.absoluteEncoder::get, drive.rearLeft.turnMotor.getEncoder()::getPosition);
-        rearRight = new Calibrator(drive.rearRight.absoluteEncoder::get, drive.rearRight.turnMotor.getEncoder()::getPosition);
+        frontLeft = new Calibrator(drive.frontLeft.absoluteEncoder::getPosition, drive.frontLeft.turnMotor.getEncoder()::getPosition);
+        frontRight = new Calibrator(drive.frontRight.absoluteEncoder::getPosition, drive.frontRight.turnMotor.getEncoder()::getPosition);
+        rearLeft = new Calibrator(drive.rearLeft.absoluteEncoder::getPosition, drive.rearLeft.turnMotor.getEncoder()::getPosition);
+        rearRight = new Calibrator(drive.rearRight.absoluteEncoder::getPosition, drive.rearRight.turnMotor.getEncoder()::getPosition);
     }
 
     @Override

@@ -71,8 +71,7 @@ public class DriveSubsystem extends SubsystemBase {
         this.frontLeft = new SwerveModule(
             "FL",
             new CANSparkMax(Constants.TURN_LEFT_FRONT.address, MotorType.kBrushless),
-            new WPI_TalonFX(Constants.DRIVE_LEFT_FRONT),
-            new AnalogEncoder(Constants.ENCODER_LEFT_FRONT),
+            new WPI_TalonFX(Constants.DRIVE_LEFT_FRONT.address),
             MoPrefs.flZero,
             MoPrefs.flScale,
             MoPrefs.flDriveMtrScale,
@@ -82,8 +81,7 @@ public class DriveSubsystem extends SubsystemBase {
         this.frontRight = new SwerveModule(
             "FR",
             new CANSparkMax(Constants.TURN_RIGHT_FRONT.address, MotorType.kBrushless),
-            new WPI_TalonFX(Constants.DRIVE_RIGHT_FRONT),
-            new AnalogEncoder(Constants.ENCODER_RIGHT_FRONT),
+            new WPI_TalonFX(Constants.DRIVE_RIGHT_FRONT.address),
             MoPrefs.frZero,
             MoPrefs.frScale,
             MoPrefs.frDriveMtrScale,
@@ -93,8 +91,7 @@ public class DriveSubsystem extends SubsystemBase {
         this.rearLeft = new SwerveModule(
             "RL",
             new CANSparkMax(Constants.TURN_LEFT_REAR.address, MotorType.kBrushless),
-            new WPI_TalonFX(Constants.DRIVE_LEFT_REAR),
-            new AnalogEncoder(Constants.ENCODER_LEFT_REAR),
+            new WPI_TalonFX(Constants.DRIVE_LEFT_REAR.address),
             MoPrefs.rlZero,
             MoPrefs.rlScale,
             MoPrefs.rlDriveMtrScale,
@@ -104,8 +101,7 @@ public class DriveSubsystem extends SubsystemBase {
         this.rearRight = new SwerveModule(
             "RR",
             new CANSparkMax(Constants.TURN_RIGHT_REAR.address, MotorType.kBrushless),
-            new WPI_TalonFX(Constants.DRIVE_RIGHT_REAR),
-            new AnalogEncoder(Constants.ENCODER_RIGHT_REAR),
+            new WPI_TalonFX(Constants.DRIVE_RIGHT_REAR.address),
             MoPrefs.rrZero,
             MoPrefs.rrScale,
             MoPrefs.rrDriveMtrScale,
