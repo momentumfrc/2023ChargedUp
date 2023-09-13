@@ -10,6 +10,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -79,13 +81,8 @@ public class PositioningSubsystem extends SubsystemBase {
     private final AHRS gyro;
     private final DriveSubsystem drive;
 
-    public final MecanumDriveKinematics kinematics = new MecanumDriveKinematics(
-        new Translation2d(WHEEL_FWD_POS, WHEEL_LEFT_POS),
-        new Translation2d(WHEEL_FWD_POS, -WHEEL_LEFT_POS),
-        new Translation2d(-WHEEL_FWD_POS, WHEEL_LEFT_POS),
-        new Translation2d(-WHEEL_FWD_POS, -WHEEL_LEFT_POS)
-    );
-    private MecanumDriveOdometry odometry;
+    public final SwerveDriveKinematics kinematics;
+    private SwerveDriveOdometry odometry;
 
     private static enum FieldOrientedDriveMode {
         GYRO,
@@ -101,10 +98,11 @@ public class PositioningSubsystem extends SubsystemBase {
     public PositioningSubsystem(AHRS ahrs, DriveSubsystem drive) {
         this.gyro = ahrs;
         this.drive = drive;
+        this.kinematics = drive.kinematics;
 
         MoShuffleboard.getInstance().settingsTab.add("Field Oriented Mode", fieldOrientedDriveMode);
 
-        odometry = new MecanumDriveOdometry(
+        odometry = new SwerveDriveOdometry(
             kinematics,
             gyro.getRotation2d(),
             drive.getWheelPositions()

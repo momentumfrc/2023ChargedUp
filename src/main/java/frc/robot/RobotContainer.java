@@ -6,10 +6,13 @@ package frc.robot;
 
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.networktables.BooleanEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.button.NetworkButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.TeleopArmCommand;
 import frc.robot.commands.TeleopBrakeCommand;
@@ -45,6 +48,8 @@ public class RobotContainer {
     private AutoBuilder autoBuilder = new AutoBuilder();
     private SendableChooser<MoInput> inputChooser = new SendableChooser<>();
 
+    private NetworkButton calibrateDriveButton;
+
     private MoInput getInput() {
         return inputChooser.getSelected();
     }
@@ -53,6 +58,11 @@ public class RobotContainer {
         inputChooser.setDefaultOption("Dual Controllers", new DualControllerInput(Constants.DRIVE_F310, Constants.ARMS_F310));
         inputChooser.addOption("Single Controller", new SingleControllerInput(Constants.DRIVE_F310));
         MoShuffleboard.getInstance().settingsTab.add("Controller Mode", inputChooser);
+
+        BooleanEntry entry = NetworkTableInstance.getDefault().getTable("Settings")
+                .getBooleanTopic("Calibrate Drive Encoders").getEntry(false);
+        entry.setDefault(false);
+        calibrateDriveButton = new NetworkButton(entry);
 
         configureBindings();
 
@@ -69,8 +79,8 @@ public class RobotContainer {
         Trigger alignCubes = new Trigger(() -> inputChooser.getSelected().getShouldAlignCubes());
         Trigger balance = new Trigger(() -> inputChooser.getSelected().getShouldBalance());
 
-        alignCones.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.REFLECTORS));
-        alignCubes.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.FIDUCIAL));
+        alignCones.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.REFLECTORS, false));
+        alignCubes.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.FIDUCIAL, false));
         balance.whileTrue(new BalanceScaleCommand(drive, gyro));
     }
 

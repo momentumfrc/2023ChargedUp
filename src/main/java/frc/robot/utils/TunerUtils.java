@@ -100,4 +100,21 @@ public class TunerUtils {
             .withGraphValues(sparkMax)
         );
     }
+
+    public static PIDTuner forMoTalonFx(MoTalonFxPID talon, String controllerName) {
+        return forMoTalonFx(talon, controllerName, false);
+    }
+
+    public static PIDTuner forMoTalonFx(MoTalonFxPID talon, String controllerName, boolean hide) {
+        PIDTunerBuilder builder = new PIDTunerBuilder(controllerName)
+            .withTunerSettings(Constants.TUNER_SETTINGS.withShowOnShuffleboard(!hide))
+            .withP(talon::setP)
+            .withI(talon::setI)
+            .withD(talon::setD)
+            .withFF(talon::setFF)
+            .withIZone(talon::setIZone)
+            .withGraphValues(talon);
+
+        return tryBuild(builder);
+    }
 }
