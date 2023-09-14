@@ -3,25 +3,17 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 import com.momentum4999.utils.PIDTuner;
-import com.playingwithfusion.CANVenom;
-import com.playingwithfusion.CANVenom.BrakeCoastMode;
-import com.playingwithfusion.CANVenom.ControlMode;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
-import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.GenericSubscriber;
-import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.drive.MecanumDrive;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.MoPIDF;
@@ -48,10 +40,14 @@ public class DriveSubsystem extends SubsystemBase {
      */
     private static final double MOVE_RATE_CUTOFF = 0.05;
 
+    private static final double RESET_ENCODER_INTERVAL = 0.5;
+
     public final SwerveModule frontLeft;
     public final SwerveModule frontRight;
     public final SwerveModule rearLeft;
     public final SwerveModule rearRight;
+
+    private final Timer resetEncoderTimer = new Timer();
 
     public final MoPIDF xPathController = new MoPIDF();
     public final MoPIDF yPathController = new MoPIDF();
@@ -108,16 +104,19 @@ public class DriveSubsystem extends SubsystemBase {
             false
         );
 
+        resetEncoderTimer.start();
+
         MoShuffleboard.getInstance().matchTab.addDouble("FL_POS", frontLeft.driveMotor::getSelectedSensorPosition);
         MoShuffleboard.getInstance().matchTab.addDouble("FL_POS_m", () -> frontLeft.driveMotor.getSelectedSensorPosition() / MoPrefs.flDriveMtrScale.get());
 
         double xoff = MoPrefs.chassisSizeX.get() / 2;
         double yoff = MoPrefs.chassisSizeY.get() / 2;
 
-        Translation2d fl = new Translation2d(xoff, yoff);
+       Translation2d fl = new Translation2d(xoff, yoff);
         Translation2d fr = new Translation2d(xoff, -yoff);
         Translation2d rl = new Translation2d(-xoff, yoff);
         Translation2d rr = new Translation2d(-xoff, -yoff);
+
 
         this.kinematics = new SwerveDriveKinematics(fl, fr, rl, rr);
     }
@@ -175,8 +174,19 @@ public class DriveSubsystem extends SubsystemBase {
         return false;
     }
 
+    public void resetRelativeEncoders() {
+        frontLeft.setRelativePosition();
+        frontRight.setRelativePosition();
+        rearLeft.setRelativePosition();
+        rearRight.setRelativePosition();
+    }
+
     @Override
     public void periodic() {
+        if(resetEncoderTimer.advanceIfElapsed(RESET_ENCODER_INTERVAL)) {
+            resetRelativeEncoders();
+        }
+
         if(DriverStation.isDisabled()) {
             this.stop();
         }

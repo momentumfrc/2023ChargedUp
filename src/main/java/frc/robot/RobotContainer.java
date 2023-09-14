@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.NetworkButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.CalibrateDriveEncodersCommand;
 import frc.robot.commands.TeleopArmCommand;
 import frc.robot.commands.TeleopDriveCommand;
 import frc.robot.commands.TeleopIntakeCommand;
@@ -78,6 +79,8 @@ public class RobotContainer {
         alignCones.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.REFLECTORS));
         alignCubes.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.FIDUCIAL));
         balance.whileTrue(new BalanceScaleCommand(drive, gyro));
+
+        calibrateDriveButton.onTrue(new CalibrateDriveEncodersCommand(drive));
     }
 
     public Command getAutonomousCommand() {
