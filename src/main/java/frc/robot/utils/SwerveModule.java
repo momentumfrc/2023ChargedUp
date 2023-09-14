@@ -3,6 +3,7 @@ package frc.robot.utils;
 import java.util.Map;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.momentum4999.utils.PIDTuner;
 import com.revrobotics.CANSparkMax;
@@ -47,6 +48,8 @@ public class SwerveModule {
         this.encoderZero = encoderZero;
         this.encoderScale = encoderScale;
         this.driveMtrScale = driveMtrScale;
+
+        this.driveMotor.setNeutralMode(NeutralMode.Brake);
 
         this.absoluteEncoder = turnMotor.getAnalog(Mode.kAbsolute);
         this.absoluteEncoder.setPositionConversionFactor(ABSOLUTE_ENCODER_SCALE);
