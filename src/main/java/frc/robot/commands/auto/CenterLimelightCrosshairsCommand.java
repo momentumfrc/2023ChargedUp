@@ -1,6 +1,6 @@
 package frc.robot.commands.auto;
 
-import com.momentum4999.utils.PIDTuner;
+import com.momentum4999.motune.PIDTuner;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
@@ -21,7 +21,6 @@ public class CenterLimelightCrosshairsCommand extends CommandBase {
     private final LimelightPipeline pipeline;
 
     private final MoPIDF alignmentController = new MoPIDF();
-    private final PIDTuner tuner = TunerUtils.forMoPID(alignmentController, "Limelight Fine Alignment");
 
     private int noCrosshairsCount = 0;
 
@@ -31,6 +30,8 @@ public class CenterLimelightCrosshairsCommand extends CommandBase {
         this.drive = drive;
         this.limelight = limelight;
         this.pipeline = pipeline;
+
+        TunerUtils.forMoPID(alignmentController, "Limelight Fine Alignment");
 
         addRequirements(drive);
     }

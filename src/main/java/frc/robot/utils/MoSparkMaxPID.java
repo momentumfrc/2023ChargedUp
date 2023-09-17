@@ -1,11 +1,10 @@
 package frc.robot.utils;
 
-import com.momentum4999.utils.PIDTuner.PIDGraphValues;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 
-public class MoSparkMaxPID implements PIDGraphValues {
+public class MoSparkMaxPID {
     private final Type type;
     private final CANSparkMax motorController;
     private final SparkMaxPIDController pidController;
@@ -53,17 +52,14 @@ public class MoSparkMaxPID implements PIDGraphValues {
         pidController.setIZone(iZone, pidSlot);
     }
 
-    @Override
     public double getLastOutput() {
         return this.motorController.get();
     }
 
-    @Override
     public double getSetpoint() {
         return this.lastReference;
     }
 
-    @Override
     public double getLastMeasurement() {
         switch (this.type) {
             case POSITION:

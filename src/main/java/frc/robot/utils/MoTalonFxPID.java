@@ -2,9 +2,8 @@ package frc.robot.utils;
 
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
-import com.momentum4999.utils.PIDTuner.PIDGraphValues;
 
-public class MoTalonFxPID implements PIDGraphValues {
+public class MoTalonFxPID {
     private final Type type;
     private final TalonFX motorController;
     private double lastReference;
@@ -39,17 +38,14 @@ public class MoTalonFxPID implements PIDGraphValues {
         motorController.config_IntegralZone(0, iZone);
     }
 
-    @Override
     public double getLastOutput() {
         return this.motorController.getMotorOutputPercent();
     }
 
-    @Override
     public double getSetpoint() {
         return this.lastReference;
     }
 
-    @Override
     public double getLastMeasurement() {
         switch (this.type) {
             case POSITION:

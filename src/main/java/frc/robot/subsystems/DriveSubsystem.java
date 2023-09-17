@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
-import com.momentum4999.utils.PIDTuner;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
@@ -55,10 +54,6 @@ public class DriveSubsystem extends SubsystemBase {
 
     public final SwerveDriveKinematics kinematics;
 
-    private final PIDTuner xPathTuner = TunerUtils.forMoPID(xPathController, "X Path", !PathFollowingUtils.USE_HOLONOMIC_DRIVE);
-    private final PIDTuner yPathTuner = TunerUtils.forMoPID(yPathController, "Y Path", !PathFollowingUtils.USE_HOLONOMIC_DRIVE);
-    private final PIDTuner rotPathTuner = TunerUtils.forMoPID(rotPathController, "Rot Path", !PathFollowingUtils.USE_HOLONOMIC_DRIVE);
-
     private final AHRS gyro;
 
     public DriveSubsystem(AHRS gyro) {
@@ -70,8 +65,7 @@ public class DriveSubsystem extends SubsystemBase {
             new WPI_TalonFX(Constants.DRIVE_LEFT_FRONT.address),
             MoPrefs.flZero,
             MoPrefs.flScale,
-            MoPrefs.flDriveMtrScale,
-            true
+            MoPrefs.flDriveMtrScale
         );
 
         this.frontRight = new SwerveModule(
@@ -80,8 +74,7 @@ public class DriveSubsystem extends SubsystemBase {
             new WPI_TalonFX(Constants.DRIVE_RIGHT_FRONT.address),
             MoPrefs.frZero,
             MoPrefs.frScale,
-            MoPrefs.frDriveMtrScale,
-            false
+            MoPrefs.frDriveMtrScale
         );
 
         this.rearLeft = new SwerveModule(
@@ -90,8 +83,7 @@ public class DriveSubsystem extends SubsystemBase {
             new WPI_TalonFX(Constants.DRIVE_LEFT_REAR.address),
             MoPrefs.rlZero,
             MoPrefs.rlScale,
-            MoPrefs.rlDriveMtrScale,
-            false
+            MoPrefs.rlDriveMtrScale
         );
 
         this.rearRight = new SwerveModule(
@@ -100,8 +92,7 @@ public class DriveSubsystem extends SubsystemBase {
             new WPI_TalonFX(Constants.DRIVE_RIGHT_REAR.address),
             MoPrefs.rrZero,
             MoPrefs.rrScale,
-            MoPrefs.rrDriveMtrScale,
-            false
+            MoPrefs.rrDriveMtrScale
         );
 
         resetEncoderTimer.start();

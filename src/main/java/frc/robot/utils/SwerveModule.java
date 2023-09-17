@@ -5,7 +5,7 @@ import java.util.Map;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
-import com.momentum4999.utils.PIDTuner;
+import com.momentum4999.motune.PIDTuner;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAnalogSensor;
@@ -41,7 +41,7 @@ public class SwerveModule {
     private final Pref<Double> encoderScale;
     private final Pref<Double> driveMtrScale;
 
-    public SwerveModule(String key, CANSparkMax turnMotor, WPI_TalonFX driveMotor, Pref<Double> encoderZero, Pref<Double> encoderScale, Pref<Double> driveMtrScale, boolean showPidTuners) {
+    public SwerveModule(String key, CANSparkMax turnMotor, WPI_TalonFX driveMotor, Pref<Double> encoderZero, Pref<Double> encoderScale, Pref<Double> driveMtrScale) {
         this.key = key;
         this.turnMotor = turnMotor;
         this.driveMotor = driveMotor;
@@ -62,8 +62,8 @@ public class SwerveModule {
         turnSparkMaxPID.setPositionPIDWrappingMaxInput(Math.PI);
         turnSparkMaxPID.setPositionPIDWrappingEnabled(true);
 
-        turnTuner = TunerUtils.forMoSparkMax(turnPID, key + "_turn", !showPidTuners);
-        driveTuner = TunerUtils.forMoTalonFx(drivePID, key + "_drive", !showPidTuners);
+        turnTuner = TunerUtils.forMoSparkMax(turnPID, key + "_turn");
+        driveTuner = TunerUtils.forMoTalonFx(drivePID, key + "_drive");
 
         relativeEncoder = turnMotor.getEncoder();
 

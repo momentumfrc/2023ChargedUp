@@ -1,92 +1,59 @@
 package frc.robot.utils;
 
-import com.momentum4999.utils.PIDTuner;
-import com.momentum4999.utils.PIDTunerBuilder;
+import com.momentum4999.motune.PIDTuner;
+import com.momentum4999.motune.PIDTunerBuilder;
 import com.playingwithfusion.CANVenom;
 
-import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 
 public class TunerUtils {
-    private static PIDTuner tryBuild(PIDTunerBuilder builder) {
-        try {
-            return builder.build();
-        } catch(IllegalArgumentException e) {
-            DriverStation.reportError("Error building tuner: " + e.getMessage(), e.getStackTrace());
-            return null;
-        }
-    }
-
     public static PIDTuner forMoPIDF(MoPIDF controller, String controllerName) {
-        return forMoPIDF(controller, controllerName, false);
-    }
-    public static PIDTuner forMoPIDF(MoPIDF controller, String controllerName, boolean hide) {
-        return tryBuild(
-            new PIDTunerBuilder(controllerName)
-            .withTunerSettings(Constants.TUNER_SETTINGS.withShowOnShuffleboard(!hide))
+        return PIDTuner.builder(controllerName)
+            .withDataStoreFile(Constants.DATA_STORE_FILE)
             .withP(controller::setP)
             .withI(controller::setI)
             .withD(controller::setD)
             .withFF(controller::setFF)
             .withIZone(controller::setIZone)
-            .buildGraphValues()
-            .withSetpointFrom(controller::getSetpoint)
-            .withLastMeasurementFrom(controller::getLastMeasurement)
-            .withLastOutputFrom(controller::getLastOutput)
-            .finishGraphValues()
-        );
+            .withSetpoint(controller::getSetpoint)
+            .withMeasurement(controller::getLastMeasurement)
+            .safeBuild();
     }
 
     public static PIDTuner forMoPID(MoPIDF controller, String controllerName) {
-        return forMoPID(controller, controllerName, false);
-    }
-    public static PIDTuner forMoPID(MoPIDF controller, String controllerName, boolean hide) {
-        return tryBuild(
-            new PIDTunerBuilder(controllerName)
-            .withTunerSettings(Constants.TUNER_SETTINGS.withShowOnShuffleboard(!hide))
+        return PIDTuner.builder(controllerName)
+            .withDataStoreFile(Constants.DATA_STORE_FILE)
             .withP(controller::setP)
             .withI(controller::setI)
             .withD(controller::setD)
             .withIZone(controller::setIZone)
-            .buildGraphValues()
-            .withSetpointFrom(controller::getSetpoint)
-            .withLastMeasurementFrom(controller::getLastMeasurement)
-            .withLastOutputFrom(controller::getLastOutput)
-            .finishGraphValues()
-        );
+            .withSetpoint(controller::getSetpoint)
+            .withMeasurement(controller::getLastMeasurement)
+            .safeBuild();
     }
 
     public static PIDTuner forVenom(CANVenom venom, String controllerName) {
-        return forVenom(venom, controllerName, false);
-    }
-    public static PIDTuner forVenom(CANVenom venom, String controllerName, boolean hide) {
-        return tryBuild(
-            new PIDTunerBuilder(controllerName)
-            .withTunerSettings(Constants.TUNER_SETTINGS.withShowOnShuffleboard(!hide))
+        return PIDTuner.builder(controllerName)
+            .withDataStoreFile(Constants.DATA_STORE_FILE)
             .withP(venom::setKP)
             .withI(venom::setKI)
             .withD(venom::setKD)
             .withFF(venom::setKF)
-            .buildGraphValues()
-            .withSetpointFrom(venom::getPIDTarget)
-            .withLastMeasurementFrom(venom::getSpeed)
-            .withLastOutputFrom(venom::get)
-            .finishGraphValues()
-        );
+            .withSetpoint(venom::getPIDTarget)
+            .withMeasurement(venom::getSpeed)
+            .safeBuild();
     }
 
     public static PIDTuner forMoSparkMax(MoSparkMaxPID sparkMax, String controllerName) {
-        return forMoSparkMax(sparkMax, controllerName, false);
-    }
-
-    public static PIDTuner forMoSparkMax(MoSparkMaxPID sparkMax, String controllerName, boolean hide) {
-        PIDTunerBuilder builder = new PIDTunerBuilder(controllerName)
-            .withTunerSettings(Constants.TUNER_SETTINGS.withShowOnShuffleboard(!hide))
+        PIDTunerBuilder builder = PIDTuner.builder(controllerName)
+            .withDataStoreFile(Constants.DATA_STORE_FILE)
             .withP(sparkMax::setP)
             .withI(sparkMax::setI)
             .withD(sparkMax::setD)
             .withFF(sparkMax::setFF)
-            .withIZone(sparkMax::setIZone);
+            .withIZone(sparkMax::setIZone)
+            .withSetpoint(sparkMax::getSetpoint)
+            .withMeasurement(sparkMax::getLastMeasurement);
 
         if(sparkMax.getType() == MoSparkMaxPID.Type.SMARTMOTION) {
             builder = builder
@@ -95,26 +62,19 @@ public class TunerUtils {
                 .withProperty("allowedError", (e) -> sparkMax.getPID().setSmartMotionAllowedClosedLoopError(e, sparkMax.getPidSlot()));
         }
 
-        return tryBuild(
-            builder
-            .withGraphValues(sparkMax)
-        );
+        return builder.safeBuild();
     }
 
     public static PIDTuner forMoTalonFx(MoTalonFxPID talon, String controllerName) {
-        return forMoTalonFx(talon, controllerName, false);
-    }
-
-    public static PIDTuner forMoTalonFx(MoTalonFxPID talon, String controllerName, boolean hide) {
-        PIDTunerBuilder builder = new PIDTunerBuilder(controllerName)
-            .withTunerSettings(Constants.TUNER_SETTINGS.withShowOnShuffleboard(!hide))
+        return PIDTuner.builder(controllerName)
+            .withDataStoreFile(Constants.DATA_STORE_FILE)
             .withP(talon::setP)
             .withI(talon::setI)
             .withD(talon::setD)
             .withFF(talon::setFF)
             .withIZone(talon::setIZone)
-            .withGraphValues(talon);
-
-        return tryBuild(builder);
+            .withSetpoint(talon::getSetpoint)
+            .withMeasurement(talon::getLastMeasurement)
+            .safeBuild();
     }
 }

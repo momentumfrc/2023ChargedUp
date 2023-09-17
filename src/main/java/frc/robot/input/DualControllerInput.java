@@ -6,10 +6,9 @@ import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants;
 import frc.robot.subsystems.ArmSubsystem.ArmMovementRequest;
 import frc.robot.utils.MoPrefs;
+import frc.robot.utils.Utils;
 import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 import frc.robot.utils.MoPrefs.Pref;
-
-import static com.momentum4999.utils.Utils.*;
 
 public class DualControllerInput implements MoInput {
 
@@ -25,12 +24,12 @@ public class DualControllerInput implements MoInput {
     }
 
     private double applyDriveInputTransforms(double value) {
-        return curve(deadzone(value, driveDeadzone.get()), driveCurve.get());
+        return Utils.curve(Utils.deadzone(value, driveDeadzone.get()), driveCurve.get());
     }
 
     private double applyArmInputTransforms(double value) {
         // TODO: determine if we'd rather have a separate deadzone/curve for the arm controller
-        return curve(deadzone(value, driveDeadzone.get()), driveCurve.get());
+        return Utils.curve(Utils.deadzone(value, driveDeadzone.get()), driveCurve.get());
     }
 
     @Override
