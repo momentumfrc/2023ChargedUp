@@ -7,6 +7,7 @@ import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import java.util.Map;
 
 import com.momentum4999.motune.PIDTuner;
+import com.momentum4999.motune.MoSparkMaxPID;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
@@ -21,11 +22,9 @@ import frc.robot.Constants;
 import frc.robot.input.MoInput;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
-import frc.robot.utils.MoSparkMaxPID;
 import frc.robot.utils.MoUtils;
 import frc.robot.utils.TunerUtils;
 import frc.robot.utils.Utils;
-import frc.robot.utils.MoSparkMaxPID.Type;
 
 public class ArmSubsystem extends SubsystemBase {
     private static final double ENCODER_MAX_DRIFT = 0.5;
@@ -99,10 +98,10 @@ public class ArmSubsystem extends SubsystemBase {
     private final RelativeEncoder wristEncoder = wrist.getEncoder();
     private final SparkMaxAbsoluteEncoder wristAbsEncoder = wrist.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
 
-    private final MoSparkMaxPID shoulderVelocityPID = new MoSparkMaxPID(Type.VELOCITY, leftShoulder, 0);
-    private final MoSparkMaxPID wristVelocityPID = new MoSparkMaxPID(Type.VELOCITY, wrist, 0);
-    private final MoSparkMaxPID shoulderSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, leftShoulder, 1);
-    private final MoSparkMaxPID wristSmartMotionPID = new MoSparkMaxPID(Type.SMARTMOTION, wrist, 1);
+    private final MoSparkMaxPID shoulderVelocityPID = new MoSparkMaxPID(MoSparkMaxPID.Type.VELOCITY, leftShoulder, 0);
+    private final MoSparkMaxPID wristVelocityPID = new MoSparkMaxPID(MoSparkMaxPID.Type.VELOCITY, wrist, 0);
+    private final MoSparkMaxPID shoulderSmartMotionPID = new MoSparkMaxPID(MoSparkMaxPID.Type.SMARTMOTION, leftShoulder, 1);
+    private final MoSparkMaxPID wristSmartMotionPID = new MoSparkMaxPID(MoSparkMaxPID.Type.SMARTMOTION, wrist, 1);
 
     // private final GenericEntry burnFlash = MoShuffleboard.getInstance().settingsTab.add("Burn Flash", false).getEntry();
 
@@ -120,10 +119,18 @@ public class ArmSubsystem extends SubsystemBase {
         leftShoulder.setInverted(false);
         rightShoulder.follow(leftShoulder, true);
 
-        TunerUtils.forMoSparkMax(shoulderVelocityPID, "Shoulder Vel. PID");
-        TunerUtils.forMoSparkMax(wristVelocityPID, "Wrist Vel. PID");
-        TunerUtils.forMoSparkMax(shoulderSmartMotionPID, "Shoulder Pos. PID");
-        TunerUtils.forMoSparkMax(wristSmartMotionPID, "Wrist Pos. PID");
+        shoulderVelocityPID.getTunerBuilder("Shoulder Vel. PID")
+            .withDataStoreFile(Constants.DATA_STORE_FILE)
+            .safeBuild();
+        wristVelocityPID.getTunerBuilder("Wrist Vel. PID")
+            .withDataStoreFile(Constants.DATA_STORE_FILE)
+            .safeBuild();
+        shoulderSmartMotionPID.getTunerBuilder("Shoulder Pos. PID")
+            .withDataStoreFile(Constants.DATA_STORE_FILE)
+            .safeBuild();
+        wristSmartMotionPID.getTunerBuilder("Wrist Pos. PID")
+            .withDataStoreFile(Constants.DATA_STORE_FILE)
+            .safeBuild();
 
         MoShuffleboard.getInstance().settingsTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
 
@@ -237,14 +244,14 @@ public class ArmSubsystem extends SubsystemBase {
 
     public void adjustVelocity(ArmMovementRequest movement) {
         movement = limitArmMovement(movement);
-        shoulderVelocityPID.setReference(movement.shoulderVelocity);
-        wristVelocityPID.setReference(movement.wristVelocity);
+        shoulderVelocityPID.setSetpoint(movement.shoulderVelocity);
+        wristVelocityPID.setSetpoint(movement.wristVelocity);
     }
 
     public void adjustSmartPosition(ArmPosition position) {
         position = limitArmPosition(position);
-        shoulderSmartMotionPID.setReference(position.shoulderRotations);
-        wristSmartMotionPID.setReference(position.wristRotations);
+        shoulderSmartMotionPID.setSetpoint(position.shoulderRotations);
+        wristSmartMotionPID.setSetpoint(position.wristRotations);
     }
 
     public void stop() {

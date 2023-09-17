@@ -5,7 +5,8 @@ import java.util.Map;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
-import com.momentum4999.motune.PIDTuner;
+import com.momentum4999.motune.MoSparkMaxPID;
+import com.momentum4999.motune.MoTalonFxPID;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAnalogSensor;
@@ -16,6 +17,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import frc.robot.Constants;
 import frc.robot.utils.MoPrefs.Pref;
 
 public class SwerveModule {
@@ -30,9 +32,6 @@ public class SwerveModule {
 
     private final MoSparkMaxPID turnPID;
     private final MoTalonFxPID drivePID;
-
-    private PIDTuner turnTuner;
-    private PIDTuner driveTuner;
 
     // Note: the relative encoder is scaled to return radians
     private final RelativeEncoder relativeEncoder;
@@ -57,13 +56,17 @@ public class SwerveModule {
         this.turnPID = new MoSparkMaxPID(MoSparkMaxPID.Type.POSITION, turnMotor, 0);
         this.drivePID = new MoTalonFxPID(MoTalonFxPID.Type.VELOCITY, driveMotor);
 
-        var turnSparkMaxPID = turnPID.getPID();
+        var turnSparkMaxPID = turnPID.getPidController();
         turnSparkMaxPID.setPositionPIDWrappingMinInput(-Math.PI);
         turnSparkMaxPID.setPositionPIDWrappingMaxInput(Math.PI);
         turnSparkMaxPID.setPositionPIDWrappingEnabled(true);
 
-        turnTuner = TunerUtils.forMoSparkMax(turnPID, key + "_turn");
-        driveTuner = TunerUtils.forMoTalonFx(drivePID, key + "_drive");
+        turnPID.getTunerBuilder(key + "_turn")
+            .withDataStoreFile(Constants.DATA_STORE_FILE)
+            .build();
+        drivePID.getTunerBuilder(key + "_drive")
+            .withDataStoreFile(Constants.DATA_STORE_FILE)
+            .build();
 
         relativeEncoder = turnMotor.getEncoder();
 
@@ -101,8 +104,8 @@ public class SwerveModule {
 
     public void drive(SwerveModuleState state) {
         var optimized = SwerveModuleState.optimize(state, Rotation2d.fromRadians(relativeEncoder.getPosition()));
-        turnPID.setReference(MathUtil.angleModulus(optimized.angle.getRadians()));
-        drivePID.setReference(optimized.speedMetersPerSecond * driveMtrScale.get());
+        turnPID.setSetpoint(MathUtil.angleModulus(optimized.angle.getRadians()));
+        drivePID.setSetpoint(optimized.speedMetersPerSecond * driveMtrScale.get());
     }
 
     public void directDrive(double turnSpeed, double driveSpeed) {
