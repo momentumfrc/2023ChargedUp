@@ -13,7 +13,6 @@ import edu.wpi.first.networktables.NetworkTableValue;
 import edu.wpi.first.networktables.StringPublisher;
 
 public final class MoPrefs {
-    public static Pref<Double> maxDriveRpm = doublePref("Drive Max RPM", 6000.0);
     public static Pref<Double> maxDriveSpeed = doublePref("Drive Max Speed m/s", 6000.0);
     public static Pref<Double> maxTurnSpeed = doublePref("Turn Max Speed m/s", 6000.0);
     public static Pref<Double> driveDeadzone = doublePref("Drive Deadzone", 0.05);

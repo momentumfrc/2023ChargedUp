@@ -133,10 +133,10 @@ public class DriveSubsystem extends SubsystemBase {
         double maxAngularSpeed = MoPrefs.maxTurnSpeed.get();
 
         ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            fwdRequest * maxLinearSpeed,
-            leftRequest * maxLinearSpeed,
-            turnRequest * maxAngularSpeed,
-            fieldOrientedDriveAngle.unaryMinus()
+            -leftRequest * maxLinearSpeed,
+            -fwdRequest * maxLinearSpeed,
+            -turnRequest * maxAngularSpeed,
+            fieldOrientedDriveAngle
         );
 
         driveSwerveStates(kinematics.toSwerveModuleStates(speeds));
@@ -150,6 +150,8 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public void driveSwerveStates(SwerveModuleState[] states) {
+        SwerveDriveKinematics.desaturateWheelSpeeds(states, MoPrefs.maxDriveSpeed.get());
+
         frontLeft.drive(states[0]);
         frontRight.drive(states[1]);
         rearLeft.drive(states[2]);

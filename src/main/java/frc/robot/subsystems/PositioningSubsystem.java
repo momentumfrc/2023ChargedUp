@@ -125,7 +125,7 @@ public class PositioningSubsystem extends SubsystemBase {
         var foMode = fieldOrientedDriveMode.getSelected();
         switch(foMode) {
             case GYRO:
-                return gyro.getRotation2d().minus(fieldOrientedFwd).rotateBy(Rotation2d.fromRotations(0.5));
+                return gyro.getRotation2d().minus(fieldOrientedFwd);
             case ODOMETRY:
                 return getRobotPose().getRotation();
             case NONE:
