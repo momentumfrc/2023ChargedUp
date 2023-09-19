@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
+import com.momentum4999.motune.PIDTuner;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
@@ -11,14 +12,15 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.GenericSubscriber;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.MoPIDF;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
-import frc.robot.utils.PathFollowingUtils;
 import frc.robot.utils.SwerveModule;
 import frc.robot.utils.TunerUtils;
 
@@ -41,6 +43,20 @@ public class DriveSubsystem extends SubsystemBase {
 
     private static final double RESET_ENCODER_INTERVAL = 0.5;
 
+    private static enum TurnState {
+        TURNING,
+        HOLD_HEADING
+    };
+    private TurnState turnState = TurnState.HOLD_HEADING;
+    private Rotation2d maintainHeading;
+
+    private final MoPIDF headingController = new MoPIDF();
+    private final PIDTuner headingTuner = TunerUtils.forMoPIDF(headingController, "Drive Heading");
+
+    private GenericSubscriber shouldHeadingPID = MoShuffleboard.getInstance().settingsTab
+        .add("Keep Heading", true)
+        .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
+
     public final SwerveModule frontLeft;
     public final SwerveModule frontRight;
     public final SwerveModule rearLeft;
@@ -58,6 +74,9 @@ public class DriveSubsystem extends SubsystemBase {
 
     public DriveSubsystem(AHRS gyro) {
         this.gyro = gyro;
+        maintainHeading = getCurrHeading();
+
+        headingController.enableContinuousInput(-Math.PI, Math.PI);
 
         this.frontLeft = new SwerveModule(
             "FL",
@@ -103,7 +122,7 @@ public class DriveSubsystem extends SubsystemBase {
         double xoff = MoPrefs.chassisSizeX.get() / 2;
         double yoff = MoPrefs.chassisSizeY.get() / 2;
 
-       Translation2d fl = new Translation2d(xoff, yoff);
+        Translation2d fl = new Translation2d(xoff, yoff);
         Translation2d fr = new Translation2d(xoff, -yoff);
         Translation2d rl = new Translation2d(-xoff, yoff);
         Translation2d rr = new Translation2d(-xoff, -yoff);
@@ -124,11 +143,55 @@ public class DriveSubsystem extends SubsystemBase {
         return positions;
     }
 
+    /**
+     * Gets the current heading, within the range (-PI, PI]
+     * @return the current heading
+     */
+    private Rotation2d getCurrHeading() {
+        Rotation2d gyroHeading = gyro.getRotation2d();
+        return new Rotation2d(gyroHeading.getCos(), gyroHeading.getSin());
+    }
+
+    /**
+     * Calculate how much the robot should turn. We want to use PID to prevent any turning, except
+     * for these situations: (1) if the driver has requested a turn, or (2) if the robot is
+     * slowing down after a requested turn (to prevent an unexpected 'snap-back' behavior).
+     * @param turnRequest The turn requested by the driver
+     * @param currentHeading The robot's current heading, as reported by the gyro
+     * @return How much the robot should turn
+     */
+    private double calculateTurn(double turnRequest, Rotation2d currentHeading) {
+        switch(turnState) {
+            case HOLD_HEADING:
+                if(turnRequest != 0) {
+                    turnState = TurnState.TURNING;
+                }
+                break;
+            case TURNING:
+                if(turnRequest == 0 && Math.abs(gyro.getRate()) < TURN_RATE_CUTOFF) {
+                    maintainHeading = currentHeading;
+                    turnState = TurnState.HOLD_HEADING;
+                }
+                break;
+        }
+        switch(turnState) {
+            case HOLD_HEADING:
+                if(shouldHeadingPID.getBoolean(true)) {
+                    return headingController.calculate(currentHeading.getRadians(), maintainHeading.getRadians());
+                }
+            case TURNING:
+            default:
+                return turnRequest;
+        }
+    }
+
     public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest) {
         this.driveCartesian(fwdRequest, leftRequest, turnRequest, new Rotation2d());
     }
 
     public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest, Rotation2d fieldOrientedDriveAngle) {
+        turnRequest = calculateTurn(turnRequest, getCurrHeading());
+
         double maxLinearSpeed = MoPrefs.maxDriveSpeed.get();
         double maxAngularSpeed = MoPrefs.maxTurnSpeed.get();
 

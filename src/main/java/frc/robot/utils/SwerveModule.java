@@ -9,6 +9,7 @@ import com.momentum4999.motune.PIDTuner;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAnalogSensor;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.SparkMaxAnalogSensor.Mode;
 
 import edu.wpi.first.math.MathUtil;
@@ -50,6 +51,7 @@ public class SwerveModule {
         this.driveMtrScale = driveMtrScale;
 
         this.driveMotor.setNeutralMode(NeutralMode.Brake);
+        this.turnMotor.setIdleMode(IdleMode.kBrake);
 
         this.absoluteEncoder = turnMotor.getAnalog(Mode.kAbsolute);
         this.absoluteEncoder.setPositionConversionFactor(ABSOLUTE_ENCODER_SCALE);
