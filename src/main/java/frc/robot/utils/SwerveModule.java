@@ -43,6 +43,8 @@ public class SwerveModule {
     private final Pref<Double> encoderScale;
     private final Pref<Double> driveMtrScale;
 
+    private FusedEncoders encoderFusion;
+
     public SwerveModule(String key, CANSparkMax turnMotor, WPI_TalonFX driveMotor, Pref<Double> encoderZero, Pref<Double> encoderScale, Pref<Double> driveMtrScale) {
         this.key = key;
         this.turnMotor = turnMotor;
@@ -70,6 +72,8 @@ public class SwerveModule {
 
         relativeEncoder = turnMotor.getEncoder();
 
+        encoderFusion = new FusedEncoders(absoluteEncoder::getPosition, this::setRelativePosition, () -> !this.areMotorsPowered());
+
         encoderZero.subscribe(zero -> this.setupRelativeEncoder(absoluteEncoder.getPosition(), zero, encoderScale.get()), false);
         encoderScale.subscribe(scale -> this.setupRelativeEncoder(absoluteEncoder.getPosition(), encoderZero.get(), scale), false);
         setupRelativeEncoder();
@@ -90,9 +94,8 @@ public class SwerveModule {
         setupRelativeEncoder(absoluteEncoder.getPosition(), encoderZero.get(), encoderScale.get());
     }
 
-    public void setRelativePosition() {
-        if(!areMotorsPowered())
-            setRelativePosition(absoluteEncoder.getPosition(), encoderZero.get());
+    public void setRelativePosition(double absPos) {
+        setRelativePosition(absPos, encoderZero.get());
     }
 
     private void setupRelativeEncoder(double absPos, double absZero, double scale) {
@@ -117,6 +120,14 @@ public class SwerveModule {
     public void directDrive(double turnSpeed, double driveSpeed) {
         turnMotor.set(turnSpeed);
         driveMotor.set(ControlMode.PercentOutput, driveSpeed);
+    }
+
+    public void setShouldAutoZero(boolean shoudldAutoZero) {
+        this.encoderFusion.setShouldAutoZero(shoudldAutoZero);
+    }
+
+    public void periodic() {
+        this.encoderFusion.periodic();
     }
 
     @Override
