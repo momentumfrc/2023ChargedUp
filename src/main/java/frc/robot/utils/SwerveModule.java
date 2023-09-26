@@ -122,8 +122,8 @@ public class SwerveModule {
         driveMotor.set(ControlMode.PercentOutput, driveSpeed);
     }
 
-    public void setShouldAutoZero(boolean shoudldAutoZero) {
-        this.encoderFusion.setShouldAutoZero(shoudldAutoZero);
+    public void setShouldAutoZero(boolean shouldAutoZero) {
+        this.encoderFusion.setShouldAutoZero(shouldAutoZero);
     }
 
     public void periodic() {

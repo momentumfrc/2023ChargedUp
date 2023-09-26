@@ -33,7 +33,7 @@ public class FusedEncoders {
     private final Supplier<Boolean> isAbsEncoderValid;
 
     private final MedianFilter filter = new MedianFilter(NUM_MEAN_SAMPLES);
-    int nSamples = 0;
+    private int nSamples = 0;
 
     private final Timer timer = new Timer();
     private boolean timerStarted = false;
