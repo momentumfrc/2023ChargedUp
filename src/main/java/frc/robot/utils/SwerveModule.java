@@ -21,6 +21,7 @@ import frc.robot.utils.MoPrefs.Pref;
 
 public class SwerveModule {
     private static final double ABSOLUTE_ENCODER_SCALE = 1/3.3;
+    private static final double MOTOR_UNPOWERED_SPEED = 0.05;
 
     private final String key;
     public final CANSparkMax turnMotor;
@@ -80,12 +81,18 @@ public class SwerveModule {
         layout.addDouble("Absolute", absoluteEncoder::getPosition);
     }
 
+    private boolean areMotorsPowered() {
+        return driveMotor.get() > MOTOR_UNPOWERED_SPEED
+            && turnMotor.get() > MOTOR_UNPOWERED_SPEED;
+    }
+
     public void setupRelativeEncoder() {
         setupRelativeEncoder(absoluteEncoder.getPosition(), encoderZero.get(), encoderScale.get());
     }
 
     public void setRelativePosition() {
-        setRelativePosition(absoluteEncoder.getPosition(), encoderZero.get());
+        if(!areMotorsPowered())
+            setRelativePosition(absoluteEncoder.getPosition(), encoderZero.get());
     }
 
     private void setupRelativeEncoder(double absPos, double absZero, double scale) {

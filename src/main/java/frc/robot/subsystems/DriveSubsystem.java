@@ -72,6 +72,8 @@ public class DriveSubsystem extends SubsystemBase {
 
     private final AHRS gyro;
 
+    public boolean doResetEncoders = true;
+
     public DriveSubsystem(AHRS gyro) {
         this.gyro = gyro;
         maintainHeading = getCurrHeading();
@@ -231,6 +233,8 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public void resetRelativeEncoders() {
+        if(!doResetEncoders)
+            return;
         frontLeft.setRelativePosition();
         frontRight.setRelativePosition();
         rearLeft.setRelativePosition();

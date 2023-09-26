@@ -17,6 +17,7 @@ import frc.robot.commands.CalibrateDriveEncodersCommand;
 import frc.robot.commands.TeleopArmCommand;
 import frc.robot.commands.TeleopDriveCommand;
 import frc.robot.commands.TeleopIntakeCommand;
+import frc.robot.commands.TuneSwerveTurnMotors;
 import frc.robot.commands.auto.BalanceScaleCommand;
 import frc.robot.commands.auto.CenterLimelightCrosshairsCommand;
 import frc.robot.input.DualControllerInput;
@@ -47,6 +48,7 @@ public class RobotContainer {
     private SendableChooser<MoInput> inputChooser = new SendableChooser<>();
 
     private NetworkButton calibrateDriveButton;
+    private NetworkButton tuneDriveButton;
 
     private MoInput getInput() {
         return inputChooser.getSelected();
@@ -57,10 +59,15 @@ public class RobotContainer {
         inputChooser.addOption("Single Controller", new SingleControllerInput(Constants.DRIVE_F310));
         MoShuffleboard.getInstance().settingsTab.add("Controller Mode", inputChooser);
 
-        BooleanEntry entry = NetworkTableInstance.getDefault().getTable("Settings")
+        BooleanEntry calibrateDriveEntry = NetworkTableInstance.getDefault().getTable("Settings")
                 .getBooleanTopic("Calibrate Drive Encoders").getEntry(false);
-        entry.setDefault(false);
-        calibrateDriveButton = new NetworkButton(entry);
+        calibrateDriveEntry.setDefault(false);
+        calibrateDriveButton = new NetworkButton(calibrateDriveEntry);
+
+        BooleanEntry tuneDriveEntry = NetworkTableInstance.getDefault().getTable("Settings")
+            .getBooleanTopic("Tune Turn Encoders").getEntry(false);
+        tuneDriveEntry.setDefault(false);
+        tuneDriveButton = new NetworkButton(tuneDriveEntry);
 
         configureBindings();
 
@@ -81,6 +88,7 @@ public class RobotContainer {
         balance.whileTrue(new BalanceScaleCommand(drive, gyro));
 
         calibrateDriveButton.onTrue(new CalibrateDriveEncodersCommand(drive));
+        tuneDriveButton.whileTrue(new TuneSwerveTurnMotors(drive, this::getInput));
     }
 
     public Command getAutonomousCommand() {
