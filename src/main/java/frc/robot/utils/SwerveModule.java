@@ -14,6 +14,7 @@ import com.revrobotics.SparkMaxAnalogSensor.Mode;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -120,6 +121,10 @@ public class SwerveModule {
     public void directDrive(double turnSpeed, double driveSpeed) {
         turnMotor.set(turnSpeed);
         driveMotor.set(ControlMode.PercentOutput, driveSpeed);
+    }
+
+    public SwerveModulePosition getPosition() {
+        return new SwerveModulePosition(driveMotor.getSelectedSensorPosition() / driveMtrScale.get(), Rotation2d.fromRadians(absoluteEncoder.getPosition()));
     }
 
     public void setShouldAutoZero(boolean shouldAutoZero) {

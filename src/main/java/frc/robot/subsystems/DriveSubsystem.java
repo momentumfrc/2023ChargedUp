@@ -64,6 +64,10 @@ public class DriveSubsystem extends SubsystemBase {
     public final MoPIDF yPathController = new MoPIDF();
     public final MoPIDF rotPathController = new MoPIDF();
 
+    private final PIDTuner xPathTuner = TunerUtils.forMoPID(xPathController, "Follow Path X");
+    private final PIDTuner yPathTuner = TunerUtils.forMoPID(xPathController, "Follow Path Y");
+    private final PIDTuner rotPathTuner = TunerUtils.forMoPID(xPathController, "Follow Path Rot");
+
     public final SwerveDriveKinematics kinematics;
 
     private final AHRS gyro;
@@ -126,15 +130,12 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public SwerveModulePosition[] getWheelPositions() {
-        var positions = new SwerveModulePosition[] {
-            // TODO
-            new SwerveModulePosition(0, Rotation2d.fromRadians(0)),
-            new SwerveModulePosition(0, Rotation2d.fromRadians(0)),
-            new SwerveModulePosition(0, Rotation2d.fromRadians(0)),
-            new SwerveModulePosition(0, Rotation2d.fromRadians(0))
+        return new SwerveModulePosition[] {
+            frontLeft.getPosition(),
+            frontRight.getPosition(),
+            rearLeft.getPosition(),
+            rearRight.getPosition()
         };
-
-        return positions;
     }
 
     /**
@@ -215,14 +216,13 @@ public class DriveSubsystem extends SubsystemBase {
         rearRight.drive(states[3]);
     }
 
-    public void driveDifferentialWheelSpeeds(double leftMps, double rightMps) {
-        // TODO
+    public boolean isMoving() {
+        return frontLeft.driveMotor.getSelectedSensorVelocity() /  MoPrefs.flDriveMtrScale.get() < MOVE_RATE_CUTOFF
+            && frontRight.driveMotor.getSelectedSensorVelocity() /  MoPrefs.frDriveMtrScale.get() < MOVE_RATE_CUTOFF
+            && rearLeft.driveMotor.getSelectedSensorVelocity() /  MoPrefs.rlDriveMtrScale.get() < MOVE_RATE_CUTOFF
+            && rearRight.driveMotor.getSelectedSensorVelocity() /  MoPrefs.rrDriveMtrScale.get() < MOVE_RATE_CUTOFF;
     }
 
-    // TODO
-    public boolean isMoving() {
-        return false;
-    }
     @Override
     public void periodic() {
         frontLeft.periodic();
