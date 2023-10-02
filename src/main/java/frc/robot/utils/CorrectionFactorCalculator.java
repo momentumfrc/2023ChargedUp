@@ -48,7 +48,7 @@ public class CorrectionFactorCalculator {
      * constrained between [-pi, pi)
      * @returns The absolute position in radians
      */
-    private double getAbsRad() {
+    public double getAbsRad() {
         double rots = (absEncoder.getAsDouble() + 1 - absZero) % 1;
         return MoUtils.rotToRad(rots);
     }
@@ -57,7 +57,7 @@ public class CorrectionFactorCalculator {
      * Gets the current position of the relative encoder, offset by the initial zero, in radians.
      * @return The relative position in radians
      */
-    private double getRelRad() {
+    public double getRelRad() {
         return relEncoder.getAsDouble() - relZero;
     }
 
