@@ -33,8 +33,9 @@ public class TuneSwerveTurnMotors extends CommandBase {
 
     @Override
     public void execute() {
-        double fwdRequest = inputSupplier.get().getForwardSpeedRequest();
-        double turnRequest = inputSupplier.get().getLeftSpeedRequest();
+        var moveRequest = inputSupplier.get().getMoveRequest();
+        double fwdRequest = moveRequest.getFirst();
+        double turnRequest = moveRequest.getSecond();
 
         SwerveModuleState state = new SwerveModuleState(0, new Rotation2d(-turnRequest, -fwdRequest));
 
