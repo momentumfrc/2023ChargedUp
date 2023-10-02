@@ -2,7 +2,6 @@ package frc.robot.input;
 
 import java.util.Optional;
 
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants;
 import frc.robot.subsystems.ArmSubsystem.ArmMovementRequest;
@@ -26,17 +25,13 @@ public class SingleControllerInput implements MoInput {
     }
 
     @Override
-    public Pair<Double, Double> getMoveRequest() {
-        double fwdRequest = controller.getLeftY();
-        double lftRequest = -1 * controller.getLeftX();
+    public double getForwardSpeedRequest() {
+        return applyInputTransforms(controller.getLeftY());
+    }
 
-        double magnitude = Math.sqrt((fwdRequest * fwdRequest) + (lftRequest * lftRequest));
-        fwdRequest /= magnitude;
-        lftRequest /= magnitude;
-
-        magnitude = applyInputTransforms(magnitude);
-
-        return new Pair<Double,Double>(fwdRequest * magnitude, lftRequest * magnitude);
+    @Override
+    public double getLeftSpeedRequest() {
+        return -1 * applyInputTransforms(controller.getLeftX());
     }
 
     @Override
