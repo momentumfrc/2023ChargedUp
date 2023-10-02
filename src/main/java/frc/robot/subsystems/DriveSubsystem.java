@@ -1,24 +1,27 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
-import com.momentum4999.utils.PIDTuner;
-import com.playingwithfusion.CANVenom;
-import com.playingwithfusion.CANVenom.BrakeCoastMode;
-import com.playingwithfusion.CANVenom.ControlMode;
+import com.momentum4999.motune.PIDTuner;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
-import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.GenericSubscriber;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.drive.MecanumDrive;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.MoPIDF;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoShuffleboard;
-import frc.robot.utils.PathFollowingUtils;
+import frc.robot.utils.SwerveModule;
 import frc.robot.utils.TunerUtils;
 
 public class DriveSubsystem extends SubsystemBase {
@@ -43,64 +46,96 @@ public class DriveSubsystem extends SubsystemBase {
         HOLD_HEADING
     };
     private TurnState turnState = TurnState.HOLD_HEADING;
-
-    private static class DriveMotor {
-        private final String mnemonic;
-        private final PIDTuner tuner;
-        public final CANVenom motor;
-        public DriveMotor(String mnemonic, Constants.CANAddress address) {
-            this.mnemonic = mnemonic;
-            motor = new CANVenom(address.address);
-            motor.setControlMode(ControlMode.SpeedControl);
-            motor.setBrakeCoastMode(BrakeCoastMode.Brake);
-            motor.setPID(0, 0, 0, 0, 0);
-            motor.setMaxJerk(0);
-
-            tuner = TunerUtils.forVenom(motor, "Drive " + mnemonic, true);
-        }
-
-        @Override
-        public String toString() {
-            return String.format("DriveMotor(\"%s\")", this.mnemonic);
-        }
-    }
-
-    private final DriveMotor frontLeftMtr = new DriveMotor("FL", Constants.DRIVE_LEFT_FRONT);
-    private final DriveMotor frontRightMtr = new DriveMotor("FR", Constants.DRIVE_RIGHT_FRONT);
-    private final DriveMotor rearLeftMtr = new DriveMotor("BL", Constants.DRIVE_LEFT_REAR);
-    private final DriveMotor rearRightMtr = new DriveMotor("BR", Constants.DRIVE_RIGHT_REAR);
-
-    public final MoPIDF xPathController = new MoPIDF();
-    public final MoPIDF yPathController = new MoPIDF();
-    public final MoPIDF rotPathController = new MoPIDF();
-
-    private final PIDTuner xPathTuner = TunerUtils.forMoPID(xPathController, "X Path", !PathFollowingUtils.USE_HOLONOMIC_DRIVE);
-    private final PIDTuner yPathTuner = TunerUtils.forMoPID(yPathController, "Y Path", !PathFollowingUtils.USE_HOLONOMIC_DRIVE);
-    private final PIDTuner rotPathTuner = TunerUtils.forMoPID(rotPathController, "Rot Path", !PathFollowingUtils.USE_HOLONOMIC_DRIVE);
-
-    private final MoPIDF headingController = new MoPIDF();
-    private final PIDTuner headingTuner = TunerUtils.forMoPIDF(headingController, "Drive Heading", true);
-
-    private final AHRS gyro;
-
     private Rotation2d maintainHeading;
 
-    private GenericSubscriber shouldDrivePID = MoShuffleboard.getInstance().settingsTab
-        .add("PID Drive", true)
-        .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
+    private final MoPIDF headingController = new MoPIDF();
+    private final PIDTuner headingTuner = TunerUtils.forMoPIDF(headingController, "Drive Heading");
 
     private GenericSubscriber shouldHeadingPID = MoShuffleboard.getInstance().settingsTab
         .add("Keep Heading", true)
         .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
+    public final SwerveModule frontLeft;
+    public final SwerveModule frontRight;
+    public final SwerveModule rearLeft;
+    public final SwerveModule rearRight;
+
+    public final MoPIDF xPathController = new MoPIDF();
+    public final MoPIDF yPathController = new MoPIDF();
+    public final MoPIDF rotPathController = new MoPIDF();
+
+    private final PIDTuner xPathTuner = TunerUtils.forMoPID(xPathController, "Follow Path X");
+    private final PIDTuner yPathTuner = TunerUtils.forMoPID(xPathController, "Follow Path Y");
+    private final PIDTuner rotPathTuner = TunerUtils.forMoPID(xPathController, "Follow Path Rot");
+
+    public final SwerveDriveKinematics kinematics;
+
+    private final AHRS gyro;
+
     public DriveSubsystem(AHRS gyro) {
         this.gyro = gyro;
         maintainHeading = getCurrHeading();
 
-        frontLeftMtr.motor.setInverted(true);
-        rearLeftMtr.motor.setInverted(true);
-
         headingController.enableContinuousInput(-Math.PI, Math.PI);
+
+        this.frontLeft = new SwerveModule(
+            "FL",
+            new CANSparkMax(Constants.TURN_LEFT_FRONT.address, MotorType.kBrushless),
+            new WPI_TalonFX(Constants.DRIVE_LEFT_FRONT.address),
+            MoPrefs.flZero,
+            MoPrefs.flScale,
+            MoPrefs.flDriveMtrScale
+        );
+
+        this.frontRight = new SwerveModule(
+            "FR",
+            new CANSparkMax(Constants.TURN_RIGHT_FRONT.address, MotorType.kBrushless),
+            new WPI_TalonFX(Constants.DRIVE_RIGHT_FRONT.address),
+            MoPrefs.frZero,
+            MoPrefs.frScale,
+            MoPrefs.frDriveMtrScale
+        );
+
+        this.rearLeft = new SwerveModule(
+            "RL",
+            new CANSparkMax(Constants.TURN_LEFT_REAR.address, MotorType.kBrushless),
+            new WPI_TalonFX(Constants.DRIVE_LEFT_REAR.address),
+            MoPrefs.rlZero,
+            MoPrefs.rlScale,
+            MoPrefs.rlDriveMtrScale
+        );
+
+        this.rearRight = new SwerveModule(
+            "RR",
+            new CANSparkMax(Constants.TURN_RIGHT_REAR.address, MotorType.kBrushless),
+            new WPI_TalonFX(Constants.DRIVE_RIGHT_REAR.address),
+            MoPrefs.rrZero,
+            MoPrefs.rrScale,
+            MoPrefs.rrDriveMtrScale
+        );
+
+        MoShuffleboard.getInstance().matchTab.addDouble("FL_POS", frontLeft.driveMotor::getSelectedSensorPosition);
+        MoShuffleboard.getInstance().matchTab.addDouble("FL_POS_m", () -> frontLeft.driveMotor.getSelectedSensorPosition() / MoPrefs.flDriveMtrScale.get());
+
+        double xoff = MoPrefs.chassisSizeX.get() / 2;
+        double yoff = MoPrefs.chassisSizeY.get() / 2;
+
+        Translation2d fl = new Translation2d(xoff, yoff);
+        Translation2d fr = new Translation2d(xoff, -yoff);
+        Translation2d rl = new Translation2d(-xoff, yoff);
+        Translation2d rr = new Translation2d(-xoff, -yoff);
+
+
+        this.kinematics = new SwerveDriveKinematics(fl, fr, rl, rr);
+    }
+
+    public SwerveModulePosition[] getWheelPositions() {
+        return new SwerveModulePosition[] {
+            frontLeft.getPosition(),
+            frontRight.getPosition(),
+            rearLeft.getPosition(),
+            rearRight.getPosition()
+        };
     }
 
     /**
@@ -110,15 +145,6 @@ public class DriveSubsystem extends SubsystemBase {
     private Rotation2d getCurrHeading() {
         Rotation2d gyroHeading = gyro.getRotation2d();
         return new Rotation2d(gyroHeading.getCos(), gyroHeading.getSin());
-    }
-
-    public MecanumDriveWheelPositions getWheelPositions() {
-        return new MecanumDriveWheelPositions(
-            -1 * frontLeftMtr.motor.getPosition() / REVOLUTIONS_PER_METER,
-            -1 * frontRightMtr.motor.getPosition() / REVOLUTIONS_PER_METER,
-            -1 * rearLeftMtr.motor.getPosition() / REVOLUTIONS_PER_METER,
-            -1 * rearRightMtr.motor.getPosition() / REVOLUTIONS_PER_METER
-        );
     }
 
     /**
@@ -159,75 +185,51 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public void driveCartesian(double fwdRequest, double leftRequest, double turnRequest, Rotation2d fieldOrientedDriveAngle) {
-        var wheelSpeeds = MecanumDrive.driveCartesianIK(fwdRequest, leftRequest, calculateTurn(turnRequest, getCurrHeading()), fieldOrientedDriveAngle.unaryMinus());
-        double maxSpeedRpm = MoPrefs.maxDriveRpm.get();
+        turnRequest = calculateTurn(turnRequest, getCurrHeading());
 
-        if(shouldDrivePID.getBoolean(true)) {
-            frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, wheelSpeeds.frontLeft * maxSpeedRpm);
-            frontRightMtr.motor.setCommand(ControlMode.SpeedControl, wheelSpeeds.frontRight * maxSpeedRpm);
-            rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, wheelSpeeds.rearLeft * maxSpeedRpm);
-            rearRightMtr.motor.setCommand(ControlMode.SpeedControl, wheelSpeeds.rearRight * maxSpeedRpm);
-        } else {
-            frontLeftMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.frontLeft);
-            frontRightMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.frontRight);
-            rearLeftMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.rearLeft);
-            rearRightMtr.motor.setCommand(ControlMode.Proportional, wheelSpeeds.rearRight);
-        }
+        double maxLinearSpeed = MoPrefs.maxDriveSpeed.get();
+        double maxAngularSpeed = MoPrefs.maxTurnSpeed.get();
+
+        ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+            -leftRequest * maxLinearSpeed,
+            -fwdRequest * maxLinearSpeed,
+            -turnRequest * maxAngularSpeed,
+            fieldOrientedDriveAngle
+        );
+
+        driveSwerveStates(kinematics.toSwerveModuleStates(speeds));
     }
 
     public void stop() {
-        frontLeftMtr.motor.setBrakeCoastMode(BrakeCoastMode.Brake);
-        frontRightMtr.motor.setBrakeCoastMode(BrakeCoastMode.Brake);
-        rearLeftMtr.motor.setBrakeCoastMode(BrakeCoastMode.Brake);
-        rearRightMtr.motor.setBrakeCoastMode(BrakeCoastMode.Brake);
-
-        frontLeftMtr.motor.setCommand(ControlMode.Proportional, 0);
-        frontRightMtr.motor.setCommand(ControlMode.Proportional, 0);
-        rearLeftMtr.motor.setCommand(ControlMode.Proportional, 0);
-        rearRightMtr.motor.setCommand(ControlMode.Proportional, 0);
+        frontLeft.driveMotor.stopMotor();
+        frontRight.driveMotor.stopMotor();
+        rearLeft.driveMotor.stopMotor();
+        rearRight.driveMotor.stopMotor();
     }
 
-    public void driveWheelSpeeds(MecanumDriveWheelSpeeds speeds) {
-        if(!shouldDrivePID.getBoolean(true)) {
-            DriverStation.reportWarning("Cannot driveWheelSpeeds() with PID disabled", false);
-            stop();
-            return;
-        }
+    public void driveSwerveStates(SwerveModuleState[] states) {
+        SwerveDriveKinematics.desaturateWheelSpeeds(states, MoPrefs.maxDriveSpeed.get());
 
-        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.frontLeftMetersPerSecond * REVOLUTIONS_PER_METER);
-        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.frontRightMetersPerSecond * REVOLUTIONS_PER_METER);
-        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.rearLeftMetersPerSecond * REVOLUTIONS_PER_METER);
-        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * speeds.rearRightMetersPerSecond * REVOLUTIONS_PER_METER);
-    }
-
-    public void driveDifferentialWheelSpeeds(double leftMps, double rightMps) {
-        if(!shouldDrivePID.getBoolean(true)) {
-            DriverStation.reportWarning("Cannot driveWheelSpeeds() with PID disabled", false);
-            stop();
-            return;
-        }
-
-        frontLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * leftMps * 60 * REVOLUTIONS_PER_METER);
-        frontRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * rightMps * 60 * REVOLUTIONS_PER_METER);
-        rearLeftMtr.motor.setCommand(ControlMode.SpeedControl, -1 * leftMps * 60 * REVOLUTIONS_PER_METER);
-        rearRightMtr.motor.setCommand(ControlMode.SpeedControl, -1 * rightMps * 60 * REVOLUTIONS_PER_METER);
-
+        frontLeft.drive(states[0]);
+        frontRight.drive(states[1]);
+        rearLeft.drive(states[2]);
+        rearRight.drive(states[3]);
     }
 
     public boolean isMoving() {
-        return Math.abs(gyro.getRate()) > TURN_RATE_CUTOFF
-            || Math.abs(frontLeftMtr.motor.getSpeed()) > MOVE_RATE_CUTOFF
-            || Math.abs(frontRightMtr.motor.getSpeed()) > MOVE_RATE_CUTOFF
-            || Math.abs(rearLeftMtr.motor.getSpeed()) > MOVE_RATE_CUTOFF
-            || Math.abs(rearRightMtr.motor.getSpeed()) > MOVE_RATE_CUTOFF;
-    }
-
-    public void resetMaintainHeading() {
-        turnState = TurnState.TURNING;
+        return frontLeft.driveMotor.getSelectedSensorVelocity() /  MoPrefs.flDriveMtrScale.get() < MOVE_RATE_CUTOFF
+            && frontRight.driveMotor.getSelectedSensorVelocity() /  MoPrefs.frDriveMtrScale.get() < MOVE_RATE_CUTOFF
+            && rearLeft.driveMotor.getSelectedSensorVelocity() /  MoPrefs.rlDriveMtrScale.get() < MOVE_RATE_CUTOFF
+            && rearRight.driveMotor.getSelectedSensorVelocity() /  MoPrefs.rrDriveMtrScale.get() < MOVE_RATE_CUTOFF;
     }
 
     @Override
     public void periodic() {
+        frontLeft.periodic();
+        frontRight.periodic();
+        rearLeft.periodic();
+        rearRight.periodic();
+
         if(DriverStation.isDisabled()) {
             this.stop();
         }

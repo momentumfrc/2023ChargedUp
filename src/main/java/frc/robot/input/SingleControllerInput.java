@@ -1,13 +1,13 @@
 package frc.robot.input;
 
-import static com.momentum4999.utils.Utils.*;
-
 import java.util.Optional;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants;
 import frc.robot.subsystems.ArmSubsystem.ArmMovementRequest;
 import frc.robot.utils.MoPrefs;
+import frc.robot.utils.Utils;
 import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 import frc.robot.utils.MoPrefs.Pref;
 
@@ -22,17 +22,21 @@ public class SingleControllerInput implements MoInput {
     }
 
     private double applyInputTransforms(double input) {
-        return curve(deadzone(input, deadzone.get()), curve.get());
+        return Utils.curve(Utils.deadzone(input, deadzone.get()), curve.get());
     }
 
     @Override
-    public double getForwardSpeedRequest() {
-        return applyInputTransforms(controller.getLeftY());
-    }
+    public Pair<Double, Double> getMoveRequest() {
+        double fwdRequest = controller.getLeftY();
+        double lftRequest = -1 * controller.getLeftX();
 
-    @Override
-    public double getLeftSpeedRequest() {
-        return -1 * applyInputTransforms(controller.getLeftX());
+        double magnitude = Math.sqrt((fwdRequest * fwdRequest) + (lftRequest * lftRequest));
+        fwdRequest /= magnitude;
+        lftRequest /= magnitude;
+
+        magnitude = applyInputTransforms(magnitude);
+
+        return new Pair<Double,Double>(fwdRequest * magnitude, lftRequest * magnitude);
     }
 
     @Override

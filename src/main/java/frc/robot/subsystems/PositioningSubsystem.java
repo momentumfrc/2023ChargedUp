@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -37,18 +38,6 @@ import frc.robot.utils.MoShuffleboard;
  * any autonomous logic.
  */
 public class PositioningSubsystem extends SubsystemBase {
-    /**
-     * The distance, in meters, of a wheel from the center of the robot towards the
-     * front of the robot.
-     */
-    private static final double WHEEL_FWD_POS = 0.25797; // 0.2664394;
-
-    /**
-     * The distance, in meters, of a wheel from the center of the robot towards the
-     * left side of the robot.
-     */
-    private static final double WHEEL_LEFT_POS = 0.288131; // 0.294386;
-
     /**
      * The maximum acceptable distance, in meters, between a limelight position update and the
      * robot's current odometry.
@@ -79,13 +68,7 @@ public class PositioningSubsystem extends SubsystemBase {
     private final AHRS gyro;
     private final DriveSubsystem drive;
 
-    public final MecanumDriveKinematics kinematics = new MecanumDriveKinematics(
-        new Translation2d(WHEEL_FWD_POS, WHEEL_LEFT_POS),
-        new Translation2d(WHEEL_FWD_POS, -WHEEL_LEFT_POS),
-        new Translation2d(-WHEEL_FWD_POS, WHEEL_LEFT_POS),
-        new Translation2d(-WHEEL_FWD_POS, -WHEEL_LEFT_POS)
-    );
-    private MecanumDriveOdometry odometry;
+    private SwerveDriveOdometry odometry;
 
     private static enum FieldOrientedDriveMode {
         GYRO,
@@ -104,8 +87,8 @@ public class PositioningSubsystem extends SubsystemBase {
 
         MoShuffleboard.getInstance().settingsTab.add("Field Oriented Mode", fieldOrientedDriveMode);
 
-        odometry = new MecanumDriveOdometry(
-            kinematics,
+        odometry = new SwerveDriveOdometry(
+            drive.kinematics,
             gyro.getRotation2d(),
             drive.getWheelPositions()
         );
@@ -119,15 +102,11 @@ public class PositioningSubsystem extends SubsystemBase {
             .withWidget(BuiltInWidgets.kBooleanBox);
     }
 
-    public DifferentialDriveKinematics getDifferentialKinematics() {
-        return new DifferentialDriveKinematics(WHEEL_LEFT_POS * 2);
-    }
-
     public Rotation2d getFieldOrientedDriveHeading() {
         var foMode = fieldOrientedDriveMode.getSelected();
         switch(foMode) {
             case GYRO:
-                return gyro.getRotation2d().minus(fieldOrientedFwd).rotateBy(Rotation2d.fromRotations(0.5));
+                return gyro.getRotation2d().minus(fieldOrientedFwd);
             case ODOMETRY:
                 return getRobotPose().getRotation();
             case NONE:

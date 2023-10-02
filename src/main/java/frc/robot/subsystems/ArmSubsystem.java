@@ -6,7 +6,7 @@ import com.revrobotics.CANSparkMax.SoftLimitDirection;
 
 import java.util.Map;
 
-import com.momentum4999.utils.Utils;
+import com.momentum4999.motune.PIDTuner;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
@@ -24,6 +24,7 @@ import frc.robot.utils.MoShuffleboard;
 import frc.robot.utils.MoSparkMaxPID;
 import frc.robot.utils.MoUtils;
 import frc.robot.utils.TunerUtils;
+import frc.robot.utils.Utils;
 import frc.robot.utils.MoSparkMaxPID.Type;
 
 public class ArmSubsystem extends SubsystemBase {
@@ -119,10 +120,10 @@ public class ArmSubsystem extends SubsystemBase {
         leftShoulder.setInverted(false);
         rightShoulder.follow(leftShoulder, true);
 
-        TunerUtils.forMoSparkMax(shoulderVelocityPID, "Shoulder Vel. PID", true);
-        TunerUtils.forMoSparkMax(wristVelocityPID, "Wrist Vel. PID", true);
-        TunerUtils.forMoSparkMax(shoulderSmartMotionPID, "Shoulder Pos. PID", true);
-        TunerUtils.forMoSparkMax(wristSmartMotionPID, "Wrist Pos. PID", true);
+        TunerUtils.forMoSparkMax(shoulderVelocityPID, "Shoulder Vel. PID");
+        TunerUtils.forMoSparkMax(wristVelocityPID, "Wrist Vel. PID");
+        TunerUtils.forMoSparkMax(shoulderSmartMotionPID, "Shoulder Pos. PID");
+        TunerUtils.forMoSparkMax(wristSmartMotionPID, "Wrist Pos. PID");
 
         MoShuffleboard.getInstance().settingsTab.add("Arm Control Mode", armChooser).withWidget(BuiltInWidgets.kComboBoxChooser);
 

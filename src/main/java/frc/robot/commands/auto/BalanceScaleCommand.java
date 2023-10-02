@@ -1,13 +1,13 @@
 package frc.robot.commands.auto;
 
 import com.kauailabs.navx.frc.AHRS;
-import com.momentum4999.utils.PIDTuner;
-import com.momentum4999.utils.Utils;
+import com.momentum4999.motune.PIDTuner;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.utils.MoPIDF;
 import frc.robot.utils.TunerUtils;
+import frc.robot.utils.Utils;
 
 /**
  * A simple bang-bang controller to automatically level the scale.
@@ -17,7 +17,6 @@ public class BalanceScaleCommand extends CommandBase {
     private static final double LEVEL_DEFINITION = 1.5; // degrees
 
     private final MoPIDF balanceScalePid = new MoPIDF();
-    private final PIDTuner balanceScaleTuner = TunerUtils.forMoPID(balanceScalePid, "Balance Scale", true);
 
     private final DriveSubsystem drive;
     private final AHRS navx;
@@ -26,12 +25,13 @@ public class BalanceScaleCommand extends CommandBase {
         this.drive = drive;
         this.navx = navx;
 
+        TunerUtils.forMoPID(balanceScalePid, "Balance Scale");
+
         addRequirements(drive);
     }
 
     @Override
     public void initialize() {
-        drive.resetMaintainHeading();
     }
 
     @Override

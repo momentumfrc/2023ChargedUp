@@ -2,14 +2,14 @@ package frc.robot.input;
 
 import java.util.Optional;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants;
 import frc.robot.subsystems.ArmSubsystem.ArmMovementRequest;
 import frc.robot.utils.MoPrefs;
+import frc.robot.utils.Utils;
 import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 import frc.robot.utils.MoPrefs.Pref;
-
-import static com.momentum4999.utils.Utils.*;
 
 public class DualControllerInput implements MoInput {
 
@@ -25,22 +25,26 @@ public class DualControllerInput implements MoInput {
     }
 
     private double applyDriveInputTransforms(double value) {
-        return curve(deadzone(value, driveDeadzone.get()), driveCurve.get());
+        return Utils.curve(Utils.deadzone(value, driveDeadzone.get()), driveCurve.get());
     }
 
     private double applyArmInputTransforms(double value) {
         // TODO: determine if we'd rather have a separate deadzone/curve for the arm controller
-        return curve(deadzone(value, driveDeadzone.get()), driveCurve.get());
+        return Utils.curve(Utils.deadzone(value, driveDeadzone.get()), driveCurve.get());
     }
 
     @Override
-    public double getForwardSpeedRequest() {
-        return applyDriveInputTransforms(driveController.getLeftY());
-    }
+    public Pair<Double, Double> getMoveRequest() {
+        double fwdRequest = driveController.getLeftY();
+        double lftRequest = -1 * driveController.getLeftX();
 
-    @Override
-    public double getLeftSpeedRequest() {
-        return -1 * applyDriveInputTransforms(driveController.getLeftX());
+        double magnitude = Math.sqrt((fwdRequest * fwdRequest) + (lftRequest * lftRequest));
+        fwdRequest /= magnitude;
+        lftRequest /= magnitude;
+
+        magnitude = applyDriveInputTransforms(magnitude);
+
+        return new Pair<Double,Double>(fwdRequest * magnitude, lftRequest * magnitude);
     }
 
     @Override
