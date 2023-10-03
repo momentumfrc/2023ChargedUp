@@ -65,8 +65,6 @@ public class CalibrateDriveEncodersCommand extends CommandBase {
             next_step = CALIBRATE_STEP;
             cooldown = COOLDOWN_STEPS;
             calculator.start();
-
-            module.setShouldAutoZero(false);
         }
 
         public void execute() {
@@ -120,7 +118,6 @@ public class CalibrateDriveEncodersCommand extends CommandBase {
                 encoderScale.set(encoderScale.get() * mean);
             }
 
-            module.setShouldAutoZero(true);
         }
     }
 

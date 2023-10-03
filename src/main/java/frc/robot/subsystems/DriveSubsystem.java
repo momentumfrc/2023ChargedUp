@@ -41,6 +41,8 @@ public class DriveSubsystem extends SubsystemBase {
      */
     private static final double MOVE_RATE_CUTOFF = 0.05;
 
+    private static final double RESET_ENCODER_INTERVAL = 0.5;
+
     private static enum TurnState {
         TURNING,
         HOLD_HEADING
@@ -60,6 +62,8 @@ public class DriveSubsystem extends SubsystemBase {
     public final SwerveModule rearLeft;
     public final SwerveModule rearRight;
 
+    private final Timer resetEncoderTimer = new Timer();
+
     public final MoPIDF xPathController = new MoPIDF();
     public final MoPIDF yPathController = new MoPIDF();
     public final MoPIDF rotPathController = new MoPIDF();
@@ -71,6 +75,8 @@ public class DriveSubsystem extends SubsystemBase {
     public final SwerveDriveKinematics kinematics;
 
     private final AHRS gyro;
+
+    public boolean doResetEncoders = true;
 
     public DriveSubsystem(AHRS gyro) {
         this.gyro = gyro;
@@ -113,6 +119,8 @@ public class DriveSubsystem extends SubsystemBase {
             MoPrefs.rrScale,
             MoPrefs.rrDriveMtrScale
         );
+
+        resetEncoderTimer.start();
 
         MoShuffleboard.getInstance().matchTab.addDouble("FL_POS", frontLeft.driveMotor::getSelectedSensorPosition);
         MoShuffleboard.getInstance().matchTab.addDouble("FL_POS_m", () -> frontLeft.driveMotor.getSelectedSensorPosition() / MoPrefs.flDriveMtrScale.get());
@@ -223,12 +231,21 @@ public class DriveSubsystem extends SubsystemBase {
             && rearRight.driveMotor.getSelectedSensorVelocity() /  MoPrefs.rrDriveMtrScale.get() < MOVE_RATE_CUTOFF;
     }
 
+
+    public void resetRelativeEncoders() {
+        if(!doResetEncoders)
+            return;
+        frontLeft.setRelativePosition();
+        frontRight.setRelativePosition();
+        rearLeft.setRelativePosition();
+        rearRight.setRelativePosition();
+    }
+
     @Override
     public void periodic() {
-        frontLeft.periodic();
-        frontRight.periodic();
-        rearLeft.periodic();
-        rearRight.periodic();
+        if(resetEncoderTimer.advanceIfElapsed(RESET_ENCODER_INTERVAL)) {
+            resetRelativeEncoders();
+        }
 
         if(DriverStation.isDisabled()) {
             this.stop();

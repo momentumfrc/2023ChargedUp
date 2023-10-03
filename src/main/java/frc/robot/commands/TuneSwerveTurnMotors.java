@@ -25,10 +25,7 @@ public class TuneSwerveTurnMotors extends CommandBase {
     public void initialize() {
         DriverStation.reportWarning("ENTERING DRIVE TURN CALIBRATION", false);
 
-        drive.frontLeft.setShouldAutoZero(false);
-        drive.frontRight.setShouldAutoZero(false);
-        drive.rearLeft.setShouldAutoZero(false);
-        drive.rearRight.setShouldAutoZero(false);
+        drive.doResetEncoders = false;
     }
 
     @Override
@@ -48,10 +45,7 @@ public class TuneSwerveTurnMotors extends CommandBase {
     public void end(boolean wasInterrupted) {
         DriverStation.reportWarning("FINISHING DRIVE TURN CALIBRATION", false);
 
-        drive.frontLeft.setShouldAutoZero(true);
-        drive.frontRight.setShouldAutoZero(true);
-        drive.rearLeft.setShouldAutoZero(true);
-        drive.rearRight.setShouldAutoZero(true);
+        drive.doResetEncoders = true;
     }
 
 }
