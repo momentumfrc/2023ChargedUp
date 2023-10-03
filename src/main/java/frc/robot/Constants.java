@@ -46,6 +46,7 @@ public class Constants {
 
     public static final HIDPort DRIVE_F310 = new HIDPort(0);
     public static final HIDPort ARMS_F310 = new HIDPort(1);
+    public static final HIDPort JOYSTICK = new HIDPort(2);
 
     public static final int EXTEND_BRAKE = 0;
     public static final int RETRACT_BRAKE = 1;

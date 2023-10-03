@@ -21,6 +21,7 @@ import frc.robot.commands.TuneSwerveTurnMotors;
 import frc.robot.commands.auto.BalanceScaleCommand;
 import frc.robot.commands.auto.CenterLimelightCrosshairsCommand;
 import frc.robot.input.DualControllerInput;
+import frc.robot.input.JoystickControllerInput;
 import frc.robot.input.MoInput;
 import frc.robot.input.SingleControllerInput;
 import frc.robot.sensors.Limelight.LimelightPipeline;
@@ -55,7 +56,8 @@ public class RobotContainer {
     }
 
     public RobotContainer() {
-        inputChooser.setDefaultOption("Dual Controllers", new DualControllerInput(Constants.DRIVE_F310, Constants.ARMS_F310));
+        inputChooser.setDefaultOption("Joystick Drive, Controller Arms", new JoystickControllerInput(Constants.JOYSTICK, Constants.ARMS_F310));
+        inputChooser.addOption("Dual Controllers", new DualControllerInput(Constants.DRIVE_F310, Constants.ARMS_F310));
         inputChooser.addOption("Single Controller", new SingleControllerInput(Constants.DRIVE_F310));
         MoShuffleboard.getInstance().settingsTab.add("Controller Mode", inputChooser);
 
