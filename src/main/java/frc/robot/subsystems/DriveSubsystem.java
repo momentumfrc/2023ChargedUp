@@ -54,7 +54,7 @@ public class DriveSubsystem extends SubsystemBase {
     private final PIDTuner headingTuner = TunerUtils.forMoPIDF(headingController, "Drive Heading");
 
     private GenericSubscriber shouldHeadingPID = MoShuffleboard.getInstance().settingsTab
-        .add("Keep Heading", true)
+        .add("Keep Heading", false)
         .withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
     public final SwerveModule frontLeft;
