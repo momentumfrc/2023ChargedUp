@@ -182,6 +182,24 @@ public class AutoBuilder {
             return new RunCommand(() -> {});
         }
 
+        return new ParallelDeadlineGroup(
+                new SequentialCommandGroup(
+                    new ParallelDeadlineGroup(
+                        new MoveArmToSetpointCommand(arm, ArmSetpoint.CUBE_MED),
+                        new StopIntakeCommand(intake)
+                    ),
+                    new ParallelDeadlineGroup(
+                        new RunIntakeCommand(intake, RunIntakeCommand.IntakeDirection.CUBE_EXHAUST),
+                        new HoldArmSetpointCommand(arm, ArmSetpoint.CUBE_MED)
+                    ),
+                    new ParallelDeadlineGroup(
+                        new MoveArmToSetpointCommand(arm, ArmSetpoint.STOW),
+                        new StopIntakeCommand(intake)
+                    )
+                ),
+                new DriveHoldPositionCommand(drive)
+            );/*
+
         SequentialCommandGroup autoCommand = new SequentialCommandGroup();
 
         // 2: If the starting position is a GRID and the specified scoring level is not LEVEL_NONE
@@ -266,5 +284,6 @@ public class AutoBuilder {
         ));
 
         return autoCommand;
+        */
     }
 }
