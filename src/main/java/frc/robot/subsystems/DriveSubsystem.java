@@ -225,10 +225,10 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public boolean isMoving() {
-        return frontLeft.driveMotor.getSelectedSensorVelocity() /  MoPrefs.flDriveMtrScale.get() < MOVE_RATE_CUTOFF
-            && frontRight.driveMotor.getSelectedSensorVelocity() /  MoPrefs.frDriveMtrScale.get() < MOVE_RATE_CUTOFF
-            && rearLeft.driveMotor.getSelectedSensorVelocity() /  MoPrefs.rlDriveMtrScale.get() < MOVE_RATE_CUTOFF
-            && rearRight.driveMotor.getSelectedSensorVelocity() /  MoPrefs.rrDriveMtrScale.get() < MOVE_RATE_CUTOFF;
+        return (frontLeft.driveMotor.getSelectedSensorVelocity() /  MoPrefs.flDriveMtrScale.get()) > MOVE_RATE_CUTOFF
+            || (frontRight.driveMotor.getSelectedSensorVelocity() /  MoPrefs.frDriveMtrScale.get()) > MOVE_RATE_CUTOFF
+            || (rearLeft.driveMotor.getSelectedSensorVelocity() /  MoPrefs.rlDriveMtrScale.get()) > MOVE_RATE_CUTOFF
+            || (rearRight.driveMotor.getSelectedSensorVelocity() /  MoPrefs.rrDriveMtrScale.get()) > MOVE_RATE_CUTOFF;
     }
 
 
