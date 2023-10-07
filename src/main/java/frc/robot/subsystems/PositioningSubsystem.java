@@ -152,7 +152,7 @@ public class PositioningSubsystem extends SubsystemBase {
     }
 
     public void resetFieldOrientedFwd() {
-        this.fieldOrientedFwd = gyro.getRotation2d();
+        this.fieldOrientedFwd = gyro.getRotation2d().rotateBy(Rotation2d.fromRotations(0.5));
     }
 
     @Override
