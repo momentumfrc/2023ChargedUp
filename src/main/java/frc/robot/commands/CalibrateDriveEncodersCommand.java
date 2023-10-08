@@ -1,167 +1,196 @@
 package frc.robot.commands;
 
+import java.util.ArrayList;
+import java.util.function.DoubleSupplier;
+
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.utils.CorrectionFactorCalculator;
 import frc.robot.utils.MoPrefs;
 import frc.robot.utils.MoUtils;
-import frc.robot.utils.SwerveModule;
-import frc.robot.utils.MoPrefs.Pref;
 
 public class CalibrateDriveEncodersCommand extends CommandBase {
-    private static final double CALIBRATE_SPEED = 0.03;
-    private static final double CALIBRATE_STEP = 0.05;
-    private static final int COOLDOWN_STEPS = 3;
-
-    public static final int N_RUNS = 5;
-
-    /**
-     * This class takes a single swerve module, runs 5 calibration cycles, and uses the average
-     * of the results to adjust the relative encoder scale.
-     * <p>
-     * During a calibration cycle, the motor is used to spin the encoders through most of a single
-     * revolution, during which the CorrectionFactorCalculator notes the values reported by the
-     * absolute and relative encoders. Then, at the end of the cycle, the calculator uses the noted
-     * values to calculate the correction factor for the relative encoder scale.
-     * <p>
-     * Note that during a calibration cycle, the motor does not spin continuously. Instead, the
-     * motor is shut off and the mechanism allowed to come to a halt before the encoder values are
-     * saved. This helps keep electromagnetic interference from the motor from affecting the
-     * the absolute encoder, which is read via an analog voltage. Also, it eliminates any error
-     * that could be introduced by the lag time between reading the absolute and relative
-     * encoders--since the mechanism isn't be moving, it doesn't matter if the two encoders are not
-     * read at precisely the same time. This stepwise motion can be adjusted using the
-     * CALIBRATE_STEP and COOLDOWN_STEPS variables.
-     * <p>
-     * Also note that this class, while written in a similar fashion to a command, is not itself a
-     * command. This is for two reasons. First, the each individual swerve module is not its own
-     * subsystem--they're all part of the drive subsystem--so we can't use addRequirements. Second,
-     * we want to enable some default behavior (no motion/zero output) once isFinished returns true.
-     * While we could probably make it work using some combination of ParallelCommandGroup and
-     * RunCommand, I find this easier to read and understand.
-     */
     private static class Calibrator {
-        private SwerveModule module;
-        private Pref<Double> encoderScale;
-        private CorrectionFactorCalculator calculator;
+        private static final double CALIBRATE_END = 0.8 * Math.PI;
+        private static final int MIN_DATAPOINTS = 10;
 
-        private double[] calculatedValues = new double[N_RUNS];
+        private static class DataPoint {
+            public final double abs;
+            public final double rel;
 
-        private int runs = 0;
-        private double next_step;
-        private int cooldown;
-
-        public Calibrator(SwerveModule module, Pref<Double> encoderScale) {
-            this.module = module;
-            this.encoderScale = encoderScale;
-
-            this.calculator = new CorrectionFactorCalculator(
-                module.absoluteEncoder::getPosition,
-                module.turnMotor.getEncoder()::getPosition
-            );
+            public DataPoint(double abs, double rel) {
+                this.abs = abs;
+                this.rel = rel;
+            }
         }
 
-        public void initialize() {
-            next_step = CALIBRATE_STEP;
-            cooldown = COOLDOWN_STEPS;
-            calculator.start();
+        private ArrayList<DataPoint> data = new ArrayList<>();
+
+        private DoubleSupplier absEncoder;
+        private DoubleSupplier relEncoder;
+
+        double absZero;
+        double relZero;
+
+        public Calibrator(DoubleSupplier absEncoder, DoubleSupplier relEncoder) {
+            this.absEncoder = absEncoder;
+            this.relEncoder = relEncoder;
         }
 
-        public void execute() {
-            if(isFinished()) {
-                module.directDrive(0, 0);
-                return;
-            }
+        public void start() {
+            data.clear();
+            absZero = absEncoder.getAsDouble();
+            relZero = relEncoder.getAsDouble();
+        }
 
-            if(calculator.isFinished()) {
-                calculatedValues[runs] = calculator.calculateCorrectionFactor();
-                runs += 1;
+        /**
+         * Gets the current position of the absolute encoder, offset by the initial zero, in radians
+         * constrained between [-pi, pi)
+         * @returns The absolute position in radians
+         */
+        private double getAbsRad() {
+            double rots = (absEncoder.getAsDouble() + 1 - absZero) % 1;
+            return MoUtils.rotToRad(rots);
+        }
 
-                if(isFinished()) {
-                    module.directDrive(0, 0);
-                    return;
-                }
-
-                initialize();
-            }
-
-            // We need to use getAbsRad() so that the value is relative to the absolute zero
-            // from when the calculator was started.
-            if(MoUtils.radToRot(calculator.getAbsRad()) < next_step) {
-                module.directDrive(CALIBRATE_SPEED, 0);
-            } else {
-                module.directDrive(0, 0);
-
-                if(cooldown > 0) {
-                    cooldown -= 1;
-                } else {
-                    calculator.recordDataPoint();
-                    next_step += CALIBRATE_STEP;
-                    cooldown = COOLDOWN_STEPS;
-                }
-            }
+        /**
+         * Gets the current position of the relative encoder, offset by the initial zero, in radians.
+         * @return The relative position in radians
+         */
+        private double getRelRad() {
+            return relEncoder.getAsDouble() - relZero;
         }
 
         public boolean isFinished() {
-            return runs >= N_RUNS;
+            return getAbsRad() > CALIBRATE_END;
         }
 
-        public void end(boolean interrupted) {
-            if(!interrupted) {
-                double mean = 0;
-                for(double value : calculatedValues) {
-                    mean += value;
-                }
+        public void recordDataPoint() {
+            DataPoint datum = new DataPoint(getAbsRad(), getRelRad());
+            if(datum.abs > CALIBRATE_END) {
+                return;
+            }
+            data.add(datum);
+        }
 
-                mean /= N_RUNS;
-
-                encoderScale.set(encoderScale.get() * mean);
+        /**
+         * Uses least-squares regression to calculate the factor the current relative encoder
+         * scale should be adjusted by to minimize the error between the relative and absolute
+         * encoders.
+         * <p>
+         * Let R be the relative encoder count, and A be the absolute position in radians (as given
+         * by the absolute encoder). Also let B be the current encoder scale (in units of radians
+         * per encoder count) and let F be the error factor such that R*B*F = A. It follows that
+         * F = A / R*B.
+         * Find the line of best fit where x = A and y = R*B. The slope of this line, m, estimates
+         * R*B / A. Thus, F = 1/m, and so the correction factor is the reciprocal of the slope of
+         * the line of best fit where the absolute position is the x-axis and the current estimated
+         * position is the y-axis.
+         *
+         * @return The factor the current relative encoder scale should be adjusted by to minimize
+         * the error between the relative and absolute encoders.
+         */
+        public double calculateCorrectionFactor() {
+            double n = data.size();
+            if(n < MIN_DATAPOINTS) {
+                DriverStation.reportWarning("Cannot complete calibration: insufficient data", false);
+                return 1;
             }
 
+            double sumx = 0;
+            double sumy = 0;
+            double sumx2 = 0;
+            double sumxy = 0;
+
+            for(DataPoint point : data) {
+                sumx += point.abs;
+                sumy += point.rel;
+                sumx2 += point.abs * point.abs;
+                sumxy += point.abs * point.rel;
+            }
+
+            double lsrl_slope = ( (n * sumxy) - (sumx * sumy) ) / ( (n * sumx2) - (sumx * sumx) );
+
+            return 1 / lsrl_slope;
         }
     }
 
-    private final Calibrator[] calibrators;
+    private static final double CALIBRATE_SPEED = 0.1;
+
+    private final DriveSubsystem drive;
+    private Calibrator frontLeft;
+    private Calibrator frontRight;
+    private Calibrator rearLeft;
+    private Calibrator rearRight;
 
     public CalibrateDriveEncodersCommand(DriveSubsystem drive) {
         addRequirements(drive);
+        this.drive = drive;
 
-        calibrators = new Calibrator[] {
-            new Calibrator(drive.frontLeft, MoPrefs.flScale),
-            new Calibrator(drive.frontRight, MoPrefs.frScale),
-            new Calibrator(drive.rearLeft, MoPrefs.rlScale),
-            new Calibrator(drive.rearRight, MoPrefs.rrScale)
-        };
+        frontLeft = new Calibrator(drive.frontLeft.absoluteEncoder::getPosition, drive.frontLeft.turnMotor.getEncoder()::getPosition);
+        frontRight = new Calibrator(drive.frontRight.absoluteEncoder::getPosition, drive.frontRight.turnMotor.getEncoder()::getPosition);
+        rearLeft = new Calibrator(drive.rearLeft.absoluteEncoder::getPosition, drive.rearLeft.turnMotor.getEncoder()::getPosition);
+        rearRight = new Calibrator(drive.rearRight.absoluteEncoder::getPosition, drive.rearRight.turnMotor.getEncoder()::getPosition);
     }
 
     @Override
     public void initialize() {
-        for(Calibrator c : calibrators) {
-            c.initialize();
-        }
+        frontLeft.start();
+        rearLeft.start();
+        frontRight.start();
+        rearRight.start();
     }
 
     @Override
     public void execute() {
-        for(Calibrator c : calibrators) {
-            c.execute();
+        if(!frontLeft.isFinished()) {
+            drive.frontLeft.directDrive(CALIBRATE_SPEED, 0);
+            frontLeft.recordDataPoint();
+        } else {
+            drive.frontLeft.directDrive(0, 0);
+        }
+
+        if(!frontRight.isFinished()) {
+            drive.frontRight.directDrive(CALIBRATE_SPEED, 0);
+            frontRight.recordDataPoint();
+        } else {
+            drive.frontRight.directDrive(0, 0);
+        }
+
+        if(!rearLeft.isFinished()) {
+            drive.rearLeft.directDrive(CALIBRATE_SPEED, 0);
+            rearLeft.recordDataPoint();
+
+            System.out.println(rearLeft.getAbsRad());
+        } else {
+            drive.frontRight.directDrive(0, 0);
+        }
+
+        if(!rearRight.isFinished()) {
+            drive.rearRight.directDrive(CALIBRATE_SPEED, 0);
+            rearRight.recordDataPoint();
+        } else {
+            drive.frontRight.directDrive(0, 0);
         }
     }
 
     @Override
     public boolean isFinished() {
-        for(Calibrator c : calibrators) {
-            if(!c.isFinished()) {
-                return false;
-            }
-        }
-        return true;
+        return frontLeft.isFinished() && frontRight.isFinished() && rearLeft.isFinished() && rearRight.isFinished();
     }
 
     @Override
     public void end(boolean interrupted) {
-        for(Calibrator c : calibrators) {
-            c.end(interrupted);
-        }
+        if(frontLeft.isFinished())
+            MoPrefs.flScale.set(MoPrefs.flScale.get() * frontLeft.calculateCorrectionFactor());
+
+        if(frontRight.isFinished())
+            MoPrefs.frScale.set(MoPrefs.frScale.get() * frontRight.calculateCorrectionFactor());
+
+        if(rearLeft.isFinished())
+            MoPrefs.rlScale.set(MoPrefs.rlScale.get() * rearLeft.calculateCorrectionFactor());
+
+        if(rearRight.isFinished())
+            MoPrefs.rrScale.set(MoPrefs.rrScale.get() * rearRight.calculateCorrectionFactor());
     }
 }
