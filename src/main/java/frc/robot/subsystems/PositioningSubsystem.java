@@ -6,6 +6,7 @@ import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
@@ -166,7 +167,7 @@ public class PositioningSubsystem extends SubsystemBase {
             if(drive.isMoving()) {
                 return;
             }
-            this.setRobotPose(pose.toPose2d());
+            this.setRobotPose(pose.toPose2d().transformBy(new Transform2d(new Translation2d(), Rotation2d.fromRotations(0.5))));
         });
 
         robotPose = odometry.update(gyro.getRotation2d(), drive.getWheelPositions());

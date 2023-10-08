@@ -77,6 +77,7 @@ public class AutoBuilder {
     private GenericEntry limelightAlignment;
     private GenericEntry chargeStationDocking;
     private GenericEntry chargeStationEngagement;
+    private GenericEntry mobilityDrive;
 
     public void initShuffleboard() {
         startPosChooser = MoShuffleboard.enumToChooser(StartingPosition.class);
@@ -119,6 +120,12 @@ public class AutoBuilder {
 
         chargeStationEngagement = tab.add("Engage Charge Station", false)
             .withPosition(2, 3)
+            .withSize(2, 1)
+            .withWidget(BuiltInWidgets.kToggleSwitch)
+            .getEntry();
+
+        mobilityDrive = tab.add("Drive for Mobility", false)
+            .withPosition(4, 2)
             .withSize(2, 1)
             .withWidget(BuiltInWidgets.kToggleSwitch)
             .getEntry();
@@ -182,6 +189,7 @@ public class AutoBuilder {
             return new RunCommand(() -> {});
         }
 
+        /*
         return new ParallelDeadlineGroup(
                 new SequentialCommandGroup(
                     new ParallelDeadlineGroup(
@@ -198,7 +206,7 @@ public class AutoBuilder {
                     )
                 ),
                 new DriveHoldPositionCommand(drive)
-            );/*
+            ); */
 
         SequentialCommandGroup autoCommand = new SequentialCommandGroup();
 
@@ -258,20 +266,23 @@ public class AutoBuilder {
 
         SequentialCommandGroup driveCommands = new SequentialCommandGroup();
 
-        // 3: Drive to the mobility position that corresponds to the specified starting position
-        String driveToMobPointPathName = String.format("%s to %s", startPos.name(), startPos.mobPos.name());
-        var driveToMobPointCommand = PathFollowingUtils.getFollowTrajectoryCommand(drive, pos, driveToMobPointPathName, true);
-        driveCommands.addCommands(driveToMobPointCommand);
+        if(mobilityDrive.getBoolean(false)) {
 
-        // 4: If charge station docking has been enabled, then drive to the charge station position
-        if(chargeStationDocking) {
-            String driveToChrgPathName = String.format("%s to CHRG", startPos.mobPos.name());
-            var driveToChrgPointCommand = PathFollowingUtils.getFollowTrajectoryCommand(drive, pos, driveToChrgPathName, false);
-            driveCommands.addCommands(driveToChrgPointCommand);
+            // 3: Drive to the mobility position that corresponds to the specified starting position
+            String driveToMobPointPathName = String.format("%s to %s", startPos.name(), startPos.mobPos.name());
+            var driveToMobPointCommand = PathFollowingUtils.getFollowTrajectoryCommand(drive, pos, driveToMobPointPathName, true);
+            driveCommands.addCommands(driveToMobPointCommand);
 
-            // 4.a: If charge station engagement is enabled, then try to  balance the charge station
-            if(chargeStationEngagement) {
-                driveCommands.addCommands(new BalanceScaleCommand(drive, navx));
+            // 4: If charge station docking has been enabled, then drive to the charge station position
+            if(chargeStationDocking) {
+                String driveToChrgPathName = String.format("%s to CHRG", startPos.mobPos.name());
+                var driveToChrgPointCommand = PathFollowingUtils.getFollowTrajectoryCommand(drive, pos, driveToChrgPathName, false);
+                driveCommands.addCommands(driveToChrgPointCommand);
+
+                // 4.a: If charge station engagement is enabled, then try to  balance the charge station
+                if(chargeStationEngagement) {
+                    driveCommands.addCommands(new BalanceScaleCommand(drive, navx));
+                }
             }
         }
 
@@ -284,6 +295,6 @@ public class AutoBuilder {
         ));
 
         return autoCommand;
-        */
+
     }
 }
