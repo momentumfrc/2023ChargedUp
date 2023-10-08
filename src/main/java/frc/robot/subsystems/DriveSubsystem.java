@@ -6,6 +6,7 @@ import com.momentum4999.motune.PIDTuner;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -25,11 +26,6 @@ import frc.robot.utils.SwerveModule;
 import frc.robot.utils.TunerUtils;
 
 public class DriveSubsystem extends SubsystemBase {
-    /**
-     * How many revolutions of a wheel encoder correspond to one meter of forward travel.
-     */
-    public static final double REVOLUTIONS_PER_METER = 22.2; // (0.152 * Math.PI) * (1.0 / 10.71);
-
     /**
      * The maximum rate of turn that the drive will consider as equivalent to zero. Used to
      * determine when to re-enable heading pid after executing a driver-requested turn.
@@ -151,8 +147,7 @@ public class DriveSubsystem extends SubsystemBase {
      * @return the current heading
      */
     private Rotation2d getCurrHeading() {
-        Rotation2d gyroHeading = gyro.getRotation2d();
-        return new Rotation2d(gyroHeading.getCos(), gyroHeading.getSin());
+        return Rotation2d.fromRadians(MathUtil.angleModulus(gyro.getRotation2d().getRadians()));
     }
 
     /**
@@ -199,8 +194,8 @@ public class DriveSubsystem extends SubsystemBase {
         double maxAngularSpeed = MoPrefs.maxTurnSpeed.get();
 
         ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+            fwdRequest * maxLinearSpeed,
             -leftRequest * maxLinearSpeed,
-            -fwdRequest * maxLinearSpeed,
             -turnRequest * maxAngularSpeed,
             fieldOrientedDriveAngle
         );

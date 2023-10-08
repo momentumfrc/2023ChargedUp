@@ -7,8 +7,6 @@ import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -23,8 +21,7 @@ public class PathFollowingUtils {
         DriveSubsystem drive, PositioningSubsystem positioning,
         PathPlannerTrajectory trajectory, boolean shouldAssumeRobotIsAtStart
     ) {
-        Command driveControllerCommand;
-        driveControllerCommand = new PPSwerveControllerCommand(
+        Command driveControllerCommand = new PPSwerveControllerCommand(
             trajectory,
             positioning::getRobotPose,
             drive.kinematics,
@@ -53,7 +50,7 @@ public class PathFollowingUtils {
         DriveSubsystem drive, PositioningSubsystem positioning,
         String trajectoryName, boolean shouldAssumeRobotIsAtStart
     ) {
-        PathPlannerTrajectory trajectory = PathPlanner.loadPath(trajectoryName, PATH_CONSTRAINTS, true);
+        PathPlannerTrajectory trajectory = PathPlanner.loadPath(trajectoryName, PATH_CONSTRAINTS);
         return getFollowTrajectoryCommand(drive, positioning, trajectory, shouldAssumeRobotIsAtStart);
     }
 }

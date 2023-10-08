@@ -66,6 +66,8 @@ public class PositioningSubsystem extends SubsystemBase {
 
     private GenericEntry shouldUseAprilTags = MoShuffleboard.getInstance().settingsTab.add("Detect AprilTags", true).withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
 
+    private Transform2d limelightTransform =  new Transform2d(new Translation2d(), Rotation2d.fromRotations(0.5));
+
     private final AHRS gyro;
     private final DriveSubsystem drive;
 
@@ -153,7 +155,7 @@ public class PositioningSubsystem extends SubsystemBase {
     }
 
     public void resetFieldOrientedFwd() {
-        this.fieldOrientedFwd = gyro.getRotation2d().rotateBy(Rotation2d.fromRotations(0.5));
+        this.fieldOrientedFwd = gyro.getRotation2d();
     }
 
     @Override
@@ -167,7 +169,8 @@ public class PositioningSubsystem extends SubsystemBase {
             if(drive.isMoving()) {
                 return;
             }
-            this.setRobotPose(pose.toPose2d().transformBy(new Transform2d(new Translation2d(), Rotation2d.fromRotations(0.5))));
+            var transformedPose = pose.toPose2d().transformBy(limelightTransform);
+            this.setRobotPose(transformedPose);
         });
 
         robotPose = odometry.update(gyro.getRotation2d(), drive.getWheelPositions());
