@@ -188,17 +188,32 @@ public class CalibrateDriveEncodersCommand extends CommandBase {
 
     @Override
     public void end(boolean interrupted) {
-        if(frontLeft.isFinished())
-            MoPrefs.flScale.set(MoPrefs.flScale.get() * frontLeft.calculateCorrectionFactor());
+        new Thread(() -> {
+            if(frontLeft.isFinished()) {
+                double factor = frontLeft.calculateCorrectionFactor();
+                System.out.format("frontLeft: factor=%.2f old=%.2f new=%.2f\n", factor, MoPrefs.flScale.get(), MoPrefs.flScale.get() * factor);
+                MoPrefs.flScale.set(MoPrefs.flScale.get() * factor);
+            }
 
-        if(frontRight.isFinished())
-            MoPrefs.frScale.set(MoPrefs.frScale.get() * frontRight.calculateCorrectionFactor());
+            if(frontRight.isFinished()) {
+                double factor = frontRight.calculateCorrectionFactor();
+                System.out.format("frontRight: factor=%.2f old=%.2f new=%.2f\n", factor, MoPrefs.frScale.get(), MoPrefs.frScale.get() * factor);
+                MoPrefs.frScale.set(MoPrefs.frScale.get() * factor);
+            }
 
-        if(rearLeft.isFinished())
-            MoPrefs.rlScale.set(MoPrefs.rlScale.get() * rearLeft.calculateCorrectionFactor());
+            if(rearLeft.isFinished()) {
+                double factor = rearLeft.calculateCorrectionFactor();
+                System.out.format("rearLeft: factor=%.2f old=%.2f new=%.2f\n", factor, MoPrefs.rlScale.get(), MoPrefs.rlScale.get() * factor);
+                MoPrefs.rlScale.set(MoPrefs.rlScale.get() * factor);
+            }
 
-        if(rearRight.isFinished())
-            MoPrefs.rrScale.set(MoPrefs.rrScale.get() * rearRight.calculateCorrectionFactor());
+            if(rearRight.isFinished()) {
+                double factor = rearRight.calculateCorrectionFactor();
+                System.out.format("rearRight: factor=%.2f old=%.2f new=%.2f\n", factor, MoPrefs.rrScale.get(), MoPrefs.rrScale.get() * factor);
+                MoPrefs.rrScale.set(MoPrefs.rrScale.get() * factor);
+            }
+        }).start();
+
         drive.doResetEncoders = true;
     }
 }
