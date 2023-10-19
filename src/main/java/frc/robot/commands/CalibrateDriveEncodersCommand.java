@@ -169,8 +169,6 @@ public class CalibrateDriveEncodersCommand extends CommandBase {
         if(!rearLeft.isFinished()) {
             drive.rearLeft.directDrive(CALIBRATE_SPEED, 0);
             rearLeft.recordDataPoint();
-
-            System.out.println(rearLeft.getAbsRad());
         } else {
             drive.frontRight.directDrive(0, 0);
         }
