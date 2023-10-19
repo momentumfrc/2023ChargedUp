@@ -146,6 +146,8 @@ public class CalibrateDriveEncodersCommand extends CommandBase {
         rearLeft.start();
         frontRight.start();
         rearRight.start();
+
+        drive.doResetEncoders = false;
     }
 
     @Override
@@ -199,5 +201,6 @@ public class CalibrateDriveEncodersCommand extends CommandBase {
 
         if(rearRight.isFinished())
             MoPrefs.rrScale.set(MoPrefs.rrScale.get() * rearRight.calculateCorrectionFactor());
+        drive.doResetEncoders = true;
     }
 }
