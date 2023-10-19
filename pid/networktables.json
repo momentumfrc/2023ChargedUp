@@ -1,0 +1,456 @@
+[
+  {
+    "name": "/Preferences/Drive Max RPM",
+    "type": "double",
+    "value": 700.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Drive Deadzone",
+    "type": "double",
+    "value": 0.08,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/Drive Curve",
+    "type": "double",
+    "value": 1.4,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Drive Slow Speed",
+    "type": "double",
+    "value": 0.35,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Drive Ramp Time",
+    "type": "double",
+    "value": 0.1,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Drive Max Rotate Speed",
+    "type": "double",
+    "value": 1.5,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Shoulder Maximum RPM",
+    "type": "double",
+    "value": 7.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Wrist Maximum RPM",
+    "type": "double",
+    "value": 14.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Abs. Shoulder Zero",
+    "type": "double",
+    "value": 0.605,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Shouler Max (revs)",
+    "type": "double",
+    "value": 0.3,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Abs. Wrist Zero",
+    "type": "double",
+    "value": 0.760017,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/Wrist Max (revs)",
+    "type": "double",
+    "value": 0.7,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Intake Speed",
+    "type": "double",
+    "value": 1.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Shoulder Ratio",
+    "type": "double",
+    "value": 255.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Wrist Ratio",
+    "type": "double",
+    "value": 93.74,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Wrist Fallback Max Power",
+    "type": "double",
+    "value": 0.5,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Arm Ramp Time",
+    "type": "double",
+    "value": 0.25,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Shoulder Current Limit",
+    "type": "double",
+    "value": 15.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Wrist Current Limit",
+    "type": "double",
+    "value": 15.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CUBE_HIGH_shoulder",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CUBE_HIGH_wrist",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CUBE_MED_shoulder",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CUBE_MED_wrist",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CUBE_LOW_shoulder",
+    "type": "double",
+    "value": 0.23134246468544006,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CUBE_LOW_wrist",
+    "type": "double",
+    "value": 0.6727924346923828,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CUBE_PICKUP_shoulder",
+    "type": "double",
+    "value": 0.18962620198726654,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CUBE_PICKUP_wrist",
+    "type": "double",
+    "value": 0.5845591425895691,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CONE_HIGH_shoulder",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CONE_HIGH_wrist",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CONE_MED_shoulder",
+    "type": "double",
+    "value": 0.15218214690685272,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CONE_MED_wrist",
+    "type": "double",
+    "value": 3.627745172707364e-05,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CONE_LOW_shoulder",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CONE_LOW_wrist",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CONE_PICKUP_shoulder",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/CONE_PICKUP_wrist",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/STOW_shoulder",
+    "type": "double",
+    "value": 0.048263996839523315,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/ArmSetpoints/STOW_wrist",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/Turn Slow Speed",
+    "type": "double",
+    "value": 0.18,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Auto Score X Dist",
+    "type": "double",
+    "value": 2.5,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Drive Max Speed m/s",
+    "type": "double",
+    "value": 0.5,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Turn Max Speed m/s",
+    "type": "double",
+    "value": 0.5,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/FL Drive Zero",
+    "type": "double",
+    "value": 0.6463,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/FL Drive Scale",
+    "type": "double",
+    "value": 0.4994681377007628,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/FR Drive Zero",
+    "type": "double",
+    "value": 0.203,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/FR Drive Scale",
+    "type": "double",
+    "value": 0.4863770622196062,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/RL Drive Zero",
+    "type": "double",
+    "value": 0.4901,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/RL Drive Scale",
+    "type": "double",
+    "value": 0.4846022783266405,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/RR Drive Zero",
+    "type": "double",
+    "value": 0.1862,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/RR Drive Scale",
+    "type": "double",
+    "value": 0.48879941544639366,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/FL Drive Motor Scale",
+    "type": "double",
+    "value": 41742.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/FR Drive Motor Scale",
+    "type": "double",
+    "value": 41742.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/RL Drive Motor Scale",
+    "type": "double",
+    "value": 41742.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/RR Drive Motor Scale",
+    "type": "double",
+    "value": 41742.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Preferences/Chassis Size X",
+    "type": "double",
+    "value": 0.68,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  },
+  {
+    "name": "/Preferences/Chassis Size Y",
+    "type": "double",
+    "value": 0.53,
+    "properties": {
+      "persistent": true,
+      "retained": true
+    }
+  }
+]
