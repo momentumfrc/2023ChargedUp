@@ -6,8 +6,7 @@ import frc.robot.subsystems.ArmSubsystem.ArmMovementRequest;
 import frc.robot.utils.ArmSetpointManager.ArmSetpoint;
 
 public interface MoInput {
-    public double getForwardSpeedRequest();
-    public double getLeftSpeedRequest();
+    public MoveVector getMoveRequest();
     public double getTurnRequest();
 
     public boolean getShouldUseSlowSpeed();

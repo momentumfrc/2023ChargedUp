@@ -35,26 +35,11 @@ public class JoystickControllerInput implements MoInput {
     }
 
     @Override
-    public double getForwardSpeedRequest() {
-        return applyDriveInputTransforms(driveController.getRawAxis(1));
-    }
+    public MoveVector getMoveRequest() {
+        var mv = new MoveVector(driveController.getRawAxis(1), -1 * driveController.getRawAxis(0));
+        mv.applyTransforms(this::applyDriveInputTransforms);
 
-    @Override
-    public double getLeftSpeedRequest() {
-        return applyDriveInputTransforms(-1 * driveController.getRawAxis(0));
-    }
-
-    public Pair<Double, Double> getMoveRequest() {
-        double fwdRequest = driveController.getRawAxis(1);
-        double lftRequest = -1 * driveController.getRawAxis(0);
-
-        double magnitude = Math.sqrt((fwdRequest * fwdRequest) + (lftRequest * lftRequest));
-        fwdRequest /= magnitude;
-        lftRequest /= magnitude;
-
-        magnitude = applyDriveInputTransforms(magnitude);
-
-        return new Pair<Double,Double>(fwdRequest * magnitude, lftRequest * magnitude);
+        return mv;
     }
 
     @Override

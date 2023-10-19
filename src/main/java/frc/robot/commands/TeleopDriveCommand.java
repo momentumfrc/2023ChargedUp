@@ -44,8 +44,10 @@ public class TeleopDriveCommand extends CommandBase {
     @Override
     public void execute() {
         MoInput input = inputSupplier.get();
-        double fwdRequest = input.getForwardSpeedRequest();
-        double leftRequest = input.getLeftSpeedRequest();
+        var mvRequest = input.getMoveRequest();
+        double fwdRequest = mvRequest.getFwd();
+        double leftRequest = mvRequest.getLeft();
+
         double turnRequest = input.getTurnRequest();
 
         if(input.getShouldUseSlowSpeed()) {

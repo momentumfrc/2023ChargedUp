@@ -33,13 +33,11 @@ public class DualControllerInput implements MoInput {
     }
 
     @Override
-    public double getForwardSpeedRequest() {
-        return applyDriveInputTransforms(driveController.getLeftY());
-    }
+    public MoveVector getMoveRequest() {
+        var mv = new MoveVector(driveController.getLeftY(), -driveController.getLeftX());
+        mv.applyTransforms(this::applyDriveInputTransforms);
 
-    @Override
-    public double getLeftSpeedRequest() {
-        return -1 * applyDriveInputTransforms(driveController.getLeftX());
+        return mv;
     }
 
     @Override

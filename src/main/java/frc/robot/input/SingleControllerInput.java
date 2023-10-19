@@ -25,13 +25,11 @@ public class SingleControllerInput implements MoInput {
     }
 
     @Override
-    public double getForwardSpeedRequest() {
-        return applyInputTransforms(controller.getLeftY());
-    }
+    public MoveVector getMoveRequest() {
+        var mv = new MoveVector(controller.getLeftY(), controller.getLeftX());
+        mv.applyTransforms(this::applyInputTransforms);
 
-    @Override
-    public double getLeftSpeedRequest() {
-        return -1 * applyInputTransforms(controller.getLeftX());
+        return mv;
     }
 
     @Override
