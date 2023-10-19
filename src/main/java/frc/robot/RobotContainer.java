@@ -56,8 +56,8 @@ public class RobotContainer {
     }
 
     public RobotContainer() {
-        inputChooser.setDefaultOption("Joystick Drive, Controller Arms", new JoystickControllerInput(Constants.JOYSTICK, Constants.ARMS_F310));
-        inputChooser.addOption("Dual Controllers", new DualControllerInput(Constants.DRIVE_F310, Constants.ARMS_F310));
+        inputChooser.setDefaultOption("Dual Controllers", new DualControllerInput(Constants.DRIVE_F310, Constants.ARMS_F310));
+        inputChooser.addOption("Joystick Drive, Controller Arms", new JoystickControllerInput(Constants.JOYSTICK, Constants.ARMS_F310));
         inputChooser.addOption("Single Controller", new SingleControllerInput(Constants.DRIVE_F310));
         MoShuffleboard.getInstance().settingsTab.add("Controller Mode", inputChooser);
 
