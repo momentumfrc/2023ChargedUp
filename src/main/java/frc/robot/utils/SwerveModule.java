@@ -38,7 +38,7 @@ public class SwerveModule {
     private PIDTuner driveTuner;
 
     // Note: the relative encoder is scaled to return radians
-    private final RelativeEncoder relativeEncoder;
+    public final RelativeEncoder relativeEncoder;
 
     private final Pref<Double> encoderZero;
     private final Pref<Double> encoderScale;
