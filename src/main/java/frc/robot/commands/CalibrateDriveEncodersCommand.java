@@ -112,11 +112,17 @@ public class CalibrateDriveEncodersCommand extends CommandBase {
 
             double lsrl_slope = ( (n * sumxy) - (sumx * sumy) ) / ( (n * sumx2) - (sumx * sumx) );
 
+
+            if(lsrl_slope < 0) {
+                DriverStation.reportError("Negative correction factor!", false);
+                return 1;
+            }
+
             return 1 / lsrl_slope;
         }
     }
 
-    private static final double CALIBRATE_SPEED = 0.1;
+    private static final double CALIBRATE_SPEED = 0.05;
 
     private final DriveSubsystem drive;
     private Calibrator frontLeft;
