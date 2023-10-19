@@ -12,6 +12,7 @@ import frc.robot.utils.MoUtils;
 public class CalibrateDriveEncodersCommand extends CommandBase {
     private static class Calibrator {
         private static final double CALIBRATE_END = 0.8 * Math.PI;
+        private static final double CALIBRATE_START = -0.8 * Math.PI;
         private static final int MIN_DATAPOINTS = 10;
 
         private static class DataPoint {
@@ -67,7 +68,7 @@ public class CalibrateDriveEncodersCommand extends CommandBase {
 
         public void recordDataPoint() {
             DataPoint datum = new DataPoint(getAbsRad(), getRelRad());
-            if(datum.abs > CALIBRATE_END) {
+            if(datum.abs > CALIBRATE_END || datum.abs < CALIBRATE_START) {
                 return;
             }
             data.add(datum);
