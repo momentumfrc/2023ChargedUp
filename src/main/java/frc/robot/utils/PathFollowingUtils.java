@@ -15,7 +15,7 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.PositioningSubsystem;
 
 public class PathFollowingUtils {
-    private static final PathConstraints PATH_CONSTRAINTS = new PathConstraints(2, 0.5);
+    private static final PathConstraints PATH_CONSTRAINTS = new PathConstraints(2, 1);
 
     public static Command getFollowTrajectoryCommand(
         DriveSubsystem drive, PositioningSubsystem positioning,
