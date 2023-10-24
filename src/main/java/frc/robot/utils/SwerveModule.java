@@ -121,7 +121,7 @@ public class SwerveModule {
     }
 
     public SwerveModulePosition getPosition() {
-        return new SwerveModulePosition(driveMotor.getSelectedSensorPosition() / driveMtrScale.get(), Rotation2d.fromRadians(absoluteEncoder.getPosition()));
+        return new SwerveModulePosition(driveMotor.getSelectedSensorPosition() / driveMtrScale.get(), Rotation2d.fromRadians(relativeEncoder.getPosition()));
     }
 
     @Override
