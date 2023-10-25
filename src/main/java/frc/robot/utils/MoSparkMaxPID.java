@@ -102,6 +102,7 @@ public class MoSparkMaxPID {
             case SMARTMOTION_KS:
                 return this.encoder.getPosition();
             case VELOCITY:
+            case VELOCITY_KS:
             case SMARTVELOCITY:
                 return this.encoder.getVelocity();
         }
@@ -134,6 +135,10 @@ public class MoSparkMaxPID {
 
             double ff = Math.signum(error) * kS;
             pidController.setReference(target, type.innerType, pidSlot, ff, SparkMaxPIDController.ArbFFUnits.kVoltage);
+        } else if(type == Type.VELOCITY_KS && kS != 0) {
+            double error = target - encoder.getVelocity();
+            double ff = Math.signum(error) * kS;
+            pidController.setReference(target, type.innerType, pidSlot, ff, SparkMaxPIDController.ArbFFUnits.kVoltage);
         } else {
             pidController.setReference(target, this.type.innerType, pidSlot, 0);
         }
@@ -145,6 +150,7 @@ public class MoSparkMaxPID {
         SMARTMOTION(CANSparkMax.ControlType.kSmartMotion),
         SMARTMOTION_KS(CANSparkMax.ControlType.kSmartMotion),
         VELOCITY(CANSparkMax.ControlType.kVelocity),
+        VELOCITY_KS(CANSparkMax.ControlType.kVelocity),
         SMARTVELOCITY(CANSparkMax.ControlType.kSmartVelocity);
 
         public final CANSparkMax.ControlType innerType;
