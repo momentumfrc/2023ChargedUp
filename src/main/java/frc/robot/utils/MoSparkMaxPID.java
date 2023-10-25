@@ -16,6 +16,7 @@ public class MoSparkMaxPID {
 
     private double kS = 0;
     private double positionWrappingRange = 0;
+    private double smartMotionMotionAllowedClosedLoopError = 0;
 
     public MoSparkMaxPID(Type type, CANSparkMax controller, int pidSlot) {
         this.type = type;
@@ -23,6 +24,14 @@ public class MoSparkMaxPID {
         this.pidController = controller.getPIDController();
         this.encoder = controller.getEncoder();
         this.pidSlot = pidSlot;
+
+        if(pidController.getPositionPIDWrappingEnabled()) {
+            positionWrappingRange = pidController.getPositionPIDWrappingMaxInput() - pidController.getPositionPIDWrappingMinInput();
+        } else {
+            positionWrappingRange = 0;
+        }
+
+        smartMotionMotionAllowedClosedLoopError = pidController.getSmartMotionAllowedClosedLoopError(pidSlot);
     }
 
     public void setPositionPIDWrappingEnabled(double min, double max) {
@@ -73,6 +82,11 @@ public class MoSparkMaxPID {
         this.kS = kS;
     }
 
+    public void setSmartMotionAllowedClosedLoopError(double error) {
+        this.smartMotionMotionAllowedClosedLoopError = error;
+        pidController.setSmartMotionAllowedClosedLoopError(error, pidSlot);
+    }
+
     public double getLastOutput() {
         return this.motorController.get();
     }
@@ -84,8 +98,8 @@ public class MoSparkMaxPID {
     public double getLastMeasurement() {
         switch (this.type) {
             case POSITION:
-            case POSITION_FF:
             case SMARTMOTION:
+            case SMARTMOTION_KS:
                 return this.encoder.getPosition();
             case VELOCITY:
             case SMARTVELOCITY:
@@ -96,10 +110,10 @@ public class MoSparkMaxPID {
     }
 
     public void setReference(double target) {
-        // In POSITION_FF, we apply an arbitrary feedfoward voltage to "linearize" the system
+        // In SMARTMOTION_KS, we apply an arbitrary feedfoward voltage to "linearize" the system
         // response. This kS can be determined using the wpilib SysId software.
-        if(type == Type.POSITION_FF && kS != 0) {
-            // We want to make sure the feedforward voltage isn't working against the PID
+        if(type == Type.SMARTMOTION_KS && kS != 0) {
+            // We want to make sure the feedforward voltage isn't working against the
             // controller, so we need to anticipate which direction it will want to turn and apply a
             // positive or negative voltage as is appropriate.
 
@@ -113,6 +127,11 @@ public class MoSparkMaxPID {
                 error = MathUtil.inputModulus(error, -errorBound, errorBound);
             }
 
+            // If we're within the allowed error, we shouldn't move, so don't apply the feedforward
+            if(Math.abs(error) < smartMotionMotionAllowedClosedLoopError) {
+                error = 0;
+            }
+
             double ff = Math.signum(error) * kS;
             pidController.setReference(target, type.innerType, pidSlot, ff, SparkMaxPIDController.ArbFFUnits.kVoltage);
         } else {
@@ -123,8 +142,8 @@ public class MoSparkMaxPID {
 
     public enum Type {
         POSITION(CANSparkMax.ControlType.kPosition),
-        POSITION_FF(CANSparkMax.ControlType.kPosition),
         SMARTMOTION(CANSparkMax.ControlType.kSmartMotion),
+        SMARTMOTION_KS(CANSparkMax.ControlType.kSmartMotion),
         VELOCITY(CANSparkMax.ControlType.kVelocity),
         SMARTVELOCITY(CANSparkMax.ControlType.kSmartVelocity);
 

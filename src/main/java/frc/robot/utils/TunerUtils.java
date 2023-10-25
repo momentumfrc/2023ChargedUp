@@ -55,15 +55,15 @@ public class TunerUtils {
             .withSetpoint(sparkMax::getSetpoint)
             .withMeasurement(sparkMax::getLastMeasurement);
 
-        if(sparkMax.getType() == MoSparkMaxPID.Type.SMARTMOTION) {
+        if(sparkMax.getType() == MoSparkMaxPID.Type.SMARTMOTION || sparkMax.getType() == MoSparkMaxPID.Type.SMARTMOTION_KS) {
             builder = builder
                 .withProperty("maxVel", (v) -> sparkMax.getPID().setSmartMotionMaxVelocity(v, sparkMax.getPidSlot()))
                 .withProperty("maxAccel", (a) -> sparkMax.getPID().setSmartMotionMaxAccel(a, sparkMax.getPidSlot()))
-                .withProperty("allowedError", (e) -> sparkMax.getPID().setSmartMotionAllowedClosedLoopError(e, sparkMax.getPidSlot()));
-        }
+                .withProperty("allowedError", sparkMax::setSmartMotionAllowedClosedLoopError);
 
-        if(sparkMax.getType() == MoSparkMaxPID.Type.POSITION_FF) {
-            builder = builder.withProperty("kS", sparkMax::setKS);
+            if(sparkMax.getType() == MoSparkMaxPID.Type.SMARTMOTION_KS) {
+                builder = builder.withProperty("kS", sparkMax::setKS);
+            }
         }
 
         return builder.safeBuild();
