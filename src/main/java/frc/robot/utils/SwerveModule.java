@@ -58,13 +58,10 @@ public class SwerveModule {
         this.absoluteEncoder = turnMotor.getAnalog(Mode.kAbsolute);
         this.absoluteEncoder.setPositionConversionFactor(ABSOLUTE_ENCODER_SCALE);
 
-        this.turnPID = new MoSparkMaxPID(MoSparkMaxPID.Type.POSITION, turnMotor, 0);
+        this.turnPID = new MoSparkMaxPID(MoSparkMaxPID.Type.POSITION_FF, turnMotor, 0);
         this.drivePID = new MoTalonFxPID(MoTalonFxPID.Type.VELOCITY, driveMotor);
 
-        var turnSparkMaxPID = turnPID.getPID();
-        turnSparkMaxPID.setPositionPIDWrappingMinInput(-Math.PI);
-        turnSparkMaxPID.setPositionPIDWrappingMaxInput(Math.PI);
-        turnSparkMaxPID.setPositionPIDWrappingEnabled(true);
+        this.turnPID.setPositionPIDWrappingEnabled(-Math.PI, Math.PI);
 
         turnTuner = TunerUtils.forMoSparkMax(turnPID, key + "_turn");
         driveTuner = TunerUtils.forMoTalonFx(drivePID, key + "_drive");

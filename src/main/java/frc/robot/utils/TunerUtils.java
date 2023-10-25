@@ -62,6 +62,10 @@ public class TunerUtils {
                 .withProperty("allowedError", (e) -> sparkMax.getPID().setSmartMotionAllowedClosedLoopError(e, sparkMax.getPidSlot()));
         }
 
+        if(sparkMax.getType() == MoSparkMaxPID.Type.POSITION_FF) {
+            builder = builder.withProperty("kS", sparkMax::setKS);
+        }
+
         return builder.safeBuild();
     }
 
