@@ -51,7 +51,7 @@ public class Limelight {
 
     private LimelightPipeline currentPipeline = LimelightPipeline.FIDUCIAL;
 
-    private boolean shouldForceLedsOff = false;
+    private boolean shouldForceLedsOff = true;
 
     private PoseFilter poseFilter = new PoseFilter(LIMELIGHT_DATAPOINTS, STDDEV_CUTOFF, ZSCORE_CUTOFF);
     private Optional<Pose3d> lastReportedPose = Optional.empty();
