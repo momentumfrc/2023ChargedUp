@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import java.util.Map;
 import java.util.Optional;
 
 import com.kauailabs.navx.frc.AHRS;
@@ -15,6 +16,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -103,6 +105,14 @@ public class PositioningSubsystem extends SubsystemBase {
             .withPosition(4, 1)
             .withSize(1, 1)
             .withWidget(BuiltInWidgets.kBooleanBox);
+
+        var posGroup = MoShuffleboard.getInstance().matchTab
+            .getLayout("Relative Pos", BuiltInLayouts.kList)
+            .withSize(2, 1)
+            .withProperties(Map.of("Label position", "RIGHT"));
+        posGroup.addDouble("X", () -> robotPose.getX());
+        posGroup.addDouble("Y", () -> robotPose.getY());
+        posGroup.addDouble("Rot", () -> robotPose.getRotation().getDegrees());
     }
 
     public Rotation2d getFieldOrientedDriveHeading() {

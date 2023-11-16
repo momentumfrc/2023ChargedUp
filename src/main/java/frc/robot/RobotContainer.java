@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.NetworkButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.AutoAlignCommand;
 import frc.robot.commands.CalibrateDriveEncodersCommand;
 import frc.robot.commands.TeleopArmCommand;
 import frc.robot.commands.TeleopDriveCommand;
@@ -86,9 +87,8 @@ public class RobotContainer {
         Trigger alignCubes = new Trigger(() -> inputChooser.getSelected().getShouldAlignCubes());
         Trigger balance = new Trigger(() -> inputChooser.getSelected().getShouldBalance());
 
-        alignCones.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.REFLECTORS));
-        alignCubes.whileTrue(new CenterLimelightCrosshairsCommand(drive, positioning.limelight, LimelightPipeline.FIDUCIAL));
-        balance.whileTrue(new BalanceScaleCommand(drive, gyro));
+        alignCubes.onTrue(new AutoAlignCommand(positioning, drive));
+        alignCubes.onFalse(driveCommand);
 
         calibrateDriveButton.onTrue(new CalibrateDriveEncodersCommand(drive));
         tuneDriveButton.whileTrue(new TuneSwerveTurnMotors(drive, this::getInput));
